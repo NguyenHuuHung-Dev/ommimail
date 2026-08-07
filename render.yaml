@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: omnimail-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DEMO_MODE
+        value: "false"
+      - key: FIREBASE_PROJECT_ID
+        value: ommimail
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_STORAGE_BUCKET
+        value: ommimail.firebasestorage.app
+      - key: TOKEN_ENCRYPTION_KEY
+        sync: false
+      - key: TOKEN_ENCRYPTION_KEY_VERSION
+        value: "1"
+      - key: ADMIN_EMAILS
+        value: ommimail@gmail.com
+      - key: WEB_APP_URL
+        value: https://omnimail.io.vn,https://ommimail.web.app
+      - key: SOCKET_CORS_ORIGIN
+        value: https://omnimail.io.vn,https://ommimail.web.app
+      - key: OAUTH_STATE_SECRET
+        sync: false

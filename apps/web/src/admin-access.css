@@ -1,0 +1,152 @@
+.page-pane:has(.grant-panel) {
+  overflow: auto;
+}
+
+.grant-panel {
+  margin-top: 14px;
+  border: 1px solid #0a0a0a;
+  background: #fff;
+  box-shadow: 7px 7px 0 #e9adc0;
+}
+
+.grant-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eadde1;
+}
+
+.grant-panel h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+}
+
+.grant-panel select {
+  min-width: 260px;
+  padding: 11px 13px;
+  border: 1px solid #0a0a0a;
+  background: #fff;
+}
+
+.grant-mail-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.grant-mail-list label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #dfcbd1;
+  background: #fff8fa;
+  cursor: pointer;
+}
+
+.grant-mail-list label > span:last-child {
+  display: grid;
+  gap: 3px;
+}
+
+.grant-mail-list small,
+.grant-hint {
+  color: #806d73;
+  font-size: 11px;
+}
+
+.grant-hint {
+  margin: 0;
+  padding: 18px 20px;
+}
+
+.page-pane:has(.grant-panel) .admin-directory {
+  height: auto;
+  max-height: 390px;
+}
+
+@media (max-width: 700px) {
+  .grant-panel > header { align-items: stretch; flex-direction: column; }
+  .grant-panel select { min-width: 0; width: 100%; }
+}
+
+.sharing-steps {
+  display: grid;
+  grid-template-columns: minmax(280px, .7fr) minmax(420px, 1.3fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.sharing-steps > article {
+  display: flex;
+  gap: 18px;
+  min-height: 330px;
+  padding: 24px;
+  border: 1px solid #0a0a0a;
+  background: #fff;
+  box-shadow: 7px 7px 0 #e9adc0;
+}
+
+.sharing-steps > article > b {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  height: 42px;
+  background: #0a0a0a;
+  color: #f2bdcc;
+}
+
+.sharing-steps > article > div { flex: 1; min-width: 0; }
+.sharing-steps h2 { margin: 6px 0 18px; font-size: 22px; }
+.sharing-steps p { color: #806d73; font-size: 12px; line-height: 1.6; }
+.sharing-steps select { width: 100%; padding: 12px; border: 1px solid #0a0a0a; background: #fff; }
+.sharing-steps .grant-mail-list { grid-template-columns: 1fr; padding: 0; }
+
+@media (max-width: 900px) {
+  .sharing-steps { grid-template-columns: 1fr; }
+  .sharing-steps > article { min-height: 0; }
+}
+
+.gmail-guide { margin: 12px 0; border: 1px solid #d8c2c9; background: #fff; }
+.gmail-guide > summary { padding: 12px 14px; cursor: pointer; font-weight: 800; font-size: 12px; }
+.gmail-guide-content { padding: 0 14px 14px; border-top: 1px solid #eadde1; }
+.guide-note { display: flex; gap: 10px; margin: 12px 0; padding: 11px; background: #f9e5eb; }
+.guide-note svg { flex: 0 0 20px; width: 20px; color: #a84e69; }
+.guide-note p { display: grid; gap: 3px; margin: 0; }
+.gmail-guide ol { display: grid; gap: 10px; margin: 14px 0; padding-left: 25px; }
+.gmail-guide li { padding-left: 4px; font-size: 11px; }
+.gmail-guide li b,.gmail-guide li span { display: block; }
+.gmail-guide li span { margin-top: 3px; color: #75646a; line-height: 1.5; }
+.gmail-guide a { color: #9f405c; font-weight: 800; }
+.gmail-guide code { padding: 2px 4px; background: #f4edf0; }
+.guide-warning { display: grid; gap: 4px; padding: 10px; border-left: 4px solid #d18a36; background: #fff7e8; font-size: 11px; line-height: 1.5; }
+.guide-security { margin: 10px 0 0!important; color: #9a334f!important; font-weight: 700; font-size: 10px!important; }
+
+/* Dashboard content starts immediately; page identity is already present in the sidebar. */
+.dashboard-page > .page-header { display: none!important; }
+.dashboard-page .stats-grid { margin-top: 0!important; }
+.dashboard-page .sharing-steps,
+.dashboard-page .pricing-grid,
+.dashboard-page .shared-mail-grid,
+.dashboard-page .mailbox-toolbar { margin-top: 0; }
+.admin-dashboard-page .admin-directory { height: auto; max-height: calc(100vh - 250px); }
+.mailbox-manager .mailbox-directory { margin-top: 14px; }
+
+/* Connect has no redundant page banner; provider cards are the page content. */
+.connect-page .connect-surface { grid-template-rows: minmax(0, 1fr) 40px!important; }
+.connect-page .connect-surface > header { display: none!important; }
+.connect-page .connect-channels { padding-top: 0; }
+
+/* Temp address creation belongs with the address picker in the left rail. */
+.temp-mail-page .temp-workspace { margin-top: 0!important; height: 100%!important; }
+.temp-mail-page:has(.temp-active-bar) .temp-workspace { height: calc(100% - 68px)!important; margin-top: 14px!important; }
+.temp-sidebar-create { flex: none; display: grid; gap: 9px; padding: 13px; border-bottom: 1px solid #0a0a0a; background: #fff7f9; }
+.temp-sidebar-create > strong { font-size: 10px; }
+.temp-sidebar-create label { display: grid; gap: 4px; }
+.temp-sidebar-create label > span { color: #a1576d; font-size: 7px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.temp-sidebar-create input,.temp-sidebar-create select { width: 100%; height: 34px; border: 1px solid #d9bbc4; background: #fff; padding: 0 9px; font-size: 9px; }
+.temp-sidebar-create .primary { width: 100%; height: 36px; justify-content: center; }
+.temp-addresses { overflow-y: auto!important; }

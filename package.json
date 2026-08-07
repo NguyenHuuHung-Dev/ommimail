@@ -1,0 +1,19 @@
+{
+  "name": "omnimail",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @omnimail/web --filter @omnimail/api dev",
+    "dev:web": "pnpm --filter @omnimail/web dev",
+    "dev:api": "pnpm --filter @omnimail/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "format": "prettier --write .",
+    "test:rules": "firebase emulators:exec --only firestore 'pnpm test'",
+    "test:e2e": "echo E2E skeleton is in apps/web/e2e"
+  },
+  "devDependencies": { "prettier": "^3.6.2", "typescript": "^5.8.3" }
+}
+
