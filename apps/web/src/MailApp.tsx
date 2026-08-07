@@ -25,6 +25,7 @@ import {
   Inbox,
   LayoutDashboard,
   LockKeyhole,
+  LoaderCircle,
   LogOut,
   Mail,
   MessageCircle,
@@ -105,6 +106,15 @@ function initials(value?: string) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toUpperCase();
 }
+function ApiStatus({ pending, error, onRetry }: { pending: boolean; error: boolean; onRetry: () => void }) {
+  if (!pending && !error) return null;
+  return (
+    <div className={`api-status ${error ? "error" : ""}`} role="status" aria-live="polite">
+      <span>{error ? "API chưa phản hồi" : "Đang khởi động dịch vụ mail…"}</span>
+      {error ? <button type="button" onClick={onRetry}>Thử lại</button> : <LoaderCircle className="spin" size={15} />}
+    </div>
+  );
+}
 export function MailApp() {
   const qc = useQueryClient();
   const ui = useUI();
@@ -114,7 +124,7 @@ export function MailApp() {
   const routePage = location.pathname.split("/")[2] || "home";
   const page = routePage === "accounts" ? "mailboxes" : routePage;
   const [profileOpen, setProfileOpen] = useState(false);
-  const { data: accounts = [] } = useQuery({
+  const { data: accounts = [], isPending: accountsPending, error: accountsError, refetch: refetchAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => api.accounts(),
   });
@@ -165,7 +175,10 @@ export function MailApp() {
       }
     }
   }, [location.pathname, location.search, accounts, navigate, setUI, ui.selectedAccount, ui.selectedMessage]);
-  const { data: me } = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const { data: me, isPending: mePending, error: meError, refetch: refetchMe } = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const servicePending = accountsPending || mePending;
+  const serviceError = Boolean(accountsError || meError);
+  const retryService = () => { void refetchAccounts(); void refetchMe(); };
   const query = `?limit=10${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
   const { data, isLoading, error, refetch: refetchMessages } = useQuery({
     queryKey: ["messages", query],
@@ -202,6 +215,7 @@ export function MailApp() {
   if (page === "home")
     return (
       <>
+        <ApiStatus pending={servicePending} error={serviceError} onRetry={retryService} />
         <HomeLanding
           onOpenProfile={() => setProfileOpen(true)}
           profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
@@ -221,6 +235,7 @@ export function MailApp() {
     );
   return (
     <div className="shell">
+      <ApiStatus pending={servicePending} error={serviceError} onRetry={retryService} />
       <aside className={ui.sidebar ? "sidebar open" : "sidebar"}>
         <div className="brand">
           <span className="brandmark">

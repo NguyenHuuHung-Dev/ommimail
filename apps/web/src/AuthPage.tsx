@@ -73,6 +73,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     setConfirmPassword(""); setFullName(""); setResetSent(false);
   }, [mode]);
 
+  useEffect(() => {
+    // Render's free service may be asleep. Wake it while the user is filling
+    // the form so mailbox data is ready by the time authentication completes.
+    void api.health().catch(() => undefined);
+  }, []);
+
   async function signInWithProvider(name: SocialProvider) {
     setProviderBusy(name);
     setError("");

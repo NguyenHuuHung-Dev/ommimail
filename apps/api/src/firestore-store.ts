@@ -90,12 +90,11 @@ export async function saveMailboxShare(accountId: string, userId: string, allowe
 
 export async function loadMailboxShares() {
   if (!persistentStoreEnabled || !getApps().length) return [] as Array<{ accountId: string; userId: string }>;
-  const accounts = await db().collection("mailAccounts").get();
-  const shares = await Promise.all(accounts.docs.map(async (account) => {
-    const snapshot = await account.ref.collection("shares").get();
-    return snapshot.docs.map((share) => ({ accountId: account.id, userId: share.id }));
-  }));
-  return shares.flat();
+  const snapshot = await db().collectionGroup("shares").get();
+  return snapshot.docs.flatMap((share) => {
+    const accountId = share.ref.parent.parent?.id;
+    return accountId ? [{ accountId, userId: share.id }] : [];
+  });
 }
 
 export async function saveUserProfile(user: StoredUser) {
@@ -125,13 +124,10 @@ export async function saveHiddenMessage(userId: string, messageId: string) {
 
 export async function loadHiddenMessageIds() {
   if (!persistentStoreEnabled || !getApps().length) return [] as Array<{ userId: string; messageId: string }>;
-  const users = await db().collection("users").get();
-  const records = await Promise.all(users.docs.map(async (user) => {
-    const snapshot = await user.ref.collection("hiddenMessages").get();
-    return snapshot.docs.flatMap((document) => {
-      const messageId = document.data().messageId;
-      return typeof messageId === "string" ? [{ userId: user.id, messageId }] : [];
-    });
-  }));
-  return records.flat();
+  const snapshot = await db().collectionGroup("hiddenMessages").get();
+  return snapshot.docs.flatMap((document) => {
+    const userId = document.ref.parent.parent?.id;
+    const messageId = document.data().messageId;
+    return userId && typeof messageId === "string" ? [{ userId, messageId }] : [];
+  });
 }

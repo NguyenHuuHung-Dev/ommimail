@@ -22,6 +22,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return j.data;
 }
 export const api = {
+  health: () =>
+    request<{
+      status: string;
+      mode: string;
+      persistentMailboxStorage: boolean;
+      providers: { googleOAuth: boolean; microsoftOAuth: boolean; tempMail: boolean };
+    }>("/api/health"),
   registrationPolicy: (email: string) =>
     request<{ allowed: true }>("/api/auth/registration-policy", {
       method: "POST",
