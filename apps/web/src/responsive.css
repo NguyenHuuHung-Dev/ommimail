@@ -1137,9 +1137,14 @@
 .mailbox-picker>span { font-size: 8px!important; letter-spacing: .14em; }
 .mailbox-picker select { font-size: 14px!important; }
 .mailbox-picker p { margin-top: 8px!important; color: #9d6d7d; font-size: 10px!important; letter-spacing: .08em!important; text-transform: uppercase; }
-.mail-html-body { line-height: 1.7; overflow-wrap: anywhere; }
-.mail-html-body table { max-width: 100%; }
-.mail-html-body img { max-width: 100%; height: auto; }
+.mail-html-frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 320px;
+  border: 0;
+  background: transparent;
+}
 
 /* The home frame is open at the bottom; keep the application main surface
    aligned with it instead of leaving a heavy black footer line. */

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
@@ -879,14 +879,49 @@ function MessageBody({ m }: { m: MailMessage }) {
   const body = m.textBody?.trim() ?? "";
   const html = m.sanitizedHtmlBody?.trim() || (/<[a-z][\s\S]*>/i.test(body) ? body : "");
   if (html) {
-    return (
-      <div
-        className="mail-html-body"
-        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
-      />
-    );
+    return <MailHtmlFrame html={html} />;
   }
   return body.split("\n").map((line, index) => <p key={index}>{line || <br />}</p>);
+}
+function MailHtmlFrame({ html }: { html: string }) {
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  const [height, setHeight] = useState(320);
+  const safeHtml = DOMPurify.sanitize(html);
+  const srcDoc = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * { box-sizing: border-box; max-width: 100%; }
+      html, body { margin: 0; padding: 0; min-width: 0; width: 100%; overflow-x: hidden; background: transparent; }
+      body { padding: 8px 0; color: #18212b; font: 14px/1.6 Arial, sans-serif; overflow-wrap: anywhere; word-break: break-word; }
+      table { max-width: 100% !important; width: 100% !important; table-layout: fixed !important; }
+      tbody, tr, td, th { max-width: 100% !important; }
+      td, th { overflow-wrap: anywhere !important; word-break: break-word !important; }
+      img, video { display: block; max-width: 100% !important; height: auto !important; }
+      pre { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+      a { overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>${safeHtml}</body>
+</html>`;
+
+  return (
+    <iframe
+      ref={frameRef}
+      className="mail-html-frame"
+      title="Email content"
+      sandbox="allow-same-origin"
+      srcDoc={srcDoc}
+      style={{ height }}
+      onLoad={() => {
+        const document = frameRef.current?.contentDocument;
+        if (!document) return;
+        setHeight(Math.max(320, document.documentElement.scrollHeight + 16));
+      }}
+    />
+  );
 }
 function ConnectPage({ onDone }: { onDone: () => void }) {
   const qc = useQueryClient();
