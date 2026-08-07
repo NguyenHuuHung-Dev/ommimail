@@ -1,83 +1,335 @@
-# OmniMail
+<div align="center">
+  <img src="apps/web/public/logo.jpg" alt="OmniMail logo" width="88" height="88" />
+  <h1>OmniMail</h1>
+  <p><strong>Every inbox. One signal.</strong></p>
+  <p>A focused workspace for Gmail, Outlook and temporary email—with secure sharing and role-based access.</p>
 
-Unified email workspace for Gmail, Microsoft 365/Outlook, IMAP and temporary inboxes. The repository starts in a self-contained demo mode with three accounts and 32 realistic messages.
+  <p>
+    <a href="https://omnimail.io.vn"><strong>Live demo</strong></a>
+    ·
+    <a href="https://omnimail-api.onrender.com/api/health">API health</a>
+    ·
+    <a href="#run-locally">Run locally</a>
+  </p>
+
+  <p>
+    <img alt="React" src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=111" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white" />
+    <img alt="Firebase" src="https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-FFCA28?logo=firebase&logoColor=111" />
+    <img alt="Node.js" src="https://img.shields.io/badge/Node.js-22-5FA04E?logo=nodedotjs&logoColor=white" />
+    <img alt="Docker" src="https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white" />
+  </p>
+</div>
+
+---
+
+## Overview
+
+OmniMail brings multiple email providers into one provider-neutral interface. The browser never talks directly to Gmail, Microsoft Graph, IMAP or mail.tm. A guarded API owns provider credentials, normalizes messages and enforces mailbox ownership before returning data to the client.
+
+The project is a production-oriented TypeScript monorepo. It includes a responsive React application, an Express API, Firebase authentication and persistent encrypted mailbox connections.
+
+### Why OmniMail?
+
+- **One reading workflow** for Gmail, Outlook and disposable inboxes.
+- **Ten-message focus** keeps the inbox useful without loading an entire mailbox.
+- **Lazy message bodies** reduce provider calls and initial response size.
+- **Secure mailbox sharing** lets Premium users receive read-only access.
+- **Clear access levels** separate Basic, Premium and Admin capabilities.
+- **Mobile-first editorial UI** works across phone, tablet and desktop layouts.
+
+## Try the demo
+
+Open **[omnimail.io.vn](https://omnimail.io.vn)** and create an account with email/password or a supported social provider.
+
+1. Open **Connect**.
+2. Connect Gmail or Microsoft through OAuth, or use a supported app-password/refresh-token flow.
+3. Open **Temp Mail** to create a disposable address without provider configuration.
+4. Visit **Mailboxes** to read the ten newest messages and refresh the active inbox.
+5. Admin accounts can manage roles and share owned mailboxes with Premium users.
+
+> The API currently runs on a free Render instance. After a long idle period, the first request can take longer while the service wakes up. OmniMail starts warming the API from the login page and shows service status instead of an empty mailbox state.
+
+## Main features
+
+| Area | What is included |
+| --- | --- |
+| Unified inbox | Gmail, Microsoft/Outlook and temp-mail accounts behind shared DTOs |
+| Mail reading | Latest 10 messages, lazy body loading, provider refresh and automatic polling |
+| Account connection | Google OAuth, Microsoft OAuth, Gmail app password and Microsoft refresh-token import |
+| Temporary email | mail.tm domain discovery, address creation, copy, refresh and deletion |
+| Authentication | Firebase email/password plus Google, Facebook and Microsoft sign-in |
+| Access control | Basic, Premium and Admin roles with server-side authorization |
+| Mailbox sharing | Owner-controlled read-only sharing and recipient revocation |
+| Administration | User directory, role management, mailbox overview and service status |
+| Security | Encrypted credentials, signed OAuth state, ownership checks, rate limits and redacted logs |
+| UX | Responsive layouts, loading/error states, subtle motion and reduced-motion support |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  U[Browser] -->|Firebase ID token| W[React + Vite]
+  W -->|Provider-neutral REST API| A[Express API]
+  W <-->|Live updates| S[Socket.IO]
+  S --- A
+  A -->|Verify token| FA[Firebase Auth]
+  A -->|Users, shares, encrypted credentials| FS[Cloud Firestore]
+  A --> G[Gmail API / IMAP]
+  A --> M[Microsoft Graph]
+  A --> T[mail.tm]
+```
+
+### Request flow
+
+1. Firebase authenticates the user and issues an ID token.
+2. The web client sends that token with every protected API request.
+3. The API verifies identity, role, mailbox ownership and sharing permissions.
+4. A provider adapter fetches the requested data.
+5. Provider-specific responses are normalized into shared `MailAccount` and `MailMessage` types.
+6. Credentials remain server-side and are encrypted before Firestore persistence.
+
+## Tech stack
+
+| Layer | Technology |
+| --- | --- |
+| Web | React 19, Vite, TypeScript, React Router |
+| Client state | TanStack Query, Zustand |
+| API | Node.js 22, Express 5, Socket.IO, Zod |
+| Authentication | Firebase Authentication and Firebase Admin |
+| Persistence | Cloud Firestore and Firebase Storage rules |
+| Mail providers | Gmail API, Microsoft Graph, ImapFlow, mail.tm |
+| Security | Helmet, CORS allowlist, rate limiting, AES-256-GCM credential encryption |
+| Testing | Vitest, Supertest, Firebase Emulator Suite |
+| Delivery | Firebase Hosting, Render Docker service |
+
+## Repository layout
+
+```text
+omnimail/
+├── apps/
+│   ├── web/                 # React application and responsive UI
+│   └── api/                 # Express API and mail-provider adapters
+├── packages/
+│   ├── shared/              # Provider-independent DTOs and contracts
+│   └── ui/                  # Reusable UI package surface
+├── firebase/                # Firestore and Storage security rules
+├── docker-compose.yml       # Local API/Redis baseline
+├── firebase.json            # Hosting, rules and emulator configuration
+└── render.yaml              # Production API blueprint
+```
 
 ## Run locally
 
-Requirements: Node.js 22+ and pnpm 10+.
+### Requirements
+
+- Node.js 22+
+- pnpm 10+
+- A Firebase project, or the Firebase Emulator Suite for local development
+
+### Install and start
 
 ```bash
+git clone https://github.com/NguyenHuuHung-Dev/ommimail.git
+cd ommimail
 pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:5173`. The API runs at `http://localhost:4000`; `GET /api/health` reports its current mode. Useful checks are `pnpm build`, `pnpm typecheck`, and `pnpm test`.
+| Service | Local URL |
+| --- | --- |
+| Web app | `http://localhost:5173` |
+| API | `http://localhost:4000` |
+| API health | `http://localhost:4000/api/health` |
 
-The app is split into `/app/home`, `/app/mailboxes`, `/app/temp-mail`, and the protected `/app/mail-admin`. A mailbox is fetched only after it is opened, returns the 10 newest messages, and refreshes every 10 seconds while visible. The refresh button bypasses the short Outlook cache.
+Run either application independently when needed:
 
-## Structure
+```bash
+pnpm dev:web
+pnpm dev:api
+```
 
-- `apps/web`: React, Vite, TypeScript, Router, TanStack Query and Zustand client.
-- `apps/api`: Express API, provider adapters, security services, Socket.IO and demo repository.
-- `packages/shared`: provider-independent mail DTOs and adapter contract.
-- `packages/ui`: reusable UI package surface.
-- `firebase`: Firestore and Storage rules plus emulator configuration.
+## Environment configuration
 
-The web app never calls a mail provider directly. All operations go through the API and use provider-neutral DTOs. Demo adapters have the same contract as Gmail, Microsoft, IMAP and temp-mail adapters, so real integrations can replace them without changing UI business logic.
+The web and API use separate environment files. Never expose provider secrets through a `VITE_*` variable.
+
+### Web — `apps/web/.env`
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:4000
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+### API — `apps/api/.env`
+
+Start from [`.env.example`](.env.example). The production-critical settings are:
+
+```dotenv
+NODE_ENV=development
+PORT=4000
+WEB_APP_URL=http://localhost:5173
+SOCKET_CORS_ORIGIN=http://localhost:5173
+DEMO_MODE=false
+
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+FIREBASE_STORAGE_BUCKET=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:4000/api/oauth/google/callback
+
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+MICROSOFT_TENANT_ID=common
+MICROSOFT_REDIRECT_URI=http://localhost:4000/api/oauth/microsoft/callback
+
+OAUTH_STATE_SECRET=
+TOKEN_ENCRYPTION_KEY=
+TOKEN_ENCRYPTION_KEY_VERSION=1
+```
+
+Generate a 32-byte encryption key:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+```
 
 ## Firebase setup
 
-1. Create a Firebase project and enable Email/Password Authentication.
-2. Create Firestore and a private Storage bucket.
-3. Create an Admin SDK service account and populate `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`, and `FIREBASE_STORAGE_BUCKET` in `apps/api/.env`.
-4. Add the Firebase web configuration as `VITE_FIREBASE_*` variables in `apps/web/.env` when switching off demo authentication.
-5. Install Firebase CLI, then run `firebase emulators:start` for Auth, Firestore and Storage.
-6. Deploy the client with `pnpm build && firebase deploy --only hosting,firestore:rules,storage`.
-
-Rules intentionally prevent the browser from creating mail accounts or modifying credentials, provider tokens and sync cursors. Those changes belong to the Admin SDK service layer, which must also enforce resource ownership.
-
-## Persistent mailbox connections
-
-Connected mailboxes are stored by the API, not by the browser. To retain them across API restarts, set `FIREBASE_PROJECT_ID` plus either the Admin SDK service-account fields (`FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY`) or `GOOGLE_APPLICATION_CREDENTIALS`, then set a base64-encoded 32-byte `TOKEN_ENCRYPTION_KEY`. Provider credentials are encrypted before being stored in Firestore. Verify the API reports `"persistentMailboxStorage":true` at `GET /api/health`.
-
-Deploy the checked-in rules after leaving Firestore test mode:
+1. Enable Firebase Email/Password Authentication and the social providers you want to expose.
+2. Create Cloud Firestore and a private Storage bucket.
+3. Create an Admin SDK service account for the API.
+4. Put the Firebase browser configuration in `apps/web/.env`.
+5. Put the Admin SDK configuration and encryption key in `apps/api/.env`.
+6. Deploy the checked-in security rules:
 
 ```bash
 firebase deploy --only firestore:rules,storage
 ```
 
-To grant Mail Admin access after configuring Firebase Admin credentials:
+The rules intentionally prevent browser code from writing provider credentials, ownership data and synchronization cursors. Those operations belong to the authenticated API.
+
+### Grant Admin access
 
 ```bash
 pnpm --filter @omnimail/api admin:grant user@example.com
 ```
 
-The user must sign out and sign in again so Firebase issues a token containing the new `admin` custom claim. Set `MICROSOFT_SEED_OWNER_UID` to the Firebase UID allowed to see a server-seeded Outlook mailbox.
+The affected user must sign out and sign in again to receive an updated Firebase custom claim.
 
-## Google OAuth and Gmail
+## Provider configuration
 
-1. In Google Cloud, configure the OAuth consent screen and enable Gmail API.
-2. Create a Web OAuth client and add the callback in `.env.example` as an authorized redirect URI.
-3. Populate `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`.
-4. Request only the scopes used by enabled features: `gmail.modify` and `gmail.send`; add readonly-only mode where appropriate.
-5. Set `DEMO_MODE=false`. OAuth state must be random, short-lived, bound to the authenticated Firebase UID and verified in the callback. Store refresh credentials only as AES-256-GCM ciphertext.
+<details>
+<summary><strong>Google OAuth and Gmail</strong></summary>
 
-## Microsoft OAuth
+1. Enable the Gmail API in Google Cloud.
+2. Configure an OAuth consent screen.
+3. Create a Web OAuth client.
+4. Add `GOOGLE_REDIRECT_URI` as an authorized redirect URI.
+5. Set the client ID, client secret and a long random `OAUTH_STATE_SECRET` on the API.
 
-1. Register an application in Microsoft Entra ID. Use tenant `consumers` for personal Outlook/Hotmail accounts, or `common` only when the registration supports both personal and organizational accounts.
-2. Add the callback URI, create a client secret, and grant delegated Microsoft Graph `Mail.Read`. The OAuth request also includes `offline_access` so the API can refresh access without asking the user to sign in again.
-3. Populate `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID`, and `MICROSOFT_REDIRECT_URI`.
-4. Set `OAUTH_STATE_SECRET` to a long random value. OAuth state is signed, short-lived and bound to the authenticated Firebase UID.
-5. Microsoft OAuth and manually imported refresh tokens are read through Microsoft Graph. The old seed/IMAP integration is disabled unless `ENABLE_LEGACY_MICROSOFT_SEED=true` is explicitly set.
+OAuth state is signed, short-lived and bound to the authenticated Firebase UID. Refresh credentials are stored only as encrypted server-side data.
+</details>
 
-## Secrets and encryption
+<details>
+<summary><strong>Microsoft OAuth</strong></summary>
 
-Copy `.env.example` values into the app-specific `.env` files. These are Git-ignored. Generate a 32-byte encryption key with `openssl rand -base64 32` and set `TOKEN_ENCRYPTION_KEY`; rotate by incrementing `TOKEN_ENCRYPTION_KEY_VERSION`. Never prefix a browser variable with credentials. Authorization headers, cookies and tokens are redacted from API logs.
+1. Register an application in Microsoft Entra ID.
+2. Use tenant `consumers` for personal Outlook accounts or `common` when the app supports both personal and organizational accounts.
+3. Grant delegated `Mail.Read` and `offline_access` permissions.
+4. Add `MICROSOFT_REDIRECT_URI` to the application registration.
+5. Configure the client ID, client secret and tenant ID on the API.
 
-Temporary mail uses mail.tm's account-token flow. No provider API key is required; each generated mailbox receives its own server-side bearer token.
+Microsoft mail is read through Microsoft Graph. The legacy seeded IMAP path is disabled unless `ENABLE_LEGACY_MICROSOFT_SEED=true` is explicitly configured.
+</details>
 
-## Production notes
+<details>
+<summary><strong>Temporary mail</strong></summary>
 
-Set `DEMO_MODE=false`, configure Firebase Admin, OAuth and a 32-byte token key. Redis is included in Compose as the planned queue backend but is not yet wired into runtime synchronization. The current in-memory account index is suitable for a single API instance; horizontal scaling still requires a Firestore-backed repository and BullMQ workers. Email bodies remain lazy-loaded and the UI displays only the ten newest messages.
+Temporary addresses use mail.tm's account-token flow. No provider API key is required. Each generated mailbox receives its own bearer token, stored encrypted by the API.
+</details>
 
-The API Dockerfile and Compose file provide the backend/Redis baseline. Use a secret manager for deployed values and rotate any credential that has been pasted into chat or logs.
+## API highlights
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/health` | Runtime mode, persistence and provider readiness |
+| `GET` | `/api/me` | Authenticated profile and role |
+| `GET` | `/api/mail-accounts` | Owned or explicitly shared mailboxes |
+| `GET` | `/api/messages` | Latest normalized messages for an accessible mailbox |
+| `GET` | `/api/messages/:id` | Lazy-load one complete message |
+| `POST` | `/api/oauth/:provider/start` | Start a user-bound OAuth flow |
+| `GET/PUT` | `/api/mailbox-shares` | View, grant or revoke mailbox access |
+| `GET/POST` | `/api/temp-mail/*` | Discover domains and manage disposable inboxes |
+| `GET` | `/api/admin/overview` | Admin-only user and mailbox directory |
+
+All protected routes require a valid Firebase bearer token. Resource access is checked again on the server; hidden UI controls are never treated as authorization.
+
+## Quality checks
+
+```bash
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm lint
+```
+
+Firestore and Storage rules can be tested through the Firebase emulators:
+
+```bash
+pnpm test:rules
+```
+
+## Deployment
+
+### Web — Firebase Hosting
+
+```bash
+pnpm --filter @omnimail/web build
+firebase deploy --only hosting
+```
+
+Set `VITE_API_BASE_URL` to the public API origin before building.
+
+### API — Docker/Render
+
+The included [`apps/api/Dockerfile`](apps/api/Dockerfile) builds the API from the monorepo. [`render.yaml`](render.yaml) defines the current production service, health check and required environment variables.
+
+```bash
+docker build -f apps/api/Dockerfile -t omnimail-api .
+docker run --env-file apps/api/.env -p 4000:4000 omnimail-api
+```
+
+## Security notes
+
+- Provider credentials are encrypted with AES-256-GCM before Firestore persistence.
+- OAuth state is signed, expiring and tied to the current user.
+- Firebase ID tokens are verified by the Admin SDK.
+- Mailbox ownership and sharing permissions are enforced per API request.
+- CORS and Socket.IO origins are allowlisted separately.
+- API logs redact authorization headers and cookies.
+- Firestore rules block browser-side credential and ownership mutations.
+- Rate limiting and Helmet security headers are enabled globally.
+
+## Current limitations and roadmap
+
+- The UI intentionally shows the ten newest messages rather than a complete mailbox archive.
+- The API currently targets a single runtime instance; horizontal scaling needs a shared synchronization layer.
+- Redis is included as a deployment baseline but background jobs are not yet wired to BullMQ.
+- Render's free instance can cold-start after inactivity.
+- Rich compose/send workflows and attachment uploads are planned beyond the current read-focused experience.
+
+Planned improvements include provider webhooks, background synchronization, shared caching, stronger end-to-end coverage and an always-on API deployment.
+
+---
+
+<div align="center">
+  Built as a focused, secure and provider-independent way to read every inbox.
+</div>
