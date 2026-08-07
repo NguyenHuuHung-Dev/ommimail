@@ -19,7 +19,15 @@ export const setOAuthCredential = (
 export const restoreOAuthCredential = (accountId: string, value: Record<string, unknown>) => credentials.set(accountId, value);
 export const removeOAuthCredential = (accountId: string) =>
   credentials.delete(accountId);
-const web = () => process.env.WEB_APP_URL ?? "http://localhost:5173";
+// WEB_APP_URL may contain a comma-separated allowlist for local/prod setups.
+// OAuth callbacks must redirect to one valid origin, never the whole allowlist.
+const web = () => {
+  const configured = process.env.WEB_APP_URL
+    ?.split(",")
+    .map((origin) => origin.trim())
+    .find(Boolean);
+  return configured || "http://localhost:5173";
+};
 function issue(provider: State["provider"], userId: string) {
   const payload = Buffer.from(JSON.stringify({
     provider,
