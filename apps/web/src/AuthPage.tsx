@@ -9,46 +9,23 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   createUserWithEmailAndPassword,
   FacebookAuthProvider,
   GoogleAuthProvider,
   OAuthProvider,
-  reload,
-  sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   type AuthProvider,
+  updateProfile,
 } from "firebase/auth";
 import { api } from "./api";
 import { auth } from "./firebase";
 
-type AuthMode = "login" | "register" | "forgot" | "verify";
+type AuthMode = "login" | "register" | "forgot";
 type SocialProvider = "google" | "facebook" | "microsoft";
-
-const temporaryEmailDomains = new Set([
-  "10minutemail.com",
-  "20minutemail.com",
-  "emailondeck.com",
-  "getnada.com",
-  "guerrillamail.com",
-  "mail.tm",
-  "maildrop.cc",
-  "mailinator.com",
-  "moakt.com",
-  "sharklasers.com",
-  "temp-mail.org",
-  "tempmail.com",
-  "throwawaymail.com",
-  "yopmail.com",
-]);
-
-function isTemporaryEmail(value: string) {
-  const domain = value.trim().toLowerCase().split("@")[1] ?? "";
-  return temporaryEmailDomains.has(domain) || domain.endsWith(".mail.tm") || /(^|[.-])(temp|tempmail|disposable|throwaway|guerrilla|mailinator)([.-]|$)/.test(domain);
-}
 
 function readableAuthError(error: unknown) {
   const code = (error as { code?: string })?.code ?? "";
@@ -59,6 +36,8 @@ function readableAuthError(error: unknown) {
     "auth/invalid-email": "Địa chỉ email không hợp lệ.",
     "auth/popup-closed-by-user": "Cửa sổ đăng nhập đã được đóng.",
     "auth/popup-blocked": "Trình duyệt đã chặn cửa sổ đăng nhập.",
+    "auth/too-many-requests":
+      "Bạn đã yêu cầu gửi quá nhiều lần. Hãy đợi một lúc rồi thử lại.",
     "auth/account-exists-with-different-credential":
       "Email này đã gắn với một phương thức đăng nhập khác.",
   };
@@ -75,9 +54,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [providerBusy, setProviderBusy] = useState<SocialProvider | "">("");
-  const [verifyBusy, setVerifyBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -87,8 +66,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     login: "Welcome back",
     register: "Create your account",
     forgot: "Reset your password",
-    verify: "Verify your email",
   }[mode];
+
+  useEffect(() => {
+    setError(""); setNotice(""); setEmail(""); setPassword("");
+    setConfirmPassword(""); setFullName(""); setResetSent(false);
+  }, [mode]);
 
   async function signInWithProvider(name: SocialProvider) {
     setProviderBusy(name);
@@ -115,16 +98,15 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         return;
       }
       if (mode === "register") {
-        if (isTemporaryEmail(email)) {
-          throw new Error("Không thể đăng ký bằng email tạm thời. Hãy dùng email cá nhân hoặc công ty.");
-        }
         if (password !== confirmPassword) {
           throw new Error("Mật khẩu xác nhận không khớp.");
         }
         await api.registrationPolicy(email);
         const result = await createUserWithEmailAndPassword(auth, email, password);
-        await sendEmailVerification(result.user);
-        nav("/verify-email");
+        await updateProfile(result.user, { displayName: fullName.trim() });
+        await result.user.getIdToken(true);
+        await api.updateMe(fullName.trim()).catch(() => undefined);
+        nav("/app/home");
         return;
       }
       if (mode === "forgot") {
@@ -137,42 +119,6 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
       setError(readableAuthError(e));
     } finally {
       setBusy(false);
-    }
-  }
-
-  async function checkVerification() {
-    if (!auth.currentUser) {
-      setError("Phiên xác minh đã hết. Hãy đăng nhập lại.");
-      return;
-    }
-    setVerifyBusy(true);
-    setError("");
-    setNotice("");
-    try {
-      await reload(auth.currentUser);
-      if (auth.currentUser.emailVerified) {
-        nav("/app/home");
-      } else {
-        setError("Email chưa được xác minh. Hãy mở email và bấm liên kết xác minh.");
-      }
-    } catch (e) {
-      setError(readableAuthError(e));
-    } finally {
-      setVerifyBusy(false);
-    }
-  }
-
-  async function resendVerification() {
-    if (!auth.currentUser) return;
-    setVerifyBusy(true);
-    setError("");
-    try {
-      await sendEmailVerification(auth.currentUser);
-      setNotice("Đã gửi lại email xác minh. Hãy kiểm tra cả thư mục spam.");
-    } catch (e) {
-      setError(readableAuthError(e));
-    } finally {
-      setVerifyBusy(false);
     }
   }
 
@@ -208,24 +154,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           </div>
           <h1>{title}</h1>
           <p className="muted">
-            {mode === "verify"
-              ? "Xác minh email để bảo vệ tài khoản trước khi vào workspace."
-              : mode === "forgot"
-                ? "Nhập email để nhận liên kết đặt lại mật khẩu."
-                : "One calm place for every inbox."}
+            {mode === "forgot"
+              ? "Nhập email để nhận liên kết đặt lại mật khẩu."
+              : "One calm place for every inbox."}
           </p>
 
-          {mode === "verify" ? (
-            <div className="verify-actions">
-              <div className="verify-badge"><Mail size={20} /> <span>Verification link sent</span></div>
-              <button className="primary" type="button" disabled={verifyBusy} onClick={() => void checkVerification()}>
-                {verifyBusy ? "Checking…" : "I verified my email"}
-              </button>
-              <button className="secondary-button" type="button" disabled={verifyBusy} onClick={() => void resendVerification()}>
-                Gửi lại email xác minh
-              </button>
-            </div>
-          ) : mode === "forgot" && resetSent ? (
+          {mode === "forgot" && resetSent ? (
             <div className="reset-success">
               <div className="verify-badge"><Mail size={20} /> <span>Reset link sent</span></div>
               <p className="auth-notice">{notice}</p>
@@ -235,6 +169,12 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             </div>
           ) : (
             <form onSubmit={(event) => void submit(event)}>
+              {mode === "register" && (
+                <label>
+                  Họ và tên
+                  <input type="text" required minLength={2} maxLength={100} value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Nguyễn Văn An" autoComplete="name" />
+                </label>
+              )}
               <label>
                 Email address
                 <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" autoComplete="email" />
@@ -256,7 +196,6 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
                   <input type={showPassword ? "text" : "password"} required minLength={6} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" autoComplete="new-password" />
                 </label>
               )}
-              {mode === "register" && <p className="auth-hint">Email tạm thời không được phép. Hãy dùng email cá nhân hoặc công ty.</p>}
               {error && <p className="form-error">{error}</p>}
               {notice && <p className="auth-notice">{notice}</p>}
               <button className="primary" disabled={busy || Boolean(providerBusy)}>
@@ -264,8 +203,6 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               </button>
             </form>
           )}
-          {mode === "verify" && error && <p className="form-error">{error}</p>}
-          {mode === "verify" && notice && <p className="auth-notice">{notice}</p>}
           <div className="auth-links">
             {mode === "login" ? (
               <><Link to="/forgot-password">Forgot password?</Link><Link to="/register">Create account</Link></>

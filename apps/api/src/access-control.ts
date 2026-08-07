@@ -9,6 +9,29 @@ export function mayReadMailbox(input: {
   return input.ownerId === input.userId || (input.role === "premium" && input.shared);
 }
 
+export const SHARED_MAILBOX_SEARCH_PREFIX_LENGTH = 5;
+
+export function mayRevealMailboxAddress(input: {
+  emailAddress: string;
+  ownerId?: string;
+  userId: string;
+  shared: boolean;
+  search?: string;
+}) {
+  const search = input.search?.trim().toLowerCase() ?? "";
+  const emailAddress = input.emailAddress.toLowerCase();
+
+  if (input.ownerId === input.userId) {
+    return !search || emailAddress.includes(search);
+  }
+
+  return (
+    input.shared &&
+    search.length >= SHARED_MAILBOX_SEARCH_PREFIX_LENGTH &&
+    emailAddress.startsWith(search)
+  );
+}
+
 export function compositeMessageAccountId(messageId: string) {
   const parts = messageId.split(":");
   if (messageId.startsWith("gmail-imap-message:")) return parts[1] ? `gmail-imap:${parts[1]}` : undefined;

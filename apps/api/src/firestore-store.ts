@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 
 type CredentialKind = "oauth" | "gmail-app-password" | "microsoft-refresh-token" | "mailtm";
 export type StoredMailbox = { account: MailAccount; userId: string; credentialKind: CredentialKind; credential: Record<string, unknown> };
-export type StoredUser = { userId: string; email: string; lastSeenAt: string; role: "admin" | "premium" | "basic" };
+export type StoredUser = { userId: string; email: string; displayName?: string; lastSeenAt: string; role: "admin" | "premium" | "basic" };
 
 const rawKey = process.env.TOKEN_ENCRYPTION_KEY;
 const key = rawKey ? Buffer.from(rawKey, "base64") : undefined;
@@ -109,7 +109,7 @@ export async function loadUserProfiles(): Promise<StoredUser[]> {
   return snapshot.docs.flatMap((document) => {
     const value = document.data();
     return typeof value.email === "string" && typeof value.lastSeenAt === "string" && (value.role === "admin" || value.role === "premium" || value.role === "basic")
-      ? [{ userId: document.id, email: value.email, lastSeenAt: value.lastSeenAt, role: value.role }]
+      ? [{ userId: document.id, email: value.email, displayName: typeof value.displayName === "string" ? value.displayName : undefined, lastSeenAt: value.lastSeenAt, role: value.role }]
       : [];
   });
 }

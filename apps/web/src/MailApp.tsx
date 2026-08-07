@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
-import { signOut } from "firebase/auth";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  signOut,
+  updatePassword,
+  updateProfile,
+} from "firebase/auth";
 import DOMPurify from "dompurify";
 import type { MailAccount, MailMessage } from "@omnimail/shared";
 import { api } from "./api";
@@ -18,6 +24,7 @@ import {
   Github,
   Inbox,
   LayoutDashboard,
+  LockKeyhole,
   LogOut,
   Mail,
   MessageCircle,
@@ -34,6 +41,7 @@ import {
   UserRoundCheck,
   Star,
   Trash2,
+  X,
 } from "lucide-react";
 
 type UserRole = "admin" | "premium" | "basic";
@@ -91,6 +99,12 @@ function ProviderDot({ p }: { p: string }) {
     </span>
   );
 }
+function initials(value?: string) {
+  const parts = value?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (!parts.length) return "OM";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toUpperCase();
+}
 export function MailApp() {
   const qc = useQueryClient();
   const ui = useUI();
@@ -99,13 +113,21 @@ export function MailApp() {
   const navigate = useNavigate();
   const routePage = location.pathname.split("/")[2] || "home";
   const page = routePage === "accounts" ? "mailboxes" : routePage;
+  const [profileOpen, setProfileOpen] = useState(false);
   const { data: accounts = [] } = useQuery({
     queryKey: ["accounts"],
-    queryFn: api.accounts,
+    queryFn: () => api.accounts(),
   });
+  const mailboxSearch = ui.search.trim();
+  const { data: searchedAccounts = [] } = useQuery({
+    queryKey: ["mail-accounts-search", mailboxSearch],
+    queryFn: () => api.accounts(mailboxSearch),
+    enabled: page === "mailboxes" && Boolean(mailboxSearch),
+  });
+  const visibleAccounts = page === "mailboxes" && mailboxSearch ? searchedAccounts : accounts;
   const inboxAccounts = useMemo(
-    () => accounts.filter((account) => account.provider !== "temp"),
-    [accounts],
+    () => visibleAccounts.filter((account) => account.provider !== "temp"),
+    [visibleAccounts],
   );
   const providerGroups = useMemo(
     () =>
@@ -144,7 +166,7 @@ export function MailApp() {
     }
   }, [location.pathname, location.search, accounts, navigate, setUI, ui.selectedAccount, ui.selectedMessage]);
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: api.me });
-  const query = `?limit=10${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}${ui.search ? `&q=${encodeURIComponent(ui.search)}` : ""}`;
+  const query = `?limit=10${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
   const { data, isLoading, error, refetch: refetchMessages } = useQuery({
     queryKey: ["messages", query],
     queryFn: () => api.messages(query),
@@ -179,24 +201,23 @@ export function MailApp() {
   };
   if (page === "home")
     return (
-      <HomeLanding
-        onOpenInbox={() => navigate("/app/mailboxes")}
-        onSearchMail={(value) => {
-          const normalized = value.trim().toLowerCase();
-          const matchingAccount = inboxAccounts.find(
-            (account) => account.emailAddress.toLowerCase() === normalized,
-          );
-          setUI({
-            selectedAccount: matchingAccount?.id ?? ui.selectedAccount,
-            selectedMessage: null,
-            search: matchingAccount ? "" : value.trim(),
-          });
-          navigate("/app/mailboxes");
-        }}
-        onNavigate={(path) => navigate(path)}
-        onLogout={logout}
-        role={me?.role ?? "basic"}
-      />
+      <>
+        <HomeLanding
+          onOpenProfile={() => setProfileOpen(true)}
+          profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
+          onSearchMail={(value) => {
+            setUI({
+              selectedMessage: null,
+              search: value.trim(),
+            });
+            navigate("/app/mailboxes");
+          }}
+          onNavigate={(path) => navigate(path)}
+          onLogout={logout}
+          role={me?.role ?? "basic"}
+        />
+        {profileOpen && <ProfileModal me={me} onClose={() => setProfileOpen(false)} />}
+      </>
     );
   return (
     <div className="shell">
@@ -216,10 +237,12 @@ export function MailApp() {
         />
         <div className="sidebar-bottom">
           <div className="user user-card">
-            <span>{(auth.currentUser?.email ?? "OM").slice(0, 2).toUpperCase()}</span>
+            <button className="user-avatar" onClick={() => setProfileOpen(true)} title="Quản lý hồ sơ" aria-label="Quản lý hồ sơ">
+              {initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
+            </button>
             <div>
-              <strong>{auth.currentUser?.displayName ?? "OmniMail user"}</strong>
-              <small>{auth.currentUser?.email ?? "Signed in"}</small>
+              <strong>{me?.displayName ?? auth.currentUser?.displayName ?? "OmniMail user"}</strong>
+              <small>{me?.email ?? auth.currentUser?.email ?? "Signed in"}</small>
             </div>
             <button className="logout-button" onClick={logout} title="Sign out" aria-label="Sign out">
               <LogOut size={16} />
@@ -238,7 +261,8 @@ export function MailApp() {
                   <input
                     value={ui.search}
                     onChange={(e) => ui.set({ search: e.target.value })}
-                    placeholder="Search mail or message"
+                    placeholder="Search by email address"
+                    aria-label="Search mailbox by email address"
                   />
                 </div>
                 {providerGroups.map((group) => {
@@ -268,7 +292,14 @@ export function MailApp() {
                     </section>
                   );
                 })}
-                {!inboxAccounts.length && <Empty title="No connected inbox" description="Connect Gmail or Microsoft to start." />}
+                {!inboxAccounts.length && (
+                  <Empty
+                    title={mailboxSearch ? "No mailbox matches this email" : "No connected inbox"}
+                    description={mailboxSearch
+                      ? "Shared mailboxes appear only after you enter at least the correct first 5 characters."
+                      : "Connect Gmail or Microsoft to start."}
+                  />
+                )}
               </aside>
               <section className="mailbox-message-column">
               <div className="list-head">
@@ -332,7 +363,7 @@ export function MailApp() {
                   <MessageRow
                     key={m.id}
                     m={m}
-                    account={accounts.find((a) => a.id === m.accountId)}
+                    account={visibleAccounts.find((a) => a.id === m.accountId)}
                     selected={selected?.id === m.id}
                     onSelect={() => ui.set({ selectedMessage: m.id })}
                   />
@@ -346,7 +377,7 @@ export function MailApp() {
             {selected ? (
               <MessageDetail
                 m={selected}
-                account={accounts.find((a) => a.id === selected.accountId)}
+                account={visibleAccounts.find((a) => a.id === selected.accountId)}
                 onClose={() => ui.set({ selectedMessage: null })}
               />
             ) : (
@@ -377,17 +408,125 @@ export function MailApp() {
           removingAccount={removeAccount.isPending ? removeAccount.variables : undefined}
         />
       )}
+      {profileOpen && <ProfileModal me={me} onClose={() => setProfileOpen(false)} />}
+    </div>
+  );
+}
+type CurrentUserProfile = Awaited<ReturnType<typeof api.me>>;
+
+function ProfileModal({
+  me,
+  onClose,
+}: {
+  me?: CurrentUserProfile;
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const user = auth.currentUser;
+  const [fullName, setFullName] = useState(me?.displayName ?? user?.displayName ?? "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState<"profile" | "password" | "">("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const passwordAccount = user?.providerData.some((provider) => provider.providerId === "password") ?? false;
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  const saveName = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!user) return;
+    const normalized = fullName.trim();
+    if (normalized.length < 2) {
+      setError("Họ và tên cần ít nhất 2 ký tự.");
+      return;
+    }
+    setBusy("profile"); setError(""); setNotice("");
+    try {
+      await updateProfile(user, { displayName: normalized });
+      await user.getIdToken(true);
+      await api.updateMe(normalized);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["me"] }),
+        qc.invalidateQueries({ queryKey: ["admin-overview"] }),
+      ]);
+      setNotice("Đã cập nhật thông tin cá nhân.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Không thể cập nhật hồ sơ.");
+    } finally { setBusy(""); }
+  };
+
+  const changePassword = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!user?.email || !passwordAccount) return;
+    if (newPassword.length < 8) { setError("Mật khẩu mới cần ít nhất 8 ký tự."); return; }
+    if (newPassword !== confirmPassword) { setError("Mật khẩu xác nhận không khớp."); return; }
+    setBusy("password"); setError(""); setNotice("");
+    try {
+      await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, currentPassword));
+      await updatePassword(user, newPassword);
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+      setNotice("Đã đổi mật khẩu thành công.");
+    } catch (cause) {
+      const code = (cause as { code?: string })?.code;
+      setError(code === "auth/invalid-credential" ? "Mật khẩu hiện tại không đúng." : cause instanceof Error ? cause.message : "Không thể đổi mật khẩu.");
+    } finally { setBusy(""); }
+  };
+
+  return (
+    <div className="modal-backdrop profile-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+        <header>
+          <div className="profile-heading">
+            <span className="profile-avatar-large">{initials(fullName || me?.email || user?.email || undefined)}</span>
+            <div><span className="eyebrow">Personal profile</span><h2 id="profile-title">Thông tin cá nhân</h2><p>Quản lý tên hiển thị và bảo mật tài khoản.</p></div>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Đóng hồ sơ"><X /></button>
+        </header>
+        <div className="profile-content">
+          <div className="profile-summary">
+            <div><small>Email đăng nhập</small><strong>{me?.email ?? user?.email ?? "—"}</strong></div>
+            <div><small>Vai trò</small><strong className={`role-badge ${me?.role ?? "basic"}`}>{me?.role ?? "basic"}</strong></div>
+          </div>
+          {(error || notice) && <div className={error ? "profile-message error" : "profile-message success"}>{error || notice}</div>}
+          <form className="profile-form" onSubmit={(event) => void saveName(event)}>
+            <div className="profile-section-title"><UserRoundCheck /><span><strong>Hồ sơ</strong><small>Tên này được hiển thị trong OmniMail và trang quản trị.</small></span></div>
+            <label>Họ và tên<input required minLength={2} maxLength={100} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" /></label>
+            <button className="primary" disabled={busy !== ""} type="submit">{busy === "profile" ? "Đang lưu…" : "Lưu thông tin"}</button>
+          </form>
+          <form className="profile-form password-form" onSubmit={(event) => void changePassword(event)}>
+            <div className="profile-section-title"><LockKeyhole /><span><strong>Mật khẩu</strong><small>{passwordAccount ? "Xác nhận mật khẩu hiện tại trước khi đổi." : "Tài khoản mạng xã hội không sử dụng mật khẩu OmniMail."}</small></span></div>
+            {passwordAccount && <>
+              <label>Mật khẩu hiện tại<input type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" /></label>
+              <div className="profile-password-grid">
+                <label>Mật khẩu mới<input type="password" required minLength={8} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" /></label>
+                <label>Xác nhận mật khẩu<input type="password" required minLength={8} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" /></label>
+              </div>
+              <button className="primary" disabled={busy !== ""} type="submit">{busy === "password" ? "Đang đổi…" : "Đổi mật khẩu"}</button>
+            </>}
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
 function HomeLanding({
-  onOpenInbox,
+  onOpenProfile,
+  profileInitials,
   onSearchMail,
   onNavigate,
   onLogout,
   role,
 }: {
-  onOpenInbox: () => void;
+  onOpenProfile: () => void;
+  profileInitials: string;
   onSearchMail: (value: string) => void;
   onNavigate: (path: string) => void;
   onLogout: () => void;
@@ -398,7 +537,7 @@ function HomeLanding({
       <header className="poster-nav">
         <button className="poster-brand" onClick={() => window.scrollTo({ top: 0 })}><img src="/logo.jpg" alt="OmniMail logo" /><strong>OmniMail</strong><span>.</span></button>
         <AppNav page="home" role={role} onNavigate={onNavigate} />
-        <div><button className="poster-icon" onClick={onLogout}><LogOut size={17} /></button><button className="poster-account" onClick={onOpenInbox}>OM</button></div>
+        <div><button className="poster-icon" onClick={onLogout}><LogOut size={17} /></button><button className="poster-account" onClick={onOpenProfile} title="Quản lý hồ sơ" aria-label="Quản lý hồ sơ">{profileInitials}</button></div>
       </header>
       <main className="poster-stage">
         <section className="poster-copy">
@@ -406,7 +545,7 @@ function HomeLanding({
           <h1><span>Every inbox.</span><br /><em>One signal.</em></h1>
           <p>Gmail, Outlook and temporary mail in one focused workspace.</p>
           <form className="poster-mail-search" onSubmit={(event) => { event.preventDefault(); const input = event.currentTarget.elements.namedItem("mailQuery"); onSearchMail(input instanceof HTMLInputElement ? input.value : ""); }}>
-            <input name="mailQuery" placeholder="Enter email, sender or subject" aria-label="Search mailbox" />
+            <input name="mailQuery" inputMode="email" placeholder="Enter mailbox email address" aria-label="Search mailbox by email address" />
             <button className="poster-copy-action" type="submit"><span>Open mailbox</span><b>→</b></button>
           </form>
         </section>
@@ -628,7 +767,7 @@ function PageContent({
               <div><span className="eyebrow">Cấp quyền mail</span><h2>Cho Premium user xem mailbox</h2></div>
               <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)}>
                 <option value="">Chọn Premium user</option>
-                {(admin?.directory ?? []).filter((user) => user.role === "premium").map((user) => <option key={user.userId} value={user.userId}>{user.email}</option>)}
+                {(admin?.directory ?? []).filter((user) => user.role === "premium").map((user) => <option key={user.userId} value={user.userId}>{user.displayName ? `${user.displayName} — ${user.email}` : user.email}</option>)}
               </select>
             </header>
             {grantUserId ? (
@@ -643,13 +782,13 @@ function PageContent({
           </section>
           <section className="admin-directory">
             <div className="admin-directory-tools">
-              <label><Search /><input value={adminSearch} onChange={(event)=>setAdminSearch(event.target.value)} placeholder="Tìm email hoặc user ID" /></label>
+              <label><Search /><input value={adminSearch} onChange={(event)=>setAdminSearch(event.target.value)} placeholder="Tìm họ tên, email hoặc user ID" /></label>
               <div>{(["all","admin","premium","basic"] as const).map((filter)=><button key={filter} className={adminRoleFilter===filter?"active":""} onClick={()=>setAdminRoleFilter(filter)}>{filter === "all" ? "Tất cả" : filter}</button>)}</div>
             </div>
-            <header><span>User & role</span><span>Trạng thái quyền</span><span>Last active</span></header>
-            {(admin?.directory ?? []).filter((user)=>adminRoleFilter==="all"||user.role===adminRoleFilter).filter((user)=>`${user.email} ${user.userId}`.toLowerCase().includes(adminSearch.trim().toLowerCase())).map((user) => (
+            <header><span>Họ tên, email & role</span><span>Trạng thái quyền</span><span>Last active</span></header>
+            {(admin?.directory ?? []).filter((user)=>adminRoleFilter==="all"||user.role===adminRoleFilter).filter((user)=>`${user.displayName ?? ""} ${user.email} ${user.userId}`.toLowerCase().includes(adminSearch.trim().toLowerCase())).map((user) => (
               <article key={user.userId}>
-                <div><span className={`role-badge ${user.role}`}>{user.role}</span><strong>{user.email}</strong><small>{user.userId}</small>{user.role!=="admin"&&<select value={user.role} disabled={updateRole.isPending} onChange={e=>updateRole.mutate({userId:user.userId,nextRole:e.target.value as "basic"|"premium"})}><option value="basic">Chuyển thành Basic</option><option value="premium">Nâng lên Premium</option></select>}</div>
+                <div><span className={`role-badge ${user.role}`}>{user.role}</span><strong>{user.displayName ?? "Chưa cập nhật họ tên"}</strong><small>{user.email}</small><small>{user.userId}</small>{user.role!=="admin"&&<select value={user.role} disabled={updateRole.isPending} onChange={e=>updateRole.mutate({userId:user.userId,nextRole:e.target.value as "basic"|"premium"})}><option value="basic">Chuyển thành Basic</option><option value="premium">Nâng lên Premium</option></select>}</div>
                 <div className="admin-mailboxes"><strong>{user.role === "premium" ? `${user.sharedAccountIds.length} mailbox` : user.role === "basic" ? "Không có quyền chia sẻ" : "Toàn quyền hệ thống"}</strong><small>{user.role === "premium" ? "Đã được Admin cấp quyền xem" : user.role === "basic" ? "Nâng Premium để nhận mailbox" : "Administrator"}</small></div>
                 <time>{user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : "—"}</time>
               </article>
@@ -686,9 +825,7 @@ function MailboxManager({
     const term = search.trim().toLowerCase();
     if (!term) return accounts;
     return accounts.filter((account) =>
-      [account.emailAddress, account.displayName, account.provider]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(term)),
+      account.emailAddress.toLowerCase().includes(term),
     );
   }, [accounts, search]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -707,7 +844,7 @@ function MailboxManager({
         <button className="primary" onClick={openConnect}><Plus /> Connect account</button>
       </div>
       <div className="mailbox-toolbar">
-        <label><Search /><input value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search email, provider, or name" /></label>
+        <label><Search /><input value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search by email address" /></label>
         <span>{filtered.length} of {accounts.length} accounts</span>
       </div>
       <section className="mailbox-directory">

@@ -15,7 +15,7 @@ import { gmail } from "./gmail.js";
 import { gmailAppPasswords } from "./gmail-app-password.js";
 import { microsoftGraph } from "./microsoft-graph.js";
 import { hiddenMessages } from "./hidden-messages.js";
-import { compositeMessageAccountId, mayReadMailbox } from "./access-control.js";
+import { compositeMessageAccountId, mayReadMailbox, mayRevealMailboxAddress } from "./access-control.js";
 import { oauth, removeOAuthCredential } from "./oauth.js";
 import { deleteMailbox, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveUserProfile } from "./firestore-store.js";
 import {
@@ -32,7 +32,7 @@ import {
   userDirectory,
   type AuthRequest,
 } from "./auth.js";
-import { isTemporaryEmail, normalizeRegistrationEmail } from "./auth-policy.js";
+import { normalizeRegistrationEmail } from "./auth-policy.js";
 const identity = (q: express.Request) => q as unknown as AuthRequest;
 const legacyMicrosoftSeedEnabled = process.env.ENABLE_LEGACY_MICROSOFT_SEED === "true";
 const ownsSeed = (q: express.Request) =>
@@ -115,10 +115,7 @@ app.post("/api/auth/registration-policy", (q, r) => {
   const parsed = z.object({ email: z.string().trim().email() }).safeParse(q.body);
   if (!parsed.success) return fail(r, 400, "INVALID_EMAIL", "Nhập một địa chỉ email hợp lệ");
   const email = normalizeRegistrationEmail(parsed.data.email);
-  if (isTemporaryEmail(email)) {
-    return fail(r, 400, "TEMP_EMAIL_NOT_ALLOWED", "Không thể đăng ký bằng email tạm thời");
-  }
-  return ok(r, { allowed: true });
+  return ok(r, { allowed: true, email });
 });
 app.use(authenticate);
 const ok = (res: express.Response, data: unknown) =>
@@ -133,8 +130,20 @@ const fail = (
     .status(status)
     .json({ success: false, error: { code, message, details: {} } });
 app.get("/api/me", (q, r) =>
-  ok(r, { userId: identity(q).userId, role: identity(q).role }),
+  ok(r, { userId: identity(q).userId, email: identity(q).email, displayName: identity(q).displayName, role: identity(q).role }),
 );
+app.patch("/api/me", async (q, r) => {
+  const parsed = z.object({ displayName: z.string().trim().min(2).max(100) }).safeParse(q.body);
+  if (!parsed.success) return fail(r, 400, "VALIDATION_ERROR", "Họ và tên cần từ 2 đến 100 ký tự");
+  const current = userDirectory.get(identity(q).userId);
+  const email = identity(q).email ?? current?.email;
+  if (!email) return fail(r, 400, "EMAIL_REQUIRED", "Tài khoản chưa có địa chỉ email");
+  if (authConfigured) await getAuth().updateUser(identity(q).userId, { displayName: parsed.data.displayName });
+  const profile = { email, displayName: parsed.data.displayName, lastSeenAt: new Date().toISOString(), role: identity(q).role };
+  userDirectory.set(identity(q).userId, profile);
+  await saveUserProfile({ userId: identity(q).userId, ...profile });
+  return ok(r, { userId: identity(q).userId, ...profile });
+});
 app.get("/api/admin/overview", requireAdmin, (_q, r) =>
   ok(r, {
     users: Math.max(1, userDirectory.size),
@@ -143,6 +152,7 @@ app.get("/api/admin/overview", requireAdmin, (_q, r) =>
     directory: [...new Set([...userDirectory.keys(), ...accountOwners.values()])].map((userId) => ({
       userId,
       email: userDirectory.get(userId)?.email ?? "Unknown user",
+      displayName: userDirectory.get(userId)?.displayName,
       lastSeenAt: userDirectory.get(userId)?.lastSeenAt,
       role: userDirectory.get(userId)?.role ?? 'basic',
       accounts: accounts.filter((account) => accountOwners.get(account.id) === userId),
@@ -177,13 +187,9 @@ app.get('/api/mailbox-shares', (q, r) => {
         return { userId, email: user?.email ?? 'Unknown user', role: user?.role ?? 'basic' };
       }),
     }));
-  const sharedWithMe = accounts
-    .filter((account) => accountOwners.get(account.id) !== ownerId && isMailboxShared(account.id, ownerId) && canReadAccount(q, account.id))
-    .map((account) => ({
-      account,
-      ownerEmail: userDirectory.get(accountOwners.get(account.id) ?? '')?.email ?? 'Unknown user',
-    }));
-  return ok(r, { mailboxes, sharedWithMe });
+  // Shared mailbox identities are intentionally discoverable only through the
+  // guarded email-prefix search on /api/mail-accounts.
+  return ok(r, { mailboxes, sharedWithMe: [] });
 });
 app.put('/api/mailbox-shares', async (q, r) => {
   const parsed = z.object({ accountId: z.string().min(1), email: z.string().trim().email(), allowed: z.boolean() }).safeParse(q.body);
@@ -201,6 +207,7 @@ app.put('/api/mailbox-shares', async (q, r) => {
   return ok(r, { accountId: parsed.data.accountId, userId: targetUserId, email: targetProfile.email, allowed: parsed.data.allowed });
 });
 app.get("/api/mail-accounts", (_q, r) => {
+  const search = String(_q.query.q ?? "").trim();
   const live =
     legacyMicrosoftSeedEnabled && process.env.MICROSOFT_SEED_REFRESH_TOKEN && ownsSeed(_q)
       ? [
@@ -219,9 +226,19 @@ app.get("/api/mail-accounts", (_q, r) => {
   const connected = accounts.filter(
     (a) =>
       !["gmail-1", "outlook-1", "temp-1", "microsoft-live"].includes(a.id) &&
-      canReadAccount(_q,a.id),
+      canReadAccount(_q,a.id) &&
+      mayRevealMailboxAddress({
+        emailAddress: a.emailAddress,
+        ownerId: accountOwners.get(a.id),
+        userId: identity(_q).userId,
+        shared: isMailboxShared(a.id, identity(_q).userId),
+        search,
+      }),
   );
-  ok(r, [...live, ...connected]);
+  const visibleLive = search
+    ? live.filter((account) => account.emailAddress.toLowerCase().includes(search.toLowerCase()))
+    : live;
+  ok(r, [...visibleLive, ...connected]);
 });
 app.get("/api/mail-accounts/:id", (q, r) => {
   const a = accounts.find((x) => x.id === q.params.id);

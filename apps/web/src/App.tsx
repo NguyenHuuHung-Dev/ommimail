@@ -28,7 +28,6 @@ export function App() {
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
       <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
-      <Route path="/verify-email" element={<AuthPage mode="verify" />} />
       <Route path="/app/*" element={<Guard />} />
       <Route path="*" element={<Navigate to="/app/home" replace />} />
     </Routes>

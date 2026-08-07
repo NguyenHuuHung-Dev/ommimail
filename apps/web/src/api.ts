@@ -27,7 +27,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
-  accounts: () => request<MailAccount[]>("/api/mail-accounts"),
+  accounts: (search = "") =>
+    request<MailAccount[]>(`/api/mail-accounts${search ? `?q=${encodeURIComponent(search)}` : ""}`),
   messages: (q = "") => request<PaginatedMessages>(`/api/messages${q}`),
   message: (id: string) =>
     request<MailMessage>(`/api/messages/${encodeURIComponent(id)}`),
@@ -46,13 +47,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(p),
     }),
-  me: () => request<{ userId: string; role: "basic" | "premium" | "admin" }>("/api/me"),
+  me: () => request<{ userId: string; email?: string; displayName?: string; role: "basic" | "premium" | "admin" }>("/api/me"),
+  updateMe: (displayName: string) => request<{ userId: string; email: string; displayName: string; role: "basic" | "premium" | "admin" }>("/api/me", { method: "PATCH", body: JSON.stringify({ displayName }) }),
   admin: () =>
     request<{
       users: number;
       connectedAccounts: number;
       serviceStatus: string;
-      directory: { userId: string; email: string; role:"basic"|"premium"|"admin"; lastSeenAt?: string; accounts: MailAccount[]; sharedAccountIds:string[] }[];
+      directory: { userId: string; email: string; displayName?: string; role:"basic"|"premium"|"admin"; lastSeenAt?: string; accounts: MailAccount[]; sharedAccountIds:string[] }[];
     }>("/api/admin/overview"),
   setUserRole:(userId:string,role:"basic"|"premium")=>request(`/api/admin/users/${encodeURIComponent(userId)}/role`,{method:"PATCH",body:JSON.stringify({role})}),
   setMailboxShare:(accountId:string,userId:string,allowed:boolean)=>request('/api/admin/mailbox-shares',{method:'PUT',body:JSON.stringify({accountId,userId,allowed})}),

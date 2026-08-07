@@ -25,8 +25,8 @@ services:
         value: "1"
       - key: ADMIN_EMAILS
         value: ommimail@gmail.com
-        - key: WEB_APP_URL
-          value: https://omnimail.io.vn
+      - key: WEB_APP_URL
+        value: https://omnimail.io.vn
       - key: SOCKET_CORS_ORIGIN
         value: https://omnimail.io.vn,https://ommimail.web.app
       - key: OAUTH_STATE_SECRET

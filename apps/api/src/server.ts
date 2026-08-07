@@ -57,7 +57,7 @@ io.on("connection", (socket) => socket.join(`user:${String(socket.data.userId)}`
 async function restorePersistentState() {
   if (!persistentStoreEnabled) return;
   const [mailboxes, shares, users, hidden] = await Promise.all([loadMailboxes(), loadMailboxShares(), loadUserProfiles(), loadHiddenMessageIds()]);
-  for (const user of users) userDirectory.set(user.userId, { email: user.email, lastSeenAt: user.lastSeenAt, role: user.role });
+  for (const user of users) userDirectory.set(user.userId, { email: user.email, displayName: user.displayName, lastSeenAt: user.lastSeenAt, role: user.role });
   for (const saved of mailboxes) {
     if (!accounts.some((account) => account.id === saved.account.id)) accounts.push(saved.account);
     accountOwners.set(saved.account.id, saved.userId);
