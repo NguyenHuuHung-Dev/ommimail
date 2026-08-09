@@ -436,7 +436,7 @@
   }
 
   .message-row {
-    grid-template-columns: 16px 18px 32px minmax(0, 1fr);
+    grid-template-columns: 18px 32px minmax(0, 1fr);
     gap: 7px;
     padding: 12px 10px;
   }
@@ -504,27 +504,6 @@
 
   .attachment {
     max-width: 100%;
-  }
-
-  .reply-actions {
-    flex-wrap: wrap;
-    margin: 22px 0;
-  }
-
-  .reply-actions button {
-    flex: 1 1 130px;
-    justify-content: center;
-  }
-
-  .compose-modal {
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    max-width: none;
-    height: min(78dvh, 600px);
-    border-left: 0;
-    border-right: 0;
-    border-radius: 12px 12px 0 0;
   }
 
   .page-pane,
@@ -921,7 +900,7 @@
   }
 
   .message-row {
-    grid-template-columns: 15px 16px 28px minmax(0, 1fr);
+    grid-template-columns: 16px 28px minmax(0, 1fr);
     gap: 5px;
     padding-inline: 8px;
   }
@@ -980,10 +959,9 @@
   overflow-x: hidden;
 }
 .message-row {
-  grid-template-columns: 18px 22px 38px minmax(0,1fr)!important;
+  grid-template-columns: 22px 38px minmax(0,1fr)!important;
   align-items: start;
 }
-.message-row > input { margin-top: 5px; }
 .message-row > .star { margin-top: 2px; }
 .message-row > .avatar { margin-top: 1px; }
 .message-main { min-width: 0; }
@@ -1380,7 +1358,6 @@
 .shell.dark .account-line,
 .shell.dark .to { color: #c4afb8!important; }
 .shell.dark .attachment,
-.shell.dark .reply-actions button,
 .shell.dark .note { background: #1e181c!important; border-color: #59434d!important; color: #f8eef2!important; }
 .shell.dark .attachment button,
 .shell.dark .note button { background: #121416!important; border-color: #715360!important; color: #fff!important; }

@@ -9,12 +9,12 @@ import {
   updateProfile,
 } from "firebase/auth";
 import DOMPurify from "dompurify";
-import type { MailAccount, MailMessage } from "@omnimail/shared";
-import { api } from "./api";
+import { io } from "socket.io-client";
+import type { MailAccount, MailMessage, MailSyncJob } from "@omnimail/shared";
+import { api, apiBaseUrl } from "./api";
 import { auth } from "./firebase";
 import { useUI } from "./store";
 import {
-  Archive,
   ArrowLeft,
   AtSign,
   ChevronDown,
@@ -28,16 +28,12 @@ import {
   LoaderCircle,
   LogOut,
   Mail,
-  MessageCircle,
   MoreHorizontal,
   Instagram,
   Paperclip,
-  PenLine,
   Plus,
   RefreshCw,
-  Reply,
   Search,
-  Send,
   ShieldCheck,
   UserRoundCheck,
   Star,
@@ -124,6 +120,23 @@ export function MailApp() {
   const routePage = location.pathname.split("/")[2] || "home";
   const page = routePage === "accounts" ? "mailboxes" : routePage;
   const [profileOpen, setProfileOpen] = useState(false);
+  useEffect(() => {
+    let active = true;
+    let socket: ReturnType<typeof io> | undefined;
+    void auth.currentUser?.getIdToken().then((token) => {
+      if (!active) return;
+      socket = io(apiBaseUrl, { auth: { token }, transports: ["websocket", "polling"] });
+      socket.on("mailbox:sync", (job: MailSyncJob) => {
+        void qc.invalidateQueries({ queryKey: ["accounts"] });
+        if (job.status === "completed" || job.status === "failed")
+          void qc.invalidateQueries({ queryKey: ["messages"] });
+      });
+    });
+    return () => {
+      active = false;
+      socket?.disconnect();
+    };
+  }, [qc]);
   const { data: accounts = [], isPending: accountsPending, error: accountsError, refetch: refetchAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => api.accounts(),
@@ -205,6 +218,22 @@ export function MailApp() {
         ui.set({ selectedAccount: null, selectedMessage: null });
       qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.removeQueries({ queryKey: ["messages"] });
+    },
+  });
+  const syncAccount = useMutation({
+    mutationFn: async (accountId: string) => {
+      const { job } = await api.syncAccount(accountId);
+      let current = job;
+      for (let attempt = 0; attempt < 80 && (current.status === "queued" || current.status === "running"); attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 750));
+        current = await api.syncJob(job.id);
+      }
+      if (current.status === "failed") throw new Error(current.error ?? "Mailbox sync failed");
+      return current;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["messages"] });
     },
   });
   const logout = async () => {
@@ -343,8 +372,16 @@ export function MailApp() {
               </div>
               <div className="mailbox-head-actions">
                 <button
+                  className="account-sync"
+                  disabled={!currentAccount || currentAccount.access === "shared" || syncAccount.isPending}
+                  title={currentAccount?.access === "shared" ? "Shared mailboxes are synchronized by their owner" : "Sync latest messages"}
+                  onClick={() => currentAccount && syncAccount.mutate(currentAccount.id)}
+                >
+                  <RefreshCw className={syncAccount.isPending ? "spin" : ""} />
+                </button>
+                <button
                   className="account-disconnect"
-                  disabled={!currentAccount || currentAccount.id === "microsoft-live" || removeAccount.isPending}
+                  disabled={!currentAccount || currentAccount.access === "shared" || currentAccount.id === "microsoft-live" || removeAccount.isPending}
                   title="Disconnect current mailbox"
                   onClick={() => {
                     if (currentAccount && window.confirm(`Disconnect ${currentAccount.emailAddress} from OmniMail? Emails in the original mailbox will not be deleted.`))
@@ -396,7 +433,7 @@ export function MailApp() {
                 onClose={() => ui.set({ selectedMessage: null })}
               />
             ) : (
-              <Empty title="Select a conversation" />
+              <Empty title="Select a message" />
             )}
           </section>
         </>
@@ -568,7 +605,7 @@ function HomeLanding({
           <img src="/homepage.png" alt="OmniMail character" />
         </figure>
         <span className="poster-side-label">READ · REFRESH · REPEAT</span>
-        <div className="poster-socials"><a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a><a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a><a href="https://m.me" target="_blank" rel="noreferrer" aria-label="Messenger"><MessageCircle /></a></div>
+        <div className="poster-socials"><a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a><a href="https://github.com/NguyenHuuHung-Dev" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a></div>
       </main>
     </div>
   );
@@ -713,7 +750,6 @@ function PageContent({
     );
   if (page === "mail-sharing") {
     const shareMailboxes = sharing?.mailboxes ?? [];
-    const sharedWithMe = sharing?.sharedWithMe ?? [];
     const activeShareId = shareAccountId || shareMailboxes[0]?.account.id || "";
     const activeShare = shareMailboxes.find((item) => item.account.id === activeShareId) ?? shareMailboxes[0];
     return (
@@ -723,7 +759,7 @@ function PageContent({
           <aside className="share-mailbox-panel"><div className="share-section-label"><span>Your mailboxes</span><small>{shareMailboxes.length}</small></div><div className="share-mailbox-list">{shareMailboxes.map(({ account, recipients }) => <button key={account.id} className={activeShare?.account.id === account.id ? "active" : ""} onClick={() => { setShareAccountId(account.id); shareMailbox.reset(); }}><ProviderDot p={account.provider} /><span><strong>{account.emailAddress}</strong><small>{recipients.length ? `${recipients.length} người đang có quyền` : "Chưa chia sẻ"}</small></span><ChevronDown /></button>)}</div></aside>
           <div className="share-main-panel">{activeShare && <><div className="share-selected-mailbox"><ProviderDot p={activeShare.account.provider} /><div><span className="eyebrow">Selected mailbox</span><h2>{activeShare.account.emailAddress}</h2></div></div><form className="share-recipient-form" onSubmit={(event) => { event.preventDefault(); const email = shareEmail.trim(); if (email) shareMailbox.mutate({ accountId: activeShare.account.id, email, allowed: true }); }}><label htmlFor="share-recipient-email"><span>Share with</span><input id="share-recipient-email" type="email" value={shareEmail} onChange={(event) => setShareEmail(event.target.value)} placeholder="name@gmail.com" autoComplete="email" /><small>Người nhận phải có tài khoản Premium trên OmniMail.</small></label><button className="primary" type="submit" disabled={!shareEmail.trim() || shareMailbox.isPending}><UserRoundCheck />{shareMailbox.isPending ? "Đang chia sẻ…" : "Share mailbox"}</button></form><div className="share-recipients"><div className="share-section-heading"><div><span className="eyebrow">People with access</span><h2>Danh sách đã chia sẻ</h2></div><span>{activeShare.recipients.length}</span></div>{activeShare.recipients.length ? activeShare.recipients.map((recipient) => <div className="share-recipient-row" key={recipient.userId}><span className="share-recipient-avatar">{recipient.email.slice(0, 1).toUpperCase()}</span><span><strong>{recipient.email}</strong><small>{recipient.role === "premium" ? "Premium user" : recipient.role}</small></span><button type="button" onClick={() => shareMailbox.mutate({ accountId: activeShare.account.id, email: recipient.email, allowed: false })} disabled={shareMailbox.isPending}>Thu hồi</button></div>) : <div className="share-no-recipients"><UserRoundCheck /><p>Chưa có ai được chia sẻ mailbox này.</p></div>}</div></>}</div>
         </section>}
-        <section className="shared-with-me-panel"><div className="share-section-heading"><div><span className="eyebrow">Shared with me</span><h2>Mailbox được chia sẻ cho tôi</h2></div><span>{sharedWithMe.length}</span></div>{sharedWithMe.length ? <div className="shared-with-me-list">{sharedWithMe.map(({ account, ownerEmail }) => <article key={account.id}><ProviderDot p={account.provider} /><div><strong>{account.emailAddress}</strong><small>Chia sẻ bởi {ownerEmail}</small></div><button onClick={() => navigateMailbox(account.id)}>Xem mailbox</button></article>)}</div> : <p className="shared-with-me-empty">Chưa có mailbox nào được chia sẻ cho bạn.</p>}</section>
+        <section className="shared-with-me-panel"><div className="share-section-heading"><div><span className="eyebrow">Private discovery</span><h2>Mailbox được chia sẻ cho tôi</h2></div><span>Bảo mật</span></div><p className="shared-with-me-empty">Danh sách mailbox được chia sẻ không hiển thị công khai. Vào Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ để mở mailbox đã được cấp quyền.</p></section>
       </main>
     );
   }
@@ -738,7 +774,7 @@ function PageContent({
           </section>
         </main>
       );
-    if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Mail được Admin chia sẻ</h1><p>Chỉ những hộp thư Admin đã cấp phép mới xuất hiện tại đây.</p></div></div><section className="shared-mail-grid">{accounts.length?accounts.map(account=><article key={account.id}><ProviderDot p={account.provider}/><div><strong>{account.emailAddress}</strong><small>{account.displayName??"Shared mailbox"}</small></div><button onClick={()=>navigateMailbox(account.id)}>Xem tin nhắn</button></article>):<Empty title="Admin chưa chia sẻ hộp thư nào"/>}</section></main>;
+    if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Truy cập mailbox được chia sẻ</h1><p>Để chống dò địa chỉ, OmniMail không liệt kê mailbox được Admin cấp. Hãy mở Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ mailbox.</p></div></div><section className="shared-mail-grid"><article><ShieldCheck/><div><strong>Private mailbox discovery</strong><small>Quyền xem vẫn được kiểm tra ở API sau khi địa chỉ khớp.</small></div></article></section></main>;
     return (
       <main className="page-pane dashboard-page admin-dashboard-page">
         <div className="page-header">
@@ -902,15 +938,11 @@ function MessageRow({
       className={`message-row ${!m.isRead ? "unread" : ""} ${selected ? "selected" : ""}`}
       onClick={onSelect}
     >
-      <input type="checkbox" onClick={(e) => e.stopPropagation()} />
-      <button
+      <span
         className={`star ${m.isStarred ? "on" : ""}`}
-        disabled
-        title="Read-only mailbox"
-        onClick={(e) => e.stopPropagation()}
       >
         <Star />
-      </button>
+      </span>
       <div className="avatar">
         {(m.from.name ?? m.from.address).slice(0, 2).toUpperCase()}
       </div>
@@ -959,19 +991,8 @@ function MessageDetail({
         <button className="mobile-menu" onClick={onClose}>
           <ArrowLeft />
         </button>
-        <button disabled title="Read-only mailbox">
-          <Archive />
-        </button>
-        <button disabled title="Read-only mailbox">
-          <Mail />
-        </button>
         <span />
-        <button disabled title="Read-only mailbox">
-          <Star className={m.isStarred ? "fill" : ""} />
-        </button>
-        <button>
-          <MoreHorizontal />
-        </button>
+        <small>READ ONLY</small>
       </div>
       <div className="detail-scroll">
         <div className="subject-row">
@@ -1020,7 +1041,7 @@ function MessageDetail({
           <ShieldCheck />
           <div>
             <strong>Read-only mailbox</strong>
-            <p>Sending, replying, forwarding and deleting are disabled.</p>
+            <p>OmniMail observes provider messages and never sends email.</p>
           </div>
         </div>
       </div>

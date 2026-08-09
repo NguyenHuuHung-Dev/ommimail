@@ -9,7 +9,6 @@ type GraphMessage = {
   subject?: string;
   bodyPreview?: string;
   isRead?: boolean;
-  isDraft?: boolean;
   hasAttachments?: boolean;
   receivedDateTime?: string;
   from?: GraphRecipient;
@@ -125,14 +124,12 @@ function dto(message: GraphMessage, connectionId: string): MailMessage {
       : undefined,
     isRead: Boolean(message.isRead),
     isStarred: message.flag?.flagStatus === "flagged",
-    isDraft: Boolean(message.isDraft),
-    isSent: false,
     hasAttachments: Boolean(message.hasAttachments),
     receivedAt: new Date(message.receivedDateTime ?? Date.now()).toISOString(),
   };
 }
 
-const messageFields = "id,subject,bodyPreview,isRead,isDraft,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
+const messageFields = "id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
 
 export const microsoftTokens = {
   async connect(input: Credential) {

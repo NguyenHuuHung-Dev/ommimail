@@ -33,6 +33,13 @@ import {
   type AuthRequest,
 } from "./auth.js";
 import { normalizeRegistrationEmail } from "./auth-policy.js";
+import {
+  clearMailboxSyncState,
+  enqueueMailboxSync,
+  getCachedMailboxMessages,
+  getMailboxSyncJob,
+  syncRuntimeInfo,
+} from "./sync-jobs.js";
 const identity = (q: express.Request) => q as unknown as AuthRequest;
 const legacyMicrosoftSeedEnabled = process.env.ENABLE_LEGACY_MICROSOFT_SEED === "true";
 const ownsSeed = (q: express.Request) =>
@@ -101,6 +108,7 @@ app.get("/api/health", (_q, r) =>
       status: "ok",
       mode: process.env.DEMO_MODE === "false" ? "production" : "demo",
       persistentMailboxStorage: persistentStoreEnabled,
+      synchronization: syncRuntimeInfo,
       providers: {
         googleOAuth: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_REDIRECT_URI),
         microsoftOAuth: Boolean(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET && process.env.MICROSOFT_REDIRECT_URI),
@@ -174,7 +182,9 @@ app.put('/api/admin/mailbox-shares',requireAdmin,async(q,r)=>{
   const parsed=z.object({accountId:z.string().min(1),userId:z.string().min(1),allowed:z.boolean()}).safeParse(q.body);if(!parsed.success)return fail(r,400,'VALIDATION_ERROR','Invalid sharing request');
   if(accountOwners.get(parsed.data.accountId)!==identity(q).userId)return fail(r,403,'FORBIDDEN','Admin can only share their own mailbox');
   if(userDirectory.get(parsed.data.userId)?.role!=='premium')return fail(r,400,'PREMIUM_REQUIRED','Only Premium users can receive mailbox access');
-  setMailboxShare(parsed.data.accountId,parsed.data.userId,parsed.data.allowed);await saveMailboxShare(parsed.data.accountId,parsed.data.userId,parsed.data.allowed);return ok(r,parsed.data);
+  setMailboxShare(parsed.data.accountId,parsed.data.userId,parsed.data.allowed);await saveMailboxShare(parsed.data.accountId,parsed.data.userId,parsed.data.allowed);
+  if(parsed.data.allowed)enqueueMailboxSync(parsed.data.accountId,identity(q).userId,{priority:true});
+  return ok(r,parsed.data);
 });
 app.get('/api/mailbox-shares', (q, r) => {
   const ownerId = identity(q).userId;
@@ -204,6 +214,7 @@ app.put('/api/mailbox-shares', async (q, r) => {
   if (targetProfile.role !== 'premium') return fail(r, 400, 'PREMIUM_REQUIRED', 'Người nhận cần tài khoản Premium để xem mailbox được chia sẻ');
   setMailboxShare(parsed.data.accountId, targetUserId, parsed.data.allowed);
   await saveMailboxShare(parsed.data.accountId, targetUserId, parsed.data.allowed);
+  if (parsed.data.allowed) enqueueMailboxSync(parsed.data.accountId, ownerId, { priority: true });
   return ok(r, { accountId: parsed.data.accountId, userId: targetUserId, email: targetProfile.email, allowed: parsed.data.allowed });
 });
 app.get("/api/mail-accounts", (_q, r) => {
@@ -238,7 +249,13 @@ app.get("/api/mail-accounts", (_q, r) => {
   const visibleLive = search
     ? live.filter((account) => account.emailAddress.toLowerCase().includes(search.toLowerCase()))
     : live;
-  ok(r, [...visibleLive, ...connected]);
+  ok(r, [
+    ...visibleLive.map((account) => ({ ...account, access: "owner" as const })),
+    ...connected.map((account) => ({
+      ...account,
+      access: accountOwners.get(account.id) === identity(_q).userId ? "owner" as const : "shared" as const,
+    })),
+  ]);
 });
 app.get("/api/mail-accounts/:id", (q, r) => {
   const a = accounts.find((x) => x.id === q.params.id);
@@ -284,29 +301,35 @@ app.delete("/api/mail-accounts/:id", async (q, r) => {
   accounts.splice(i, 1);
   accountOwners.delete(q.params.id);
   mailboxShares.delete(q.params.id);
+  clearMailboxSyncState(q.params.id);
   await deleteMailbox(q.params.id);
   return ok(r, { deleted: true });
 });
-app.post("/api/mail-accounts/:id/sync", async (q, r) => {
+app.post("/api/mail-accounts/:id/sync", (q, r) => {
   const a = accounts.find((x) => x.id === q.params.id);
   if (!a) return fail(r, 404, "NOT_FOUND", "Account not found");
   if(accountOwners.get(a.id)!==identity(q).userId)return fail(r,403,"READ_ONLY_SHARE","Shared mailboxes are read only");
-  a.status = "syncing";
-  setTimeout(() => {
-    a.status = "connected";
-    a.lastSyncedAt = new Date().toISOString();
-  }, 500);
-  return ok(r, { jobId: crypto.randomUUID(), status: "queued" });
+  return ok(r, { job: enqueueMailboxSync(a.id, identity(q).userId, { priority: true }) });
 });
-app.post("/api/mail-accounts/sync-all", (q, r) =>
-  ok(r, {
+app.post("/api/mail-accounts/sync-all", (q, r) => {
+  const ownerId = identity(q).userId;
+  return ok(r, {
     jobs: accounts
-      .filter((account) => accountOwners.get(account.id) === identity(q).userId)
-      .map((account) => ({ accountId: account.id, status: "queued" })),
-  }),
-);
+      .filter((account) => accountOwners.get(account.id) === ownerId)
+      .map((account) => enqueueMailboxSync(account.id, ownerId)),
+  });
+});
+app.get("/api/sync-jobs/:id", (q, r) => {
+  const job = getMailboxSyncJob(q.params.id, identity(q).userId);
+  return job ? ok(r, job) : fail(r, 404, "SYNC_JOB_NOT_FOUND", "Sync job was not found");
+});
 app.get("/api/messages", async (q, r) => {
   const account = String(q.query.accountId ?? "");
+  const cached = account && canReadAccount(q, account) ? getCachedMailboxMessages(account) : undefined;
+  if (cached) {
+    const list = filterLoadedMessages(q, cached);
+    return ok(r, { items: list, total: list.length, synced: true });
+  }
   if (account.startsWith("gmail-imap:")) {
     if (!canReadAccount(q,account)) return fail(r, 403, "FORBIDDEN", "Mailbox access was not granted");
     try { const list = await gmailAppPasswords.list(account.slice("gmail-imap:".length)); return ok(r, { items: list, total: list.length }); }
@@ -593,6 +616,7 @@ app.post("/api/temp-mail/accounts", async (q, r) => {
     accounts.push(a);
     accountOwners.set(a.id, identity(q).userId);
     await saveMailbox(a, identity(q).userId, "mailtm", mailTm.credential(remote.id)!);
+    enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
     return ok(r, { ...a, providerAccountId: remote.id });
   } catch (e) {
     return fail(
@@ -637,6 +661,7 @@ app.post("/api/mail-accounts/microsoft/refresh-token", async (q, r) => {
     accounts.push(a);
     accountOwners.set(a.id, identity(q).userId);
     await saveMailbox(a, identity(q).userId, "microsoft-refresh-token", { email: parsed.data.email, clientId: parsed.data.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "", refreshToken: parsed.data.refreshToken });
+    enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
     return ok(r, a);
   } catch (e) {
     return fail(
@@ -653,7 +678,7 @@ app.post("/api/mail-accounts/google/app-password", async (q, r) => {
   try {
     const connected = await gmailAppPasswords.connect(parsed.data);
     const account = { id: `gmail-imap:${connected.id}`, provider: "gmail" as const, emailAddress: connected.email, displayName: "Gmail (App Password)", status: "connected" as const, unreadCount: 0, lastSyncedAt: new Date().toISOString(), color: "#ef4444" };
-    accounts.push(account); accountOwners.set(account.id, identity(q).userId); await saveMailbox(account, identity(q).userId, "gmail-app-password", { email: parsed.data.email, appPassword: parsed.data.appPassword }); return ok(r, account);
+    accounts.push(account); accountOwners.set(account.id, identity(q).userId); await saveMailbox(account, identity(q).userId, "gmail-app-password", { email: parsed.data.email, appPassword: parsed.data.appPassword }); enqueueMailboxSync(account.id, identity(q).userId, { priority: true }); return ok(r, account);
   } catch { return fail(r, 401, "GMAIL_AUTH_FAILED", "Google từ chối đăng nhập. Hãy kiểm tra đúng email tạo mã, bật xác minh 2 bước và tạo App Password mới (không dùng mật khẩu Gmail hoặc mã OTP)"); }
 });
 app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
@@ -694,6 +719,7 @@ app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
       accounts.push(a);
       accountOwners.set(a.id, identity(q).userId);
       await saveMailbox(a, identity(q).userId, "microsoft-refresh-token", { email: input.email, clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "", refreshToken: input.refreshToken });
+      enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
       results.push({ email: input.email, success: true });
     } catch (e) {
       results.push({
@@ -736,6 +762,7 @@ app.delete("/api/temp-mail/accounts/:id", async (q, r) => {
   }
   if (i >= 0) accounts.splice(i, 1);
   accountOwners.delete(q.params.id);
+  clearMailboxSyncState(q.params.id);
   await deleteMailbox(q.params.id);
   return ok(r, { deleted: i >= 0 });
 });

@@ -80,7 +80,6 @@ type GraphMessage = {
   subject?: string;
   bodyPreview?: string;
   isRead?: boolean;
-  isDraft?: boolean;
   hasAttachments?: boolean;
   receivedDateTime?: string;
   from?: GraphRecipient;
@@ -112,8 +111,6 @@ function dto(m: GraphMessage, accountId: string): MailMessage {
     textBody: m.body?.content,
     isRead: Boolean(m.isRead),
     isStarred: m.flag?.flagStatus === "flagged",
-    isDraft: Boolean(m.isDraft),
-    isSent: false,
     hasAttachments: Boolean(m.hasAttachments),
     receivedAt: new Date(m.receivedDateTime ?? Date.now()).toISOString(),
   };
@@ -124,7 +121,7 @@ export const microsoftGraph = {
     try {
       const data = await call<{ value?: GraphMessage[] }>(
         accountId,
-        "/mailFolders/inbox/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,isDraft,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
+        "/mailFolders/inbox/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
       );
       return (data.value ?? []).map((m) => dto(m, accountId));
     } catch (e) {
@@ -132,7 +129,7 @@ export const microsoftGraph = {
       // Fallback to /messages if /mailFolders/inbox/messages fails
       const data = await call<{ value?: GraphMessage[] }>(
         accountId,
-        "/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,isDraft,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
+        "/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
       );
       return (data.value ?? []).map((m) => dto(m, accountId));
     }

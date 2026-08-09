@@ -34,9 +34,12 @@ The project is a production-oriented TypeScript monorepo. It includes a responsi
 - **One reading workflow** for Gmail, Outlook and disposable inboxes.
 - **Ten-message focus** keeps the inbox useful without loading an entire mailbox.
 - **Lazy message bodies** reduce provider calls and initial response size.
+- **Real mailbox synchronization** runs provider reads through a bounded background queue and exposes job status.
 - **Secure mailbox sharing** lets Premium users receive read-only access.
 - **Clear access levels** separate Basic, Premium and Admin capabilities.
 - **Mobile-first editorial UI** works across phone, tablet and desktop layouts.
+
+Shared mailbox addresses are never listed globally. A recipient must search with the correct first five characters before a shared mailbox is revealed. Microsoft refresh-token connections remain available for managed Premium sharing workflows; share-triggered sync jobs are prioritized to warm the mailbox cache immediately.
 
 ## Try the demo
 
@@ -56,6 +59,7 @@ Open **[omnimail.io.vn](https://omnimail.io.vn)** and create an account with ema
 | --- | --- |
 | Unified inbox | Gmail, Microsoft/Outlook and temp-mail accounts behind shared DTOs |
 | Mail reading | Latest 10 messages, lazy body loading, provider refresh and automatic polling |
+| Synchronization | Provider-backed jobs, short-lived message cache, scheduled refresh and live Socket.IO updates |
 | Account connection | Google OAuth, Microsoft OAuth, Gmail app password and Microsoft refresh-token import |
 | Temporary email | mail.tm domain discovery, address creation, copy, refresh and deletion |
 | Authentication | Firebase email/password plus Google, Facebook and Microsoft sign-in |
@@ -78,6 +82,10 @@ flowchart LR
   A --> G[Gmail API / IMAP]
   A --> M[Microsoft Graph]
   A --> T[mail.tm]
+  A --> Q[Bounded sync queue]
+  Q --> G
+  Q --> M
+  Q --> T
 ```
 
 ### Request flow
@@ -88,6 +96,7 @@ flowchart LR
 4. A provider adapter fetches the requested data.
 5. Provider-specific responses are normalized into shared `MailAccount` and `MailMessage` types.
 6. Credentials remain server-side and are encrypted before Firestore persistence.
+7. Manual, scheduled and share-triggered sync jobs refresh provider data and notify authorized viewers live.
 
 ## Tech stack
 
@@ -114,7 +123,7 @@ omnimail/
 │   ├── shared/              # Provider-independent DTOs and contracts
 │   └── ui/                  # Reusable UI package surface
 ├── firebase/                # Firestore and Storage security rules
-├── docker-compose.yml       # Local API/Redis baseline
+├── docker-compose.yml       # Local API and future shared-queue baseline
 ├── firebase.json            # Hosting, rules and emulator configuration
 └── render.yaml              # Production API blueprint
 ```
@@ -193,6 +202,8 @@ MICROSOFT_REDIRECT_URI=http://localhost:4000/api/oauth/microsoft/callback
 OAUTH_STATE_SECRET=
 TOKEN_ENCRYPTION_KEY=
 TOKEN_ENCRYPTION_KEY_VERSION=1
+SYNC_CONCURRENCY=2
+SYNC_INTERVAL_MS=300000
 ```
 
 Generate a 32-byte encryption key:
@@ -265,6 +276,8 @@ Temporary addresses use mail.tm's account-token flow. No provider API key is req
 | `GET` | `/api/mail-accounts` | Owned or explicitly shared mailboxes |
 | `GET` | `/api/messages` | Latest normalized messages for an accessible mailbox |
 | `GET` | `/api/messages/:id` | Lazy-load one complete message |
+| `POST` | `/api/mail-accounts/:id/sync` | Queue a real provider synchronization job |
+| `GET` | `/api/sync-jobs/:id` | Read synchronization progress and result |
 | `POST` | `/api/oauth/:provider/start` | Start a user-bound OAuth flow |
 | `GET/PUT` | `/api/mailbox-shares` | View, grant or revoke mailbox access |
 | `GET/POST` | `/api/temp-mail/*` | Discover domains and manage disposable inboxes |
@@ -322,14 +335,14 @@ docker run --env-file apps/api/.env -p 4000:4000 omnimail-api
 
 - The UI intentionally shows the ten newest messages rather than a complete mailbox archive.
 - The API currently targets a single runtime instance; horizontal scaling needs a shared synchronization layer.
-- Redis is included as a deployment baseline but background jobs are not yet wired to BullMQ.
+- Synchronization jobs run in a bounded in-process queue; horizontal scaling will require a shared queue.
 - Render's free instance can cold-start after inactivity.
-- Rich compose/send workflows and attachment uploads are planned beyond the current read-focused experience.
+- OmniMail is intentionally read-only and does not implement compose, reply, forward or email sending.
 
-Planned improvements include provider webhooks, background synchronization, shared caching, stronger end-to-end coverage and an always-on API deployment.
+Planned improvements include provider webhooks, a durable shared queue, stronger end-to-end coverage and an always-on API deployment.
 
 ---
 
 <div align="center">
-  Built as a focused, secure and provider-independent way to read every inbox.
+  Built by <a href="https://github.com/NguyenHuuHung-Dev">NguyenHuuHung-Dev</a> as a focused, secure and provider-independent way to read every inbox.
 </div>

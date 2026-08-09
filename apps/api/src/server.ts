@@ -10,10 +10,11 @@ import { gmailAppPasswords } from "./gmail-app-password.js";
 import { microsoftTokens } from "./microsoft-token-accounts.js";
 import { mailTm } from "./mail-tm.js";
 import { restoreOAuthCredential } from "./oauth.js";
-import { restoreMailboxShare } from "./sharing.js";
+import { mailboxShares, restoreMailboxShare } from "./sharing.js";
 import { hiddenMessages } from "./hidden-messages.js";
 import { authConfigured, userDirectory } from "./auth.js";
 import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
+import { onMailboxSyncUpdate, startMailboxSyncScheduler } from "./sync-jobs.js";
 
 const port = Number(process.env.PORT ?? 4000);
 const server = createServer(app);
@@ -54,6 +55,20 @@ io.use(async (socket, next) => {
   }
 });
 io.on("connection", (socket) => socket.join(`user:${String(socket.data.userId)}`));
+onMailboxSyncUpdate((job) => {
+  const viewers = new Set([job.ownerId, ...(mailboxShares.get(job.accountId) ?? [])]);
+  for (const userId of viewers) io.to(`user:${userId}`).emit("mailbox:sync", {
+    id: job.id,
+    accountId: job.accountId,
+    status: job.status,
+    requestedAt: job.requestedAt,
+    startedAt: job.startedAt,
+    completedAt: job.completedAt,
+    messageCount: job.messageCount,
+    unreadCount: job.unreadCount,
+    error: job.error,
+  });
+});
 async function restorePersistentState() {
   if (!persistentStoreEnabled) return;
   const [mailboxes, shares, users, hidden] = await Promise.all([loadMailboxes(), loadMailboxShares(), loadUserProfiles(), loadHiddenMessageIds()]);
@@ -75,6 +90,7 @@ void restorePersistentState()
   .then(() => {
     server.listen(port, () => {
       console.log(`OmniMail API ready at http://localhost:${port}`);
+      startMailboxSyncScheduler();
       if (process.env.ENABLE_LEGACY_MICROSOFT_SEED === "true" && process.env.MICROSOFT_SEED_REFRESH_TOKEN)
         void listMicrosoftInbox(30).catch(() => undefined);
     });

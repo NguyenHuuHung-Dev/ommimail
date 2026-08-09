@@ -96,8 +96,6 @@ export async function listMicrosoftInbox(limit = 30): Promise<MailMessage[]> {
         preview: "Open this message to load its content securely.",
         isRead: m.flags?.has("\\Seen") ?? false,
         isStarred: m.flags?.has("\\Flagged") ?? false,
-        isDraft: false,
-        isSent: false,
         hasAttachments: Boolean(
           m.bodyStructure?.childNodes?.some(
             (n) => n.disposition === "attachment",
@@ -154,8 +152,6 @@ export async function getMicrosoftMessage(id: string): Promise<MailMessage> {
           typeof parsed.html === "string" ? parsed.html : undefined,
         isRead: m.flags?.has("\\Seen") ?? false,
         isStarred: m.flags?.has("\\Flagged") ?? false,
-        isDraft: false,
-        isSent: false,
         hasAttachments: parsed.attachments.length > 0,
         attachments: parsed.attachments.map((a, i) => ({
           id: `${uid}:${i}`,

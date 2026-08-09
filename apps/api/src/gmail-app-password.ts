@@ -17,7 +17,7 @@ const dto = (id: string, m: any, textBody?: string): MailMessage => ({
   from: address(m.envelope?.from?.[0]), to: (m.envelope?.to ?? []).map(address), cc: (m.envelope?.cc ?? []).map(address),
   subject: m.envelope?.subject ?? "(No subject)", preview: textBody?.slice(0, 180) ?? "Open to load content.", textBody,
   isRead: m.flags?.has("\\Seen") ?? false, isStarred: m.flags?.has("\\Flagged") ?? false,
-  isDraft: false, isSent: false, hasAttachments: Boolean(m.bodyStructure?.childNodes?.some((n: any) => n.disposition === "attachment")),
+  hasAttachments: Boolean(m.bodyStructure?.childNodes?.some((n: any) => n.disposition === "attachment")),
   receivedAt: new Date(m.internalDate ?? m.envelope?.date ?? Date.now()).toISOString(),
 });
 export const gmailAppPasswords = {

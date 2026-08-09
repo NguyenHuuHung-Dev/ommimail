@@ -91,8 +91,6 @@ function dto(m: Gmail, accountId: string): MailMessage {
     textBody: text(m.payload) || undefined,
     isRead: !m.labelIds?.includes("UNREAD"),
     isStarred: Boolean(m.labelIds?.includes("STARRED")),
-    isDraft: Boolean(m.labelIds?.includes("DRAFT")),
-    isSent: Boolean(m.labelIds?.includes("SENT")),
     hasAttachments: Boolean(m.payload?.parts?.some((p) => p.filename)),
     receivedAt: new Date(Number(m.internalDate ?? Date.now())).toISOString(),
   };

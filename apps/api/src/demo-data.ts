@@ -10,9 +10,8 @@ const people = [
 const subjects = ['Q3 product review — notes & next steps','Your weekly project digest','Design handoff for the mobile experience','Security alert: new sign-in','Coffee next Thursday?','Deployment completed successfully','Updated contract and timeline','A calmer way to organize your work'];
 export const messages: MailMessage[] = Array.from({length:32},(_,i)=>({
  id:`msg-${i+1}`,accountId:accounts[i%3].id,providerMessageId:`provider-${i+1}`,providerThreadId:`thread-${Math.floor(i/2)}`,
- folderIds:[i===7?'sent':'inbox'],labelIds:i%5===0?['Important']:i%7===0?['Finance']:[],from:{name:people[i%people.length][0],address:people[i%people.length][1]},to:[{name:'Alex Morgan',address:accounts[i%3].emailAddress}],cc:[],subject:subjects[i%subjects.length],
+ folderIds:['inbox'],labelIds:i%5===0?['Important']:i%7===0?['Finance']:[],from:{name:people[i%people.length][0],address:people[i%people.length][1]},to:[{name:'Alex Morgan',address:accounts[i%3].emailAddress}],cc:[],subject:subjects[i%subjects.length],
  preview:['Sharing the final notes from our conversation. I highlighted the decisions that need your attention.','Here is a concise summary of everything that changed this week, plus a look ahead.','The files are ready for review. Let me know if anything needs another pass.'][i%3],
  textBody:`Hi Alex,\n\n${['Sharing the final notes from our conversation. I highlighted the decisions that need your attention.','Here is a concise summary of everything that changed this week, plus a look ahead.','The files are ready for review. Let me know if anything needs another pass.'][i%3]}\n\nThe team made excellent progress and the remaining work is clearly scoped. Please take a look when you have a moment.\n\nBest,\n${people[i%people.length][0]}`,
- isRead:i>11||i%4===0,isStarred:i%6===0,isDraft:i===8,isSent:i===7,hasAttachments:i%5===0,attachments:i%5===0?[{id:`att-${i}`,filename:'Project brief.pdf',mimeType:'application/pdf',size:2480000}]:[],receivedAt:new Date(Date.now()-i*36e5*5).toISOString()
+ isRead:i>11||i%4===0,isStarred:i%6===0,hasAttachments:i%5===0,attachments:i%5===0?[{id:`att-${i}`,filename:'Project brief.pdf',mimeType:'application/pdf',size:2480000}]:[],receivedAt:new Date(Date.now()-i*36e5*5).toISOString()
 }));
-

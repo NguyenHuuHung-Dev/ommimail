@@ -1,13 +1,14 @@
 import type {
   MailAccount,
   MailMessage,
+  MailSyncJob,
   PaginatedMessages,
 } from "@omnimail/shared";
 import { auth } from "./firebase";
-const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
+export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await auth.currentUser?.getIdToken();
-  const r = await fetch(`${base}${path}`, {
+  const r = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -27,6 +28,7 @@ export const api = {
       status: string;
       mode: string;
       persistentMailboxStorage: boolean;
+      synchronization: { mode: "in-process"; concurrency: number; intervalMs: number };
       providers: { googleOAuth: boolean; microsoftOAuth: boolean; tempMail: boolean };
     }>("/api/health"),
   registrationPolicy: (email: string) =>
@@ -44,7 +46,9 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(p),
     }),
-  syncAll: () => request("/api/mail-accounts/sync-all", { method: "POST" }),
+  syncAccount: (id: string) => request<{ job: MailSyncJob }>(`/api/mail-accounts/${encodeURIComponent(id)}/sync`, { method: "POST" }),
+  syncAll: () => request<{ jobs: MailSyncJob[] }>("/api/mail-accounts/sync-all", { method: "POST" }),
+  syncJob: (id: string) => request<MailSyncJob>(`/api/sync-jobs/${encodeURIComponent(id)}`),
   tempDomains: () =>
     request<{ id: string; name: string; ready: boolean }[]>(
       "/api/temp-mail/domains",

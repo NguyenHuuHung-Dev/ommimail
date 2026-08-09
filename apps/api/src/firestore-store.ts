@@ -49,6 +49,16 @@ export async function updateMailboxCredential(accountId: string, credential: Rec
   });
 }
 
+export async function updateMailboxSyncState(account: MailAccount) {
+  if (!persistentStoreEnabled || !getApps().length) return;
+  await db().collection("mailAccounts").doc(account.id).set({
+    status: account.status,
+    unreadCount: account.unreadCount,
+    lastSyncedAt: account.lastSyncedAt ?? null,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
 export async function deleteMailbox(accountId: string) {
   if (!persistentStoreEnabled || !getApps().length) return;
   const reference = db().collection("mailAccounts").doc(accountId);

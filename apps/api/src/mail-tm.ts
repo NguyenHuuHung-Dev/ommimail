@@ -16,7 +16,7 @@ async function request<T>(path:string,init?:RequestInit,token?:string):Promise<T
   return response.json() as Promise<T>;
 }
 function collection<T>(value:unknown):T[]{if(Array.isArray(value))return value as T[];if(value&&typeof value==='object'){const object=value as Record<string,unknown>;const list=object['hydra:member']??object.member;if(Array.isArray(list))return list as T[]}return []}
-function dto(m:Summary,accountId:string):MailMessage{return {id:`mailtm:${accountId}:${m.id}`,accountId:`mailtm:${accountId}`,providerMessageId:m.id,providerThreadId:m.msgid,folderIds:['inbox'],labelIds:[],from:m.from,to:m.to,cc:[],subject:m.subject||'(No subject)',preview:m.intro??'',isRead:m.seen,isStarred:false,isDraft:false,isSent:false,hasAttachments:m.hasAttachments,receivedAt:m.createdAt}}
+function dto(m:Summary,accountId:string):MailMessage{return {id:`mailtm:${accountId}:${m.id}`,accountId:`mailtm:${accountId}`,providerMessageId:m.id,providerThreadId:m.msgid,folderIds:['inbox'],labelIds:[],from:m.from,to:m.to,cc:[],subject:m.subject||'(No subject)',preview:m.intro??'',isRead:m.seen,isStarred:false,hasAttachments:m.hasAttachments,receivedAt:m.createdAt}}
 
 export const mailTm={
   async domains(){return collection<Domain>(await request<unknown>('/domains')).filter(d=>d.isActive).map(d=>({id:d.id,name:d.domain,ready:true}))},
