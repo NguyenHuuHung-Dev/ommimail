@@ -120,6 +120,7 @@ export function MailApp() {
   const routePage = location.pathname.split("/")[2] || "home";
   const page = routePage === "accounts" ? "mailboxes" : routePage;
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mailFolder, setMailFolder] = useState<"main" | "spam">("main");
   useEffect(() => {
     let active = true;
     let socket: ReturnType<typeof io> | undefined;
@@ -192,7 +193,7 @@ export function MailApp() {
   const servicePending = accountsPending || mePending;
   const serviceError = Boolean(accountsError || meError);
   const retryService = () => { void refetchAccounts(); void refetchMe(); };
-  const query = `?limit=10${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
+  const query = `?limit=100${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
   const { data, isLoading, error, refetch: refetchMessages } = useQuery({
     queryKey: ["messages", query],
     queryFn: () => api.messages(query),
@@ -201,8 +202,16 @@ export function MailApp() {
       page === "mailboxes" && selectedInboxAccount ? 10_000 : false,
     refetchIntervalInBackground: false,
   });
-  const messages = data?.items ?? [];
+  const allMessages = data?.items ?? [];
+  const spamMessages = allMessages.filter((message) => message.folderIds.includes("spam"));
+  const mainMessages = allMessages.filter((message) => !message.folderIds.includes("spam"));
+  const messages = mailFolder === "spam" ? spamMessages : mainMessages;
   const currentAccount = inboxAccounts.find((a) => a.id === selectedInboxAccount);
+
+  useEffect(() => {
+    setMailFolder("main");
+    setUI({ selectedMessage: null });
+  }, [selectedInboxAccount, setUI]);
   const selectedSummary = ui.selectedMessage
     ? messages.find((m) => m.id === ui.selectedMessage)
     : undefined;
@@ -276,7 +285,7 @@ export function MailApp() {
         <AppNav
           page={page}
           role={me?.role ?? "basic"}
-          unreadCount={messages.filter((m) => !m.isRead).length}
+          unreadCount={allMessages.filter((m) => !m.isRead).length}
           onNavigate={(path) => { ui.set({ sidebar: false }); navigate(path); }}
         />
         <div className="sidebar-bottom">
@@ -403,23 +412,42 @@ export function MailApp() {
                     <button onClick={() => navigate("/app/connect")}>Reconnect account</button>
                   </div>
                 </div>
-              ) : messages.length === 0 ? (
-                <Empty
-                  title="Your inbox is clear"
-                  description={currentAccount?.provider === "microsoft"
-                    ? "This is the Microsoft / Outlook inbox for this sign-in. It is separate from Gmail, even when both use the same Gmail address."
-                    : "Gmail returned no messages from the Inbox folder."}
-                />
               ) : (
-                messages.map((m) => (
-                  <MessageRow
-                    key={m.id}
-                    m={m}
-                    account={visibleAccounts.find((a) => a.id === m.accountId)}
-                    selected={selected?.id === m.id}
-                    onSelect={() => ui.set({ selectedMessage: m.id })}
-                  />
-                ))
+                <>
+                  <button
+                    className={`spam-folder-row ${mailFolder === "spam" ? "open" : ""}`}
+                    type="button"
+                    onClick={() => {
+                      setMailFolder(mailFolder === "spam" ? "main" : "spam");
+                      ui.set({ selectedMessage: null });
+                    }}
+                  >
+                    {mailFolder === "spam" ? <ArrowLeft /> : <Mail />}
+                    <span>
+                      <strong>Spam</strong>
+                      <small>{mailFolder === "spam" ? "Quay lại hộp thư chính" : "Chỉ mở khi bạn cần kiểm tra"}</small>
+                    </span>
+                    <b>{spamMessages.length}</b>
+                  </button>
+                  {messages.length === 0 ? (
+                    <Empty
+                      title={mailFolder === "spam" ? "Không có thư Spam" : "Your inbox is clear"}
+                      description={mailFolder === "spam"
+                        ? "Các thư bị nhà cung cấp đánh dấu Spam hoặc Junk sẽ xuất hiện riêng tại đây."
+                        : currentAccount?.provider === "microsoft"
+                          ? "This is the Microsoft / Outlook inbox for this sign-in. It is separate from Gmail, even when both use the same Gmail address."
+                          : "Gmail returned no messages from the Inbox folder."}
+                    />
+                  ) : messages.map((m) => (
+                    <MessageRow
+                      key={m.id}
+                      m={m}
+                      account={visibleAccounts.find((a) => a.id === m.accountId)}
+                      selected={selected?.id === m.id}
+                      onSelect={() => ui.set({ selectedMessage: m.id })}
+                    />
+                  ))}
+                </>
               )}
               </div>
               </section>

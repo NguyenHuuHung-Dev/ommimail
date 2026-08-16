@@ -15,6 +15,7 @@ import { gmail } from "./gmail.js";
 import { gmailAppPasswords } from "./gmail-app-password.js";
 import { microsoftGraph } from "./microsoft-graph.js";
 import { hiddenMessages } from "./hidden-messages.js";
+import { MailboxAlreadyConnectedError, reserveMailboxConnection } from "./connection-policy.js";
 import { compositeMessageAccountId, mayReadMailbox, mayRevealMailboxAddress } from "./access-control.js";
 import { oauth, removeOAuthCredential } from "./oauth.js";
 import { deleteMailbox, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveUserProfile } from "./firestore-store.js";
@@ -69,7 +70,7 @@ const filterLoadedMessages = (q: express.Request, list: typeof messages) => {
       filtered = filtered.filter((message) => `${message.subject} ${message.preview} ${message.from.name ?? ""} ${message.from.address}`.toLowerCase().includes(search));
     }
   }
-  const limit = Math.min(Math.max(Number(q.query.limit) || 10, 1), 10);
+  const limit = Math.min(Math.max(Number(q.query.limit) || 30, 1), 100);
   return filtered.slice(0, limit);
 };
 export const app = express();
@@ -407,7 +408,7 @@ app.get("/api/messages", async (q, r) => {
   ) {
     try {
       if (q.query.refresh === "1") clearMicrosoftCache();
-      const list = filterLoadedMessages(q, await listMicrosoftInbox(10));
+      const list = filterLoadedMessages(q, await listMicrosoftInbox(20));
       return ok(r, { items: list, total: list.length });
     } catch (e) {
       return fail(
@@ -645,7 +646,9 @@ app.post("/api/mail-accounts/microsoft/refresh-token", async (q, r) => {
       "VALIDATION_ERROR",
       "Email, Client ID or refresh token is invalid",
     );
+  let releaseConnection: (() => void) | undefined;
   try {
+    releaseConnection = reserveMailboxConnection(parsed.data.email, identity(q).userId);
     const remote = await microsoftTokens.connect({
       email: parsed.data.email,
       clientId: parsed.data.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "",
@@ -667,22 +670,32 @@ app.post("/api/mail-accounts/microsoft/refresh-token", async (q, r) => {
     enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
     return ok(r, a);
   } catch (e) {
+    if (e instanceof MailboxAlreadyConnectedError)
+      return fail(r, 409, e.code, e.message);
     return fail(
       r,
       401,
       "MICROSOFT_TOKEN_INVALID",
       e instanceof Error ? e.message : "Microsoft connection failed",
     );
+  } finally {
+    releaseConnection?.();
   }
 });
 app.post("/api/mail-accounts/google/app-password", async (q, r) => {
   const parsed = z.object({ email: z.string().trim().email(), appPassword: z.string().transform((value)=>value.replace(/\s/g," ").replace(/ /g,"")).refine((value)=>value.length===16) }).safeParse(q.body);
   if (!parsed.success) return fail(r, 400, "INVALID_INPUT", "Mã App Password phải có đúng 16 ký tự, không tính dấu cách");
+  let releaseConnection: (() => void) | undefined;
   try {
+    releaseConnection = reserveMailboxConnection(parsed.data.email, identity(q).userId);
     const connected = await gmailAppPasswords.connect(parsed.data);
     const account = { id: `gmail-imap:${connected.id}`, provider: "gmail" as const, emailAddress: connected.email, displayName: "Gmail (App Password)", status: "connected" as const, unreadCount: 0, lastSyncedAt: new Date().toISOString(), color: "#ef4444" };
     accounts.push(account); accountOwners.set(account.id, identity(q).userId); await saveMailbox(account, identity(q).userId, "gmail-app-password", { email: parsed.data.email, appPassword: parsed.data.appPassword }); enqueueMailboxSync(account.id, identity(q).userId, { priority: true }); return ok(r, account);
-  } catch { return fail(r, 401, "GMAIL_AUTH_FAILED", "Google từ chối đăng nhập. Hãy kiểm tra đúng email tạo mã, bật xác minh 2 bước và tạo App Password mới (không dùng mật khẩu Gmail hoặc mã OTP)"); }
+  } catch (error) {
+    if (error instanceof MailboxAlreadyConnectedError)
+      return fail(r, 409, error.code, error.message);
+    return fail(r, 401, "GMAIL_AUTH_FAILED", "Google từ chối đăng nhập. Hãy kiểm tra đúng email tạo mã, bật xác minh 2 bước và tạo App Password mới (không dùng mật khẩu Gmail hoặc mã OTP)");
+  } finally { releaseConnection?.(); }
 });
 app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
   const item = z.object({
@@ -719,7 +732,9 @@ app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
       }
       const input = valid.data;
       let connectionId: string | undefined;
+      let releaseConnection: (() => void) | undefined;
       try {
+        releaseConnection = reserveMailboxConnection(input.email, identity(q).userId);
         const remote = await microsoftTokens.connect({
           email: input.email,
           clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "",
@@ -749,6 +764,8 @@ app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
           success: false,
           error: e instanceof Error ? e.message : "Connection failed",
         };
+      } finally {
+        releaseConnection?.();
       }
     }
   };

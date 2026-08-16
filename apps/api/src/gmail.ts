@@ -1,6 +1,6 @@
 import type { MailMessage } from "@omnimail/shared";
 import { getOAuthCredential, setOAuthCredential } from "./oauth.js";
-import { gmailFolderIds } from "./mail-folders.js";
+import { gmailFolderIds, mergeLatestMessages } from "./mail-folders.js";
 async function access(accountId: string) {
   const c = getOAuthCredential(accountId);
   if (!c) throw new Error("Gmail credential is unavailable");
@@ -99,21 +99,26 @@ function dto(m: Gmail, accountId: string): MailMessage {
 }
 export const gmail = {
   async list(accountId: string) {
-    // Spam is excluded by default, and filters may archive Promotions.
-    const query = encodeURIComponent("{in:inbox in:spam category:promotions}");
-    const page = await call<{ messages?: { id: string }[] }>(
-      accountId,
-      `/messages?maxResults=10&includeSpamTrash=true&q=${query}`,
-    );
+    const loadIds = (query: string, maxResults: number) =>
+      call<{ messages?: { id: string }[] }>(
+        accountId,
+        `/messages?maxResults=${maxResults}&includeSpamTrash=true&q=${encodeURIComponent(query)}`,
+      );
+    // Read Spam separately so it remains available even when Inbox is busy.
+    const [mainPage, spamPage] = await Promise.all([
+      loadIds("{in:inbox category:promotions}", 20),
+      loadIds("in:spam", 10),
+    ]);
+    const ids = [...new Set([...(mainPage.messages ?? []), ...(spamPage.messages ?? [])].map((message) => message.id))];
     const items = await Promise.all(
-      (page.messages ?? []).map((x) =>
+      ids.map((id) =>
         call<Gmail>(
           accountId,
-          `/messages/${x.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Subject&metadataHeaders=Date`,
+          `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Subject&metadataHeaders=Date`,
         ),
       ),
     );
-    return items.map((m) => dto(m, accountId));
+    return mergeLatestMessages([items.map((message) => dto(message, accountId))], 30);
   },
   async get(accountId: string, messageId: string) {
     return dto(

@@ -155,7 +155,7 @@ export const microsoftTokens = {
       .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
       .map((result) => result.value);
     if (!groups.length) throw inbox.status === "rejected" ? inbox.reason : junk.status === "rejected" ? junk.reason : new Error("Microsoft folders are unavailable");
-    return mergeLatestMessages(groups, 10);
+    return mergeLatestMessages(groups, 20);
   },
   async get(id: string, messageId: string, folderId = "inbox") {
     const message = await graph<GraphMessage>(

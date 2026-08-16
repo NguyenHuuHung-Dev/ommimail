@@ -133,7 +133,7 @@ export const microsoftGraph = {
     const groups = [inbox, junk]
       .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
       .map((result) => result.value);
-    if (groups.length) return mergeLatestMessages(groups, 10);
+    if (groups.length) return mergeLatestMessages(groups, 20);
     console.error("microsoftGraph.list folder reads failed", {
       inbox: inbox.status === "rejected" ? inbox.reason : undefined,
       junk: junk.status === "rejected" ? junk.reason : undefined,

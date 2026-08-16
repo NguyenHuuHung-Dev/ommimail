@@ -43,7 +43,7 @@ export const gmailAppPasswords = {
           groups.push(out);
         } finally { lock.release(); }
       }
-      return mergeLatestMessages(groups, 10);
+      return mergeLatestMessages(groups, 20);
     } finally { await client.logout(); }
   },
   async get(id: string, uid: number, mailboxToken?: string) {

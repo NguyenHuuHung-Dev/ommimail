@@ -3,6 +3,7 @@ import type { Request, Response } from "express";
 import { accounts } from "./demo-data.js";
 import { accountOwners } from "./ownership.js";
 import { saveMailbox, updateMailboxCredential } from "./firestore-store.js";
+import { reserveMailboxConnection } from "./connection-policy.js";
 type State = {
   provider: "google" | "microsoft";
   userId: string;
@@ -107,34 +108,27 @@ async function add(
   const tokenRecord = tokens as Record<string, unknown>;
   const expiresAt = Date.now() + Number(tokenRecord.expires_in ?? 3600) * 1000;
   const normalizedTokens = { ...tokenRecord, expires_at: expiresAt, expiry_date: expiresAt };
-  const duplicate = accounts.find(
-    (a) =>
-      a.provider === provider &&
-      accountOwners.get(a.id) === userId &&
-      a.emailAddress.toLowerCase() === email.toLowerCase(),
-  );
-  if (duplicate) {
-    duplicate.status = "connected";
-    credentials.set(duplicate.id, normalizedTokens);
-    await saveMailbox(duplicate, userId, "oauth", normalizedTokens);
-    return duplicate;
+  const release = reserveMailboxConnection(email, userId);
+  try {
+    const id = `${provider}-${crypto.randomUUID()}`;
+    const a = {
+      id,
+      provider,
+      emailAddress: email,
+      displayName: name,
+      status: "connected" as const,
+      unreadCount: 0,
+      lastSyncedAt: new Date().toISOString(),
+      color: provider === "gmail" ? "#ef4444" : "#2563eb",
+    };
+    await saveMailbox(a, userId, "oauth", normalizedTokens);
+    accounts.push(a);
+    credentials.set(id, normalizedTokens);
+    accountOwners.set(id, userId);
+    return a;
+  } finally {
+    release();
   }
-  const id = `${provider}-${crypto.randomUUID()}`;
-  const a = {
-    id,
-    provider,
-    emailAddress: email,
-    displayName: name,
-    status: "connected" as const,
-    unreadCount: 0,
-    lastSyncedAt: new Date().toISOString(),
-    color: provider === "gmail" ? "#ef4444" : "#2563eb",
-  };
-  accounts.push(a);
-  credentials.set(id, normalizedTokens);
-  accountOwners.set(id, userId);
-  await saveMailbox(a, userId, "oauth", normalizedTokens);
-  return a;
 }
 const user = (req: Request) =>
   (req as Request & { userId?: string }).userId ?? "demo-user";

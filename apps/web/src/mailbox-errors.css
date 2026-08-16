@@ -115,3 +115,63 @@
     grid-column: 1 / -1;
   }
 }
+
+.spam-folder-row {
+  width: calc(100% - 24px);
+  min-height: 48px;
+  margin: 10px 12px;
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #d9bbc4;
+  background: #fff8fa;
+  color: #604a51;
+  text-align: left;
+}
+
+.spam-folder-row:hover,
+.spam-folder-row.open {
+  border-color: #0a0a0a;
+  background: #f3c4d2;
+  color: #0a0a0a;
+}
+
+.spam-folder-row > svg {
+  width: 17px;
+}
+
+.spam-folder-row span,
+.spam-folder-row strong,
+.spam-folder-row small {
+  display: block;
+  min-width: 0;
+}
+
+.spam-folder-row strong {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.spam-folder-row small {
+  margin-top: 2px;
+  color: #8a747b;
+  font-size: 8px;
+}
+
+.spam-folder-row b {
+  min-width: 24px;
+  padding: 4px 6px;
+  background: #0a0a0a;
+  color: #f2bdcc;
+  font-size: 9px;
+  text-align: center;
+}
+
+.shell.dark .spam-folder-row {
+  border-color: #5d4650;
+  background: #261b1f;
+  color: #f7e9ee;
+}

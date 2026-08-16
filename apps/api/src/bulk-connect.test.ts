@@ -1,6 +1,16 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { app } from "./app.js";
+import { accounts } from "./demo-data.js";
+import { accountOwners } from "./ownership.js";
+
+const duplicateAccountId = "duplicate-route-test";
+
+afterEach(() => {
+  const index = accounts.findIndex((account) => account.id === duplicateAccountId);
+  if (index >= 0) accounts.splice(index, 1);
+  accountOwners.delete(duplicateAccountId);
+});
 
 describe("Microsoft bulk connection", () => {
   it("accepts more than ten rows and reports validation errors per line", async () => {
@@ -29,5 +39,27 @@ describe("Microsoft bulk connection", () => {
       success: false,
       error: "Email Microsoft không hợp lệ",
     });
+  });
+
+  it("rejects an address that the user already connected", async () => {
+    accounts.push({
+      id: duplicateAccountId,
+      provider: "gmail",
+      emailAddress: "already@gmail.com",
+      status: "connected",
+      unreadCount: 0,
+    });
+    accountOwners.set(duplicateAccountId, "local-user");
+
+    const response = await request(app)
+      .post("/api/mail-accounts/google/app-password")
+      .set("Authorization", "Bearer local-session")
+      .send({
+        email: "ALREADY@gmail.com",
+        appPassword: "abcdefghijklmnop",
+      });
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.code).toBe("MAILBOX_ALREADY_CONNECTED");
   });
 });

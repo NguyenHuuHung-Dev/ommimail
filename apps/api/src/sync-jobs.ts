@@ -41,7 +41,7 @@ async function fetchLatestMessages(account: MailAccount): Promise<MailMessage[]>
   if (account.id.startsWith("gmail-")) return gmail.list(account.id);
   if (account.id.startsWith("microsoft-token:"))
     return microsoftTokens.list(account.id.slice("microsoft-token:".length));
-  if (account.id === "microsoft-live") return listMicrosoftInbox(10);
+  if (account.id === "microsoft-live") return listMicrosoftInbox(20);
   if (account.id.startsWith("microsoft-")) return microsoftGraph.list(account.id);
   if (account.id.startsWith("mailtm:"))
     return mailTm.list(account.id.slice("mailtm:".length));
