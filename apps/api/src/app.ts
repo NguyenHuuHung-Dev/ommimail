@@ -202,21 +202,114 @@ app.get('/api/mailbox-shares', (q, r) => {
   // guarded email-prefix search on /api/mail-accounts.
   return ok(r, { mailboxes, sharedWithMe: [] });
 });
+class MailboxShareOperationError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+async function applyMailboxShare(
+  ownerId: string,
+  input: { accountId: string; email: string; allowed: boolean },
+) {
+  const account = accounts.find((candidate) => candidate.id === input.accountId);
+  if (!account || accountOwners.get(input.accountId) !== ownerId)
+    throw new MailboxShareOperationError(403, 'FORBIDDEN', 'Bạn chỉ có thể chia sẻ mailbox của mình');
+  const parsedEmail = z.string().trim().email().safeParse(input.email);
+  if (!parsedEmail.success)
+    throw new MailboxShareOperationError(400, 'INVALID_EMAIL', 'Địa chỉ email người nhận không hợp lệ');
+  const targetEmail = parsedEmail.data.toLowerCase();
+  const target = [...userDirectory.entries()].find(([, user]) => user.email.toLowerCase() === targetEmail);
+  if (!target)
+    throw new MailboxShareOperationError(404, 'USER_NOT_FOUND', 'Email này chưa có tài khoản trong OmniMail');
+  const [targetUserId, targetProfile] = target;
+  if (targetUserId === ownerId)
+    throw new MailboxShareOperationError(400, 'SELF_SHARE', 'Bạn không thể chia sẻ mailbox cho chính mình');
+  if (input.allowed && targetProfile.role !== 'premium')
+    throw new MailboxShareOperationError(400, 'PREMIUM_REQUIRED', 'Người nhận cần tài khoản Premium để xem mailbox được chia sẻ');
+  const alreadyAllowed = isMailboxShared(input.accountId, targetUserId);
+  const changed = alreadyAllowed !== input.allowed;
+  if (changed) {
+    await saveMailboxShare(input.accountId, targetUserId, input.allowed);
+    setMailboxShare(input.accountId, targetUserId, input.allowed);
+  }
+  return {
+    accountId: input.accountId,
+    mailboxEmail: account.emailAddress,
+    userId: targetUserId,
+    email: targetProfile.email,
+    allowed: input.allowed,
+    changed,
+  };
+}
+app.put('/api/mailbox-shares/batch', async (q, r) => {
+  const parsed = z.object({
+    items: z.array(z.object({
+      accountId: z.string().min(1),
+      email: z.string().trim().min(1),
+      allowed: z.boolean(),
+    })).min(1),
+  }).safeParse(q.body);
+  if (!parsed.success)
+    return fail(r, 400, 'VALIDATION_ERROR', 'Chọn ít nhất một mailbox và một người nhận');
+  const uniqueItems = [...new Map(parsed.data.items.map((item) => [
+    `${item.accountId}\u0000${item.email.toLowerCase()}\u0000${item.allowed}`,
+    item,
+  ])).values()];
+  const results: Array<{
+    accountId: string;
+    mailboxEmail?: string;
+    email: string;
+    allowed: boolean;
+    success: boolean;
+    changed?: boolean;
+    code?: string;
+    error?: string;
+  }> = [];
+  const syncAccountIds = new Set<string>();
+  for (const item of uniqueItems) {
+    try {
+      const result = await applyMailboxShare(identity(q).userId, item);
+      results.push({ ...result, success: true });
+      if (result.allowed && result.changed) syncAccountIds.add(result.accountId);
+    } catch (cause) {
+      const operationError = cause instanceof MailboxShareOperationError ? cause : undefined;
+      const visibleAccount = accountOwners.get(item.accountId) === identity(q).userId
+        ? accounts.find((account) => account.id === item.accountId)
+        : undefined;
+      results.push({
+        accountId: item.accountId,
+        mailboxEmail: visibleAccount?.emailAddress,
+        email: item.email.toLowerCase(),
+        allowed: item.allowed,
+        success: false,
+        code: operationError?.code ?? 'SHARE_FAILED',
+        error: cause instanceof Error ? cause.message : 'Không thể cập nhật quyền chia sẻ',
+      });
+    }
+  }
+  for (const accountId of syncAccountIds)
+    enqueueMailboxSync(accountId, identity(q).userId, { priority: true });
+  const successful = results.filter((result) => result.success).length;
+  const changed = results.filter((result) => result.success && result.changed).length;
+  return ok(r, { successful, changed, failed: results.length - successful, results });
+});
 app.put('/api/mailbox-shares', async (q, r) => {
   const parsed = z.object({ accountId: z.string().min(1), email: z.string().trim().email(), allowed: z.boolean() }).safeParse(q.body);
   if (!parsed.success) return fail(r, 400, 'VALIDATION_ERROR', 'Nhập một địa chỉ email hợp lệ');
-  const ownerId = identity(q).userId;
-  if (accountOwners.get(parsed.data.accountId) !== ownerId) return fail(r, 403, 'FORBIDDEN', 'Bạn chỉ có thể chia sẻ mailbox của mình');
-  const targetEmail = parsed.data.email.toLowerCase();
-  const target = [...userDirectory.entries()].find(([, user]) => user.email.toLowerCase() === targetEmail);
-  if (!target) return fail(r, 404, 'USER_NOT_FOUND', 'Email này chưa có tài khoản trong OmniMail');
-  const [targetUserId, targetProfile] = target;
-  if (targetUserId === ownerId) return fail(r, 400, 'SELF_SHARE', 'Bạn không thể chia sẻ mailbox cho chính mình');
-  if (targetProfile.role !== 'premium') return fail(r, 400, 'PREMIUM_REQUIRED', 'Người nhận cần tài khoản Premium để xem mailbox được chia sẻ');
-  setMailboxShare(parsed.data.accountId, targetUserId, parsed.data.allowed);
-  await saveMailboxShare(parsed.data.accountId, targetUserId, parsed.data.allowed);
-  if (parsed.data.allowed) enqueueMailboxSync(parsed.data.accountId, ownerId, { priority: true });
-  return ok(r, { accountId: parsed.data.accountId, userId: targetUserId, email: targetProfile.email, allowed: parsed.data.allowed });
+  try {
+    const result = await applyMailboxShare(identity(q).userId, parsed.data);
+    if (result.allowed && result.changed)
+      enqueueMailboxSync(result.accountId, identity(q).userId, { priority: true });
+    return ok(r, result);
+  } catch (cause) {
+    if (cause instanceof MailboxShareOperationError)
+      return fail(r, cause.status, cause.code, cause.message);
+    return fail(r, 500, 'SHARE_FAILED', cause instanceof Error ? cause.message : 'Không thể cập nhật quyền chia sẻ');
+  }
 });
 app.get("/api/mail-accounts", (_q, r) => {
   const search = String(_q.query.q ?? "").trim();

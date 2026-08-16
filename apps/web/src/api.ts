@@ -76,6 +76,21 @@ export const api = {
   shareMailbox: (accountId: string, email: string, allowed: boolean) => request<{
     accountId: string; userId: string; email: string; allowed: boolean;
   }>("/api/mailbox-shares", { method: "PUT", body: JSON.stringify({ accountId, email, allowed }) }),
+  shareMailboxesBatch: (items: { accountId: string; email: string; allowed: boolean }[]) => request<{
+    successful: number;
+    changed: number;
+    failed: number;
+    results: {
+      accountId: string;
+      mailboxEmail?: string;
+      email: string;
+      allowed: boolean;
+      success: boolean;
+      changed?: boolean;
+      code?: string;
+      error?: string;
+    }[];
+  }>("/api/mailbox-shares/batch", { method: "PUT", body: JSON.stringify({ items }) }),
   oauthStart: (provider: "google" | "microsoft") =>
     request<{ url: string }>(`/api/oauth/${provider}/start`),
   connectMicrosoftToken: (input: {
