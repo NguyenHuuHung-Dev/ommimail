@@ -107,4 +107,13 @@ export const api = {
     request<{ deleted: boolean }>(`/api/mail-accounts/${encodeURIComponent(id)}`, {
       method: "DELETE",
     }),
+  deleteAccounts: (ids: string[]) =>
+    request<{
+      deleted: number;
+      failed: number;
+      results: { id: string; success: boolean; email?: string; error?: string }[];
+    }>("/api/mail-accounts/delete-batch", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    }),
 };

@@ -1,7 +1,7 @@
 export type Provider = 'gmail' | 'microsoft' | 'imap' | 'temp';
 export type AccountStatus = 'connected' | 'syncing' | 'expired' | 'error' | 'disconnected';
 export interface MailAddress { name?: string; address: string }
-export interface MailAccount { id:string; provider:Provider; emailAddress:string; displayName?:string; status:AccountStatus; unreadCount:number; lastSyncedAt?:string; color?:string; access?:'owner'|'shared' }
+export interface MailAccount { id:string; provider:Provider; emailAddress:string; displayName?:string; status:AccountStatus; unreadCount:number; connectedAt?:string; lastSyncedAt?:string; color?:string; access?:'owner'|'shared' }
 export interface Attachment { id:string; filename:string; mimeType:string; size:number }
 export interface MailMessage { id:string; accountId:string; providerMessageId:string; providerThreadId?:string; folderIds:string[]; labelIds:string[]; from:MailAddress; to:MailAddress[]; cc:MailAddress[]; subject:string; preview:string; textBody?:string; sanitizedHtmlBody?:string; isRead:boolean; isStarred:boolean; hasAttachments:boolean; attachments?:Attachment[]; receivedAt:string }
 export interface PaginatedMessages { items:MailMessage[]; nextCursor?:string; total:number }

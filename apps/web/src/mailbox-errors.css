@@ -116,62 +116,312 @@
   }
 }
 
-.spam-folder-row {
-  width: calc(100% - 24px);
-  min-height: 48px;
-  margin: 10px 12px;
-  padding: 8px 12px;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+.spam-toolbar-button {
+  min-width: 92px;
+  height: 40px;
+  padding: 0 9px;
+  display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid #d9bbc4;
   background: #fff8fa;
   color: #604a51;
-  text-align: left;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
 
-.spam-folder-row:hover,
-.spam-folder-row.open {
+.spam-toolbar-button:hover:not(:disabled),
+.spam-toolbar-button.open {
   border-color: #0a0a0a;
   background: #f3c4d2;
   color: #0a0a0a;
 }
 
-.spam-folder-row > svg {
-  width: 17px;
+.spam-toolbar-button > svg {
+  width: 15px;
 }
 
-.spam-folder-row span,
-.spam-folder-row strong,
-.spam-folder-row small {
-  display: block;
-  min-width: 0;
-}
-
-.spam-folder-row strong {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.spam-folder-row small {
-  margin-top: 2px;
-  color: #8a747b;
+.spam-toolbar-button b {
+  min-width: 20px;
+  padding: 3px 5px;
+  background: #0a0a0a;
+  color: #f2bdcc;
   font-size: 8px;
+  text-align: center;
 }
 
-.spam-folder-row b {
-  min-width: 24px;
-  padding: 4px 6px;
+.spam-toolbar-button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.shell.dark .spam-toolbar-button {
+  border-color: #5d4650;
+  background: #261b1f;
+  color: #f7e9ee;
+}
+
+.profile-modal {
+  width: min(980px, calc(100% - 30px));
+}
+
+.profile-summary {
+  grid-template-columns: minmax(180px, 1.3fr) 120px minmax(170px, 1fr) minmax(170px, 1fr);
+}
+
+.profile-mailbox-dashboard {
+  border: 1px solid #0a0a0a;
+  background: #fff;
+}
+
+.profile-mailbox-dashboard > .profile-section-title {
+  margin: 0 18px;
+  padding: 16px 0 13px;
+}
+
+.profile-mailbox-dashboard > .profile-section-title > b {
+  min-width: 28px;
+  margin-left: auto;
+  padding: 5px 7px;
   background: #0a0a0a;
   color: #f2bdcc;
   font-size: 9px;
   text-align: center;
 }
 
-.shell.dark .spam-folder-row {
-  border-color: #5d4650;
-  background: #261b1f;
-  color: #f7e9ee;
+.profile-mailbox-toolbar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px 14px;
+}
+
+.profile-mailbox-search {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid #cabcc0;
+}
+
+.profile-mailbox-search svg {
+  width: 15px;
+  color: #8a747b;
+}
+
+.profile-mailbox-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 11px;
+}
+
+.profile-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #66545a;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.profile-select-all input,
+.profile-mailbox-list article > input {
+  accent-color: #0a0a0a;
+}
+
+.profile-remove-selected {
+  height: 38px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #b84f6e;
+  background: #fff;
+  color: #9a3452;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.profile-remove-selected:hover:not(:disabled) {
+  background: #0a0a0a;
+  color: #f2bdcc;
+}
+
+.profile-remove-selected:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.profile-remove-selected svg {
+  width: 14px;
+}
+
+.profile-mailbox-list {
+  max-height: 285px;
+  overflow: auto;
+  border-top: 1px solid #eadde1;
+}
+
+.profile-mailbox-list article {
+  min-height: 60px;
+  display: grid;
+  grid-template-columns: 18px 22px minmax(170px, 1fr) minmax(170px, .8fr) 34px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 18px;
+  border-bottom: 1px solid #f0e4e7;
+}
+
+.profile-mailbox-list article:hover {
+  background: #fff7f9;
+}
+
+.profile-mailbox-list article > div {
+  min-width: 0;
+}
+
+.profile-mailbox-list article strong,
+.profile-mailbox-list article small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-mailbox-list article strong {
+  font-size: 10px;
+}
+
+.profile-mailbox-list article small {
+  margin-top: 4px;
+  color: #8a747b;
+  font-size: 8px;
+}
+
+.profile-mailbox-time {
+  text-align: right;
+}
+
+.profile-mailbox-time small {
+  margin: 0 0 4px!important;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.profile-mailbox-time strong {
+  font-size: 9px!important;
+  font-weight: 700;
+}
+
+.profile-mailbox-list article > button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #deb9c4;
+  background: #fff;
+  color: #ad536e;
+  display: grid;
+  place-items: center;
+}
+
+.profile-mailbox-list article > button:hover:not(:disabled) {
+  background: #0a0a0a;
+  color: #f2bdcc;
+}
+
+.profile-mailbox-list article > button:disabled {
+  opacity: .25;
+  cursor: not-allowed;
+}
+
+.profile-mailbox-list article > button svg {
+  width: 13px;
+}
+
+.profile-mailbox-empty {
+  padding: 28px;
+  color: #8a747b;
+  font-size: 10px;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .profile-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .profile-summary > div:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid #dfd4d7;
+  }
+
+  .profile-summary > div:nth-child(4) {
+    border-top: 1px solid #dfd4d7;
+  }
+
+  .profile-mailbox-toolbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .profile-mailbox-search {
+    grid-column: 1 / -1;
+  }
+
+  .profile-mailbox-list article {
+    grid-template-columns: 18px 22px minmax(0, 1fr) 34px;
+  }
+
+  .profile-mailbox-time {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .profile-modal {
+    width: 100%;
+  }
+
+  .profile-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-summary > div + div {
+    border-left: 0;
+    border-top: 1px solid #dfd4d7;
+  }
+
+  .profile-mailbox-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-mailbox-search,
+  .profile-remove-selected {
+    grid-column: 1;
+  }
+
+  .profile-remove-selected {
+    justify-content: center;
+  }
+
+  .profile-mailbox-list article {
+    padding-inline: 12px;
+  }
+
+  .spam-toolbar-button {
+    min-width: 40px;
+    padding-inline: 8px;
+  }
+
+  .spam-toolbar-button span {
+    display: none;
+  }
 }

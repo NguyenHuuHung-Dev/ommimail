@@ -268,7 +268,7 @@ export function MailApp() {
           onLogout={logout}
           role={me?.role ?? "basic"}
         />
-        {profileOpen && <ProfileModal me={me} onClose={() => setProfileOpen(false)} />}
+        {profileOpen && <ProfileModal me={me} accounts={accounts} onClose={() => setProfileOpen(false)} />}
       </>
     );
   return (
@@ -381,6 +381,20 @@ export function MailApp() {
               </div>
               <div className="mailbox-head-actions">
                 <button
+                  className={`spam-toolbar-button ${mailFolder === "spam" ? "open" : ""}`}
+                  type="button"
+                  disabled={!currentAccount}
+                  title={mailFolder === "spam" ? "Quay lại hộp thư chính" : "Mở thư Spam / Junk"}
+                  onClick={() => {
+                    setMailFolder(mailFolder === "spam" ? "main" : "spam");
+                    ui.set({ selectedMessage: null });
+                  }}
+                >
+                  {mailFolder === "spam" ? <ArrowLeft /> : <Mail />}
+                  <span>{mailFolder === "spam" ? "Inbox" : "Spam"}</span>
+                  <b>{spamMessages.length}</b>
+                </button>
+                <button
                   className="account-sync"
                   disabled={!currentAccount || currentAccount.access === "shared" || syncAccount.isPending}
                   title={currentAccount?.access === "shared" ? "Shared mailboxes are synchronized by their owner" : "Sync latest messages"}
@@ -414,21 +428,6 @@ export function MailApp() {
                 </div>
               ) : (
                 <>
-                  <button
-                    className={`spam-folder-row ${mailFolder === "spam" ? "open" : ""}`}
-                    type="button"
-                    onClick={() => {
-                      setMailFolder(mailFolder === "spam" ? "main" : "spam");
-                      ui.set({ selectedMessage: null });
-                    }}
-                  >
-                    {mailFolder === "spam" ? <ArrowLeft /> : <Mail />}
-                    <span>
-                      <strong>Spam</strong>
-                      <small>{mailFolder === "spam" ? "Quay lại hộp thư chính" : "Chỉ mở khi bạn cần kiểm tra"}</small>
-                    </span>
-                    <b>{spamMessages.length}</b>
-                  </button>
                   {messages.length === 0 ? (
                     <Empty
                       title={mailFolder === "spam" ? "Không có thư Spam" : "Your inbox is clear"}
@@ -488,7 +487,7 @@ export function MailApp() {
           removingAccount={removeAccount.isPending ? removeAccount.variables : undefined}
         />
       )}
-      {profileOpen && <ProfileModal me={me} onClose={() => setProfileOpen(false)} />}
+      {profileOpen && <ProfileModal me={me} accounts={accounts} onClose={() => setProfileOpen(false)} />}
     </div>
   );
 }
@@ -496,12 +495,15 @@ type CurrentUserProfile = Awaited<ReturnType<typeof api.me>>;
 
 function ProfileModal({
   me,
+  accounts,
   onClose,
 }: {
   me?: CurrentUserProfile;
+  accounts: MailAccount[];
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const ui = useUI();
   const user = auth.currentUser;
   const [fullName, setFullName] = useState(me?.displayName ?? user?.displayName ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -510,7 +512,55 @@ function ProfileModal({
   const [busy, setBusy] = useState<"profile" | "password" | "">("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [mailboxSearch, setMailboxSearch] = useState("");
+  const [selectedAccountIds, setSelectedAccountIds] = useState<Set<string>>(new Set());
   const passwordAccount = user?.providerData.some((provider) => provider.providerId === "password") ?? false;
+  const filteredAccounts = useMemo(() => {
+    const query = mailboxSearch.trim().toLowerCase();
+    return accounts.filter((account) => !query || account.emailAddress.toLowerCase().includes(query));
+  }, [accounts, mailboxSearch]);
+  const removableAccounts = filteredAccounts.filter(
+    (account) => account.access !== "shared" && account.id !== "microsoft-live",
+  );
+  const allVisibleSelected = removableAccounts.length > 0
+    && removableAccounts.every((account) => selectedAccountIds.has(account.id));
+  const lastSignInAt = user?.metadata.lastSignInTime;
+  const accountCreatedAt = user?.metadata.creationTime;
+
+  useEffect(() => {
+    setSelectedAccountIds((current) => new Set(
+      [...current].filter((id) => accounts.some((account) => account.id === id)),
+    ));
+  }, [accounts]);
+
+  const removeMailboxes = useMutation({
+    mutationFn: (ids: string[]) => api.deleteAccounts(ids),
+    onSuccess: async (result, ids) => {
+      setSelectedAccountIds(new Set());
+      if (ui.selectedAccount && ids.includes(ui.selectedAccount))
+        ui.set({ selectedAccount: null, selectedMessage: null });
+      await qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.removeQueries({ queryKey: ["messages"] });
+      const failedMessage = result.failed
+        ? `; ${result.failed} mailbox không thể xóa`
+        : "";
+      setNotice(`Đã xóa ${result.deleted} mailbox${failedMessage}.`);
+      setError("");
+    },
+    onError: (cause) => {
+      setNotice("");
+      setError(cause instanceof Error ? cause.message : "Không thể xóa mailbox.");
+    },
+  });
+
+  const confirmRemoveMailboxes = (ids: string[]) => {
+    const targets = accounts.filter((account) => ids.includes(account.id) && account.access !== "shared");
+    if (!targets.length) return;
+    const preview = targets.slice(0, 3).map((account) => account.emailAddress).join(", ");
+    const more = targets.length > 3 ? ` và ${targets.length - 3} mailbox khác` : "";
+    if (window.confirm(`Xóa kết nối ${preview}${more} khỏi OmniMail? Thư gốc trong Gmail/Outlook sẽ không bị xóa.`))
+      removeMailboxes.mutate(targets.map((account) => account.id));
+  };
 
   useEffect(() => {
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -566,7 +616,7 @@ function ProfileModal({
         <header>
           <div className="profile-heading">
             <span className="profile-avatar-large">{initials(fullName || me?.email || user?.email || undefined)}</span>
-            <div><span className="eyebrow">Personal profile</span><h2 id="profile-title">Thông tin cá nhân</h2><p>Quản lý tên hiển thị và bảo mật tài khoản.</p></div>
+            <div><span className="eyebrow">Personal dashboard</span><h2 id="profile-title">Quản lý tài khoản</h2><p>Hồ sơ, lịch sử đăng nhập và toàn bộ mailbox tại một nơi.</p></div>
           </div>
           <button type="button" onClick={onClose} aria-label="Đóng hồ sơ"><X /></button>
         </header>
@@ -574,8 +624,100 @@ function ProfileModal({
           <div className="profile-summary">
             <div><small>Email đăng nhập</small><strong>{me?.email ?? user?.email ?? "—"}</strong></div>
             <div><small>Vai trò</small><strong className={`role-badge ${me?.role ?? "basic"}`}>{me?.role ?? "basic"}</strong></div>
+            <div><small>Đăng nhập gần nhất</small><strong>{lastSignInAt ? new Date(lastSignInAt).toLocaleString("vi-VN") : "—"}</strong></div>
+            <div><small>Ngày tạo tài khoản</small><strong>{accountCreatedAt ? new Date(accountCreatedAt).toLocaleString("vi-VN") : "—"}</strong></div>
           </div>
           {(error || notice) && <div className={error ? "profile-message error" : "profile-message success"}>{error || notice}</div>}
+          <section className="profile-mailbox-dashboard">
+            <div className="profile-section-title">
+              <LayoutDashboard />
+              <span><strong>Dashboard mailbox</strong><small>Tìm, chọn và xóa nhiều kết nối cùng lúc. Email gốc không bị xóa.</small></span>
+              <b>{accounts.length}</b>
+            </div>
+            <div className="profile-mailbox-toolbar">
+              <label className="profile-mailbox-search">
+                <Search />
+                <input
+                  value={mailboxSearch}
+                  onChange={(event) => setMailboxSearch(event.target.value)}
+                  placeholder="Tìm theo địa chỉ email"
+                  aria-label="Tìm mailbox trong hồ sơ"
+                />
+              </label>
+              <label className="profile-select-all">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  disabled={!removableAccounts.length}
+                  onChange={(event) => {
+                    setSelectedAccountIds((current) => {
+                      const next = new Set(current);
+                      for (const account of removableAccounts) {
+                        if (event.target.checked) next.add(account.id);
+                        else next.delete(account.id);
+                      }
+                      return next;
+                    });
+                  }}
+                />
+                Chọn tất cả
+              </label>
+              <button
+                className="profile-remove-selected"
+                type="button"
+                disabled={!selectedAccountIds.size || removeMailboxes.isPending}
+                onClick={() => confirmRemoveMailboxes([...selectedAccountIds])}
+              >
+                <Trash2 />
+                {removeMailboxes.isPending ? "Đang xóa…" : `Xóa đã chọn (${selectedAccountIds.size})`}
+              </button>
+            </div>
+            <div className="profile-mailbox-list">
+              {filteredAccounts.length ? filteredAccounts.map((account) => {
+                const removable = account.access !== "shared" && account.id !== "microsoft-live";
+                return (
+                  <article key={account.id}>
+                    <input
+                      type="checkbox"
+                      checked={selectedAccountIds.has(account.id)}
+                      disabled={!removable || removeMailboxes.isPending}
+                      onChange={(event) => setSelectedAccountIds((current) => {
+                        const next = new Set(current);
+                        if (event.target.checked) next.add(account.id);
+                        else next.delete(account.id);
+                        return next;
+                      })}
+                      aria-label={`Chọn ${account.emailAddress}`}
+                    />
+                    <ProviderDot p={account.provider} />
+                    <div>
+                      <strong>{account.emailAddress}</strong>
+                      <small>
+                        {account.provider === "gmail" ? "Google / Gmail" : account.provider === "microsoft" ? "Microsoft / Outlook" : "Temporary mail"}
+                        {account.access === "shared" ? " · Được chia sẻ" : " · Chủ sở hữu"}
+                      </small>
+                    </div>
+                    <div className="profile-mailbox-time">
+                      <small>{account.lastSyncedAt ? "Đồng bộ gần nhất" : account.connectedAt ? "Đã kết nối" : "Trạng thái"}</small>
+                      <strong>{account.lastSyncedAt
+                        ? new Date(account.lastSyncedAt).toLocaleString("vi-VN")
+                        : account.connectedAt
+                          ? new Date(account.connectedAt).toLocaleString("vi-VN")
+                          : account.status}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={!removable || removeMailboxes.isPending}
+                      title={removable ? `Xóa ${account.emailAddress}` : "Mailbox chia sẻ hoặc do máy chủ quản lý"}
+                      onClick={() => confirmRemoveMailboxes([account.id])}
+                    >
+                      <Trash2 />
+                    </button>
+                  </article>
+                );
+              }) : <div className="profile-mailbox-empty">Không tìm thấy mailbox phù hợp.</div>}
+            </div>
+          </section>
           <form className="profile-form" onSubmit={(event) => void saveName(event)}>
             <div className="profile-section-title"><UserRoundCheck /><span><strong>Hồ sơ</strong><small>Tên này được hiển thị trong OmniMail và trang quản trị.</small></span></div>
             <label>Họ và tên<input required minLength={2} maxLength={100} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" /></label>

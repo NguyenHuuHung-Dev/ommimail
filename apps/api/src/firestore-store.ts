@@ -28,6 +28,7 @@ export async function saveMailbox(
   credentialKind: CredentialKind,
   credential: Record<string, unknown>,
 ) {
+  account.connectedAt ??= new Date().toISOString();
   if (!persistentStoreEnabled || !getApps().length) return;
   await db().collection("mailAccounts").doc(account.id).set({
     ...account,
@@ -78,8 +79,13 @@ export async function loadMailboxes(): Promise<StoredMailbox[]> {
     if (typeof value.userId !== "string" || typeof value.encryptedCredentials !== "string" || typeof value.credentialKind !== "string") continue;
     try {
       const { userId, credentialKind, encryptedCredentials, credentialKeyVersion, createdAt, updatedAt, ...account } = value;
+      const storedConnectedAt = typeof account.connectedAt === "string"
+        ? account.connectedAt
+        : createdAt && typeof createdAt.toDate === "function"
+          ? createdAt.toDate().toISOString()
+          : undefined;
       results.push({
-        account: account as MailAccount,
+        account: { ...account, connectedAt: storedConnectedAt } as MailAccount,
         userId,
         credentialKind: credentialKind as CredentialKind,
         credential: JSON.parse(encryption!.decrypt(encryptedCredentials)) as Record<string, unknown>,

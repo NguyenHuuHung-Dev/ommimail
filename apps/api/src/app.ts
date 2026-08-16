@@ -272,6 +272,62 @@ app.patch("/api/mail-accounts/:id/settings", (q, r) => {
     ? ok(r, { ...a, settings: q.body })
     : fail(r, 404, "NOT_FOUND", "Account not found");
 });
+async function disconnectMailbox(accountId: string) {
+  const index = accounts.findIndex((account) => account.id === accountId);
+  if (index < 0) return false;
+  const account = accounts[index];
+  if (account.id.startsWith("gmail-imap:"))
+    gmailAppPasswords.remove(account.id.slice("gmail-imap:".length));
+  else if (account.id.startsWith("microsoft-token:"))
+    microsoftTokens.remove(account.id.slice("microsoft-token:".length));
+  else if (account.id.startsWith("mailtm:")) {
+    try {
+      await mailTm.remove(account.id.replace(/^mailtm:/, ""));
+    } catch {
+      // The local connection should still be removable if the provider expired it.
+    }
+  } else removeOAuthCredential(account.id);
+  accounts.splice(index, 1);
+  accountOwners.delete(accountId);
+  mailboxShares.delete(accountId);
+  clearMailboxSyncState(accountId);
+  await deleteMailbox(accountId);
+  return true;
+}
+app.post("/api/mail-accounts/delete-batch", async (q, r) => {
+  const parsed = z.object({ ids: z.array(z.string().min(1)).min(1) }).safeParse(q.body);
+  if (!parsed.success)
+    return fail(r, 400, "VALIDATION_ERROR", "Chọn ít nhất một mailbox cần xóa");
+  const results: { id: string; success: boolean; email?: string; error?: string }[] = [];
+  for (const accountId of [...new Set(parsed.data.ids)]) {
+    const account = accounts.find((item) => item.id === accountId);
+    if (!account) {
+      results.push({ id: accountId, success: false, error: "Mailbox không còn tồn tại" });
+      continue;
+    }
+    if (account.id === "microsoft-live") {
+      results.push({ id: accountId, email: account.emailAddress, success: false, error: "Mailbox này do máy chủ quản lý" });
+      continue;
+    }
+    if (accountOwners.get(accountId) !== identity(q).userId) {
+      results.push({ id: accountId, email: account.emailAddress, success: false, error: "Bạn không có quyền xóa mailbox này" });
+      continue;
+    }
+    try {
+      await disconnectMailbox(accountId);
+      results.push({ id: accountId, email: account.emailAddress, success: true });
+    } catch (cause) {
+      results.push({
+        id: accountId,
+        email: account.emailAddress,
+        success: false,
+        error: cause instanceof Error ? cause.message : "Không thể xóa mailbox",
+      });
+    }
+  }
+  const deleted = results.filter((result) => result.success).length;
+  return ok(r, { deleted, failed: results.length - deleted, results });
+});
 app.delete("/api/mail-accounts/:id", async (q, r) => {
   if (q.params.id === "microsoft-live")
     return fail(
@@ -287,23 +343,7 @@ app.delete("/api/mail-accounts/:id", async (q, r) => {
     identity(q).role !== "admin"
   )
     return fail(r, 403, "FORBIDDEN", "Mailbox does not belong to this user");
-  const account = accounts[i];
-  if (account.id.startsWith("gmail-imap:"))
-    gmailAppPasswords.remove(account.id.slice("gmail-imap:".length));
-  else if (account.id.startsWith("microsoft-token:"))
-    microsoftTokens.remove(account.id.slice("microsoft-token:".length));
-  else if (account.id.startsWith("mailtm:")) {
-    try {
-      await mailTm.remove(account.id.replace(/^mailtm:/, ""));
-    } catch {
-      // The local connection should still be removable if the provider expired it.
-    }
-  } else removeOAuthCredential(account.id);
-  accounts.splice(i, 1);
-  accountOwners.delete(q.params.id);
-  mailboxShares.delete(q.params.id);
-  clearMailboxSyncState(q.params.id);
-  await deleteMailbox(q.params.id);
+  await disconnectMailbox(q.params.id);
   return ok(r, { deleted: true });
 });
 app.post("/api/mail-accounts/:id/sync", (q, r) => {
