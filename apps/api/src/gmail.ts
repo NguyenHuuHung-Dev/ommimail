@@ -1,5 +1,6 @@
 import type { MailMessage } from "@omnimail/shared";
 import { getOAuthCredential, setOAuthCredential } from "./oauth.js";
+import { gmailFolderIds } from "./mail-folders.js";
 async function access(accountId: string) {
   const c = getOAuthCredential(accountId);
   if (!c) throw new Error("Gmail credential is unavailable");
@@ -76,13 +77,14 @@ function text(part?: Part): string {
   return "";
 }
 function dto(m: Gmail, accountId: string): MailMessage {
+  const labelIds = m.labelIds ?? [];
   return {
     id: `gmail-live:${accountId}:${m.id}`,
     accountId,
     providerMessageId: m.id,
     providerThreadId: m.threadId,
-    folderIds: ["inbox"],
-    labelIds: m.labelIds ?? [],
+    folderIds: gmailFolderIds(labelIds),
+    labelIds,
     from: address(header(m, "From")),
     to: header(m, "To").split(",").filter(Boolean).map(address),
     cc: header(m, "Cc").split(",").filter(Boolean).map(address),
@@ -97,9 +99,11 @@ function dto(m: Gmail, accountId: string): MailMessage {
 }
 export const gmail = {
   async list(accountId: string) {
+    // Spam is excluded by default, and filters may archive Promotions.
+    const query = encodeURIComponent("{in:inbox in:spam category:promotions}");
     const page = await call<{ messages?: { id: string }[] }>(
       accountId,
-      "/messages?maxResults=10&q=in%3Ainbox",
+      `/messages?maxResults=10&includeSpamTrash=true&q=${query}`,
     );
     const items = await Promise.all(
       (page.messages ?? []).map((x) =>

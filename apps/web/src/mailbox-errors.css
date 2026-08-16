@@ -51,3 +51,67 @@
   background: #0a0a0a;
   color: #f2bdcc;
 }
+
+.bulk-import-results {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow: auto;
+  padding-top: 8px;
+  border-top: 1px solid #d9bbc4;
+}
+
+.bulk-import-results > strong {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 7px 8px;
+  background: #0a0a0a;
+  color: #f2bdcc;
+}
+
+.bulk-import-results > div {
+  display: grid;
+  grid-template-columns: 54px minmax(120px, .8fr) minmax(180px, 1.2fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border-left: 4px solid #2d8a57;
+  background: #effaf3;
+  overflow-wrap: anywhere;
+}
+
+.bulk-import-results > div.failed {
+  border-left-color: #c43d4d;
+  background: #fff0f2;
+}
+
+.bulk-import-results span,
+.bulk-import-results b,
+.bulk-import-results small {
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.bulk-import-results span {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.shell.dark .bulk-import-results > div {
+  background: #183024;
+}
+
+.shell.dark .bulk-import-results > div.failed {
+  background: #3a171d;
+}
+
+@media (max-width: 700px) {
+  .bulk-import-results > div {
+    grid-template-columns: 52px 1fr;
+  }
+
+  .bulk-import-results small {
+    grid-column: 1 / -1;
+  }
+}

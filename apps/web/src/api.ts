@@ -93,12 +93,12 @@ export const api = {
       body: JSON.stringify(input),
     }),
   connectMicrosoftBatch: (
-    items: { email: string; clientId?: string; refreshToken: string }[],
+    items: { line: number; email: string; clientId?: string; refreshToken: string }[],
   ) =>
     request<{
       connected: number;
       failed: number;
-      results: { email: string; success: boolean; error?: string }[];
+      results: { line: number; email: string; success: boolean; error?: string }[];
     }>("/api/mail-accounts/microsoft/refresh-token/batch", {
       method: "POST",
       body: JSON.stringify({ items }),

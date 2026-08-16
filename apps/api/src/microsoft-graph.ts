@@ -1,5 +1,6 @@
 import type { MailMessage } from "@omnimail/shared";
 import { getOAuthCredential, setOAuthCredential } from "./oauth.js";
+import { mergeLatestMessages } from "./mail-folders.js";
 
 async function access(accountId: string) {
   const c = getOAuthCredential(accountId);
@@ -96,13 +97,13 @@ function recipient(r?: GraphRecipient) {
   };
 }
 
-function dto(m: GraphMessage, accountId: string): MailMessage {
+function dto(m: GraphMessage, accountId: string, folderId = "inbox"): MailMessage {
   return {
-    id: `microsoft-graph-message:${accountId}:${m.id}`,
+    id: `microsoft-graph-message:${accountId}:${m.id}:${folderId}`,
     accountId,
     providerMessageId: m.id,
-    folderIds: ["inbox"],
-    labelIds: [],
+    folderIds: [folderId],
+    labelIds: folderId === "spam" ? ["Junk"] : [],
     from: recipient(m.from),
     to: (m.toRecipients ?? []).map(recipient),
     cc: (m.ccRecipients ?? []).map(recipient),
@@ -118,27 +119,36 @@ function dto(m: GraphMessage, accountId: string): MailMessage {
 
 export const microsoftGraph = {
   async list(accountId: string) {
-    try {
+    const fields = "id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
+    const loadFolder = async (folder: "inbox" | "junkemail") => {
       const data = await call<{ value?: GraphMessage[] }>(
         accountId,
-        "/mailFolders/inbox/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
+        `/mailFolders/${folder}/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${fields}`,
       );
-      return (data.value ?? []).map((m) => dto(m, accountId));
-    } catch (e) {
-      console.error("microsoftGraph.list error:", e);
-      // Fallback to /messages if /mailFolders/inbox/messages fails
-      const data = await call<{ value?: GraphMessage[] }>(
-        accountId,
-        "/messages?$top=10&$orderby=receivedDateTime%20desc&$select=id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag",
+      return (data.value ?? []).map((message) =>
+        dto(message, accountId, folder === "junkemail" ? "spam" : "inbox"),
       );
-      return (data.value ?? []).map((m) => dto(m, accountId));
-    }
+    };
+    const [inbox, junk] = await Promise.allSettled([loadFolder("inbox"), loadFolder("junkemail")]);
+    const groups = [inbox, junk]
+      .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
+      .map((result) => result.value);
+    if (groups.length) return mergeLatestMessages(groups, 10);
+    console.error("microsoftGraph.list folder reads failed", {
+      inbox: inbox.status === "rejected" ? inbox.reason : undefined,
+      junk: junk.status === "rejected" ? junk.reason : undefined,
+    });
+    const data = await call<{ value?: GraphMessage[] }>(
+      accountId,
+      `/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${fields}`,
+    );
+    return (data.value ?? []).map((message) => dto(message, accountId, "all"));
   },
-  async get(accountId: string, messageId: string) {
+  async get(accountId: string, messageId: string, folderId = "inbox") {
     const m = await call<GraphMessage>(
       accountId,
       `/messages/${encodeURIComponent(messageId)}`,
     );
-    return dto(m, accountId);
+    return dto(m, accountId, folderId);
   },
 };

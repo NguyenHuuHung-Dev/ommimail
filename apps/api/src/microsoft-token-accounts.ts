@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import type { MailMessage } from "@omnimail/shared";
 import { updateMailboxCredential } from "./firestore-store.js";
+import { mergeLatestMessages } from "./mail-folders.js";
 
 type Credential = { email: string; clientId: string; refreshToken: string };
 type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
@@ -104,14 +105,14 @@ const htmlToText = (value: string) => value
   .replace(/\n{3,}/g, "\n\n")
   .trim();
 
-function dto(message: GraphMessage, connectionId: string): MailMessage {
+function dto(message: GraphMessage, connectionId: string, folderId = "inbox"): MailMessage {
   const content = message.body?.content;
   return {
-    id: `microsoft-token:${connectionId}:${message.id}`,
+    id: `microsoft-token:${connectionId}:${message.id}:${folderId}`,
     accountId: `microsoft-token:${connectionId}`,
     providerMessageId: message.id,
-    folderIds: ["inbox"],
-    labelIds: [],
+    folderIds: [folderId],
+    labelIds: folderId === "spam" ? ["Junk"] : [],
     from: recipient(message.from),
     to: (message.toRecipients ?? []).map(recipient),
     cc: (message.ccRecipients ?? []).map(recipient),
@@ -145,18 +146,23 @@ export const microsoftTokens = {
     }
   },
   async list(id: string) {
-    const data = await graph<{ value?: GraphMessage[] }>(
-      id,
-      `/mailFolders/inbox/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${messageFields}`,
-    );
-    return (data.value ?? []).map((message) => dto(message, id));
+    const loadFolder = async (folder: "inbox" | "junkemail") => {
+      const data = await graph<{ value?: GraphMessage[] }>(id, `/mailFolders/${folder}/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${messageFields}`);
+      return (data.value ?? []).map((message) => dto(message, id, folder === "junkemail" ? "spam" : "inbox"));
+    };
+    const [inbox, junk] = await Promise.allSettled([loadFolder("inbox"), loadFolder("junkemail")]);
+    const groups = [inbox, junk]
+      .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
+      .map((result) => result.value);
+    if (!groups.length) throw inbox.status === "rejected" ? inbox.reason : junk.status === "rejected" ? junk.reason : new Error("Microsoft folders are unavailable");
+    return mergeLatestMessages(groups, 10);
   },
-  async get(id: string, messageId: string) {
+  async get(id: string, messageId: string, folderId = "inbox") {
     const message = await graph<GraphMessage>(
       id,
       `/messages/${encodeURIComponent(messageId)}?$select=${messageFields},body`,
     );
-    return dto(message, id);
+    return dto(message, id, folderId);
   },
   restore(id: string, credential: Credential) {
     credentials.set(id, { ...credential });

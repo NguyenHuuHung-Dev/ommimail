@@ -933,6 +933,11 @@ function MessageRow({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const folderLabels = m.folderIds
+    .filter((folder) => folder !== "inbox" && folder !== "all")
+    .map((folder) => folder === "spam" ? "Spam" : folder === "promotions" ? "Promotions" : folder);
+  const systemFolderLabels = new Set(["INBOX", "SPAM", "JUNK", "CATEGORY_PROMOTIONS"]);
+  const visibleLabels = [...folderLabels, ...m.labelIds.filter((label) => !systemFolderLabels.has(label.toUpperCase()))];
   return (
     <article
       className={`message-row ${!m.isRead ? "unread" : ""} ${selected ? "selected" : ""}`}
@@ -962,7 +967,7 @@ function MessageRow({
         </h3>
         <p>{m.preview}</p>
         <div className="chips">
-          {m.labelIds.map((l) => (
+          {visibleLabels.map((l) => (
             <span key={l}>{l}</span>
           ))}
           {m.hasAttachments && (
@@ -985,6 +990,7 @@ function MessageDetail({
   account?: MailAccount;
   onClose: () => void;
 }) {
+  const folderLabel = m.folderIds.includes("spam") ? "Spam" : m.folderIds.includes("promotions") ? "Promotions" : "Inbox";
   return (
     <div className="detail">
       <div className="detail-toolbar">
@@ -997,7 +1003,7 @@ function MessageDetail({
       <div className="detail-scroll">
         <div className="subject-row">
           <h2>{m.subject}</h2>
-          <span className="label">Inbox</span>
+          <span className="label">{folderLabel}</span>
         </div>
         <div className="sender">
           <div className="avatar large-avatar">
@@ -1146,18 +1152,18 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
     mutationFn: () => {
       const items = bulkMicrosoft
         .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .slice(0, 10)
-        .map((line) => {
-          const parts = line.split("|").map((x) => x.trim().replace(/^\t+|\t+$/g, "")).filter(Boolean);
+        .map((value, index) => ({ value: value.trim(), line: index + 1 }))
+        .filter(({ value }) => Boolean(value))
+        .map(({ value, line }) => {
+          const parts = value.split("|").map((x) => x.trim().replace(/^\t+|\t+$/g, "")).filter(Boolean);
           return parts.length >= 3
             ? {
+                line,
                 email: parts[0],
                 clientId: parts[1],
                 refreshToken: parts.slice(2).join("|").trim(),
               }
-            : { email: parts[0], refreshToken: parts.slice(1).join("|").trim() };
+            : { line, email: parts[0] ?? "", refreshToken: parts.slice(1).join("|").trim() };
         });
       return api.connectMicrosoftBatch(items);
     },
@@ -1282,7 +1288,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
             <div className="connect-error">{tokenConnect.error.message}</div>
           )}
           <div className="bulk-import">
-            <strong>Bulk import — up to 10 accounts</strong>
+            <strong>Bulk import — all rows</strong>
             <small>
               One account per line: email | client ID | refresh token
             </small>
@@ -1303,10 +1309,16 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
                 : "Import Microsoft accounts"}
             </button>
             {batchConnect.data && (
-              <span>
-                {batchConnect.data.connected} connected ·{" "}
-                {batchConnect.data.failed} failed
-              </span>
+              <div className="bulk-import-results">
+                <strong>{batchConnect.data.connected} connected · {batchConnect.data.failed} failed</strong>
+                {batchConnect.data.results.map((result) => (
+                  <div className={result.success ? "success" : "failed"} key={`${result.line}:${result.email}`}>
+                    <span>Dòng {result.line}</span>
+                    <b>{result.email}</b>
+                    <small>{result.success ? "Kết nối thành công" : result.error ?? "Kết nối thất bại"}</small>
+                  </div>
+                ))}
+              </div>
             )}
             {batchConnect.error && (
               <div className="connect-error">{batchConnect.error.message}</div>

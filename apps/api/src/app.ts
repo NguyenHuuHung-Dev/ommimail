@@ -440,9 +440,12 @@ app.get("/api/messages", async (q, r) => {
 });
 app.get("/api/messages/:id", async (q, r) => {
   if (q.params.id.startsWith("gmail-imap-message:")) {
-    const [, connectionId, uid] = q.params.id.split(":"); const accountId = `gmail-imap:${connectionId}`;
+    const [, connectionId, mailboxTokenOrUid, encodedUid] = q.params.id.split(":");
+    const mailboxToken = encodedUid ? mailboxTokenOrUid : undefined;
+    const uid = encodedUid ?? mailboxTokenOrUid;
+    const accountId = `gmail-imap:${connectionId}`;
     if (!canReadAccount(q,accountId)) return fail(r, 403, "FORBIDDEN", "Mailbox access was not granted");
-    try { return ok(r, await gmailAppPasswords.get(connectionId, Number(uid))); }
+    try { return ok(r, await gmailAppPasswords.get(connectionId, Number(uid), mailboxToken)); }
     catch (e) { return fail(r, 502, "GMAIL_IMAP_ERROR", e instanceof Error ? e.message : "Could not read Gmail message"); }
   }
   if (q.params.id.startsWith("gmail-live:")) {
@@ -467,7 +470,7 @@ app.get("/api/messages/:id", async (q, r) => {
   }
   if (q.params.id.startsWith("microsoft-token:")) {
     try {
-      const [, connectionId, uid] = q.params.id.split(":");
+      const [, connectionId, uid, folderId] = q.params.id.split(":");
       const accountId = `microsoft-token:${connectionId}`;
       if (!canReadAccount(q,accountId))
         return fail(
@@ -476,7 +479,7 @@ app.get("/api/messages/:id", async (q, r) => {
           "FORBIDDEN",
           "Message does not belong to this user",
         );
-      return ok(r, await microsoftTokens.get(connectionId, uid));
+      return ok(r, await microsoftTokens.get(connectionId, uid, folderId));
     } catch (e) {
       return fail(
         r,
@@ -508,7 +511,7 @@ app.get("/api/messages/:id", async (q, r) => {
   }
   if (q.params.id.startsWith("microsoft-graph-message:")) {
     try {
-      const [, accountId, messageId] = q.params.id.split(":");
+      const [, accountId, messageId, folderId] = q.params.id.split(":");
       if (!canReadAccount(q, accountId))
         return fail(
           r,
@@ -516,7 +519,7 @@ app.get("/api/messages/:id", async (q, r) => {
           "FORBIDDEN",
           "Message does not belong to this user",
         );
-      return ok(r, await microsoftGraph.get(accountId, messageId));
+      return ok(r, await microsoftGraph.get(accountId, messageId, folderId));
     } catch (e) {
       return fail(
         r,
@@ -687,48 +690,69 @@ app.post("/api/mail-accounts/microsoft/refresh-token/batch", async (q, r) => {
     clientId: z.string().trim().uuid().optional(),
     refreshToken: z.string().trim().min(40),
   });
-  const parsed = z
-    .object({ items: z.array(item).min(1).max(10) })
-    .safeParse(q.body);
+  const parsed = z.object({ items: z.array(z.unknown()).min(1) }).safeParse(q.body);
   if (!parsed.success)
     return fail(
       r,
       400,
       "VALIDATION_ERROR",
-      "Provide between 1 and 10 valid Microsoft accounts",
+      "Provide at least one Microsoft account",
     );
-  const results: Array<{ email: string; success: boolean; error?: string }> =
-    [];
-  for (const input of parsed.data.items) {
-    try {
-      const remote = await microsoftTokens.connect({
-        email: input.email,
-        clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "",
-        refreshToken: input.refreshToken,
-      });
-      const a = {
-        id: `microsoft-token:${remote.id}`,
-        provider: "microsoft" as const,
-        emailAddress: remote.email,
-        displayName: "Microsoft Graph (bulk import)",
-        status: "connected" as const,
-        unreadCount: 0,
-        lastSyncedAt: new Date().toISOString(),
-        color: "#2563eb",
-      };
-      accounts.push(a);
-      accountOwners.set(a.id, identity(q).userId);
-      await saveMailbox(a, identity(q).userId, "microsoft-refresh-token", { email: input.email, clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "", refreshToken: input.refreshToken });
-      enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
-      results.push({ email: input.email, success: true });
-    } catch (e) {
-      results.push({
-        email: input.email,
-        success: false,
-        error: e instanceof Error ? e.message : "Connection failed",
-      });
+  const results: Array<{ line: number; email: string; success: boolean; error?: string }> = new Array(parsed.data.items.length);
+  let nextIndex = 0;
+  const connectNext = async () => {
+    while (nextIndex < parsed.data.items.length) {
+      const index = nextIndex++;
+      const raw = parsed.data.items[index] as Record<string, unknown> | null;
+      const line = typeof raw?.line === "number" && Number.isInteger(raw.line) && raw.line > 0 ? raw.line : index + 1;
+      const email = typeof raw?.email === "string" ? raw.email.trim() : "(unknown)";
+      const valid = item.safeParse(raw);
+      if (!valid.success) {
+        const fields = new Set(valid.error.issues.map((issue) => String(issue.path[0] ?? "row")));
+        const error = fields.has("email")
+          ? "Email Microsoft không hợp lệ"
+          : fields.has("clientId")
+            ? "Client ID phải là UUID hợp lệ"
+            : "Refresh token bị thiếu hoặc ngắn hơn 40 ký tự";
+        results[index] = { line, email, success: false, error };
+        continue;
+      }
+      const input = valid.data;
+      let connectionId: string | undefined;
+      try {
+        const remote = await microsoftTokens.connect({
+          email: input.email,
+          clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "",
+          refreshToken: input.refreshToken,
+        });
+        connectionId = remote.id;
+        const a = {
+          id: `microsoft-token:${remote.id}`,
+          provider: "microsoft" as const,
+          emailAddress: remote.email,
+          displayName: "Microsoft Graph (bulk import)",
+          status: "connected" as const,
+          unreadCount: 0,
+          lastSyncedAt: new Date().toISOString(),
+          color: "#2563eb",
+        };
+        await saveMailbox(a, identity(q).userId, "microsoft-refresh-token", { email: input.email, clientId: input.clientId ?? process.env.MICROSOFT_CLIENT_ID ?? "", refreshToken: input.refreshToken });
+        accounts.push(a);
+        accountOwners.set(a.id, identity(q).userId);
+        enqueueMailboxSync(a.id, identity(q).userId, { priority: true });
+        results[index] = { line, email: input.email, success: true };
+      } catch (e) {
+        if (connectionId) microsoftTokens.remove(connectionId);
+        results[index] = {
+          line,
+          email: input.email,
+          success: false,
+          error: e instanceof Error ? e.message : "Connection failed",
+        };
+      }
     }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, parsed.data.items.length) }, connectNext));
   return ok(r, {
     results,
     connected: results.filter((x) => x.success).length,

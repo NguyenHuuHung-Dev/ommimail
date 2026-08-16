@@ -1,6 +1,7 @@
 import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import type { MailMessage } from "@omnimail/shared";
+import { decodeMailboxPath, encodeMailboxPath, findJunkMailboxPath, mergeLatestMessages } from "./mail-folders.js";
 
 const tokenUrl =
   "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
@@ -64,51 +65,43 @@ export async function listMicrosoftInbox(limit = 30): Promise<MailMessage[]> {
     return inboxCache.items.slice(0, limit);
   const c = await client();
   await c.connect();
-  const lock = await c.getMailboxLock("INBOX");
   try {
-    const found = await c.search({ all: true }, { uid: true });
-    const uids = (found || []).slice(-Math.max(1, Math.min(limit, 100)));
-    if (!uids.length) return [];
-    const result: MailMessage[] = [];
-    for await (const m of c.fetch(
-      uids,
-      {
-        uid: true,
-        envelope: true,
-        flags: true,
-        internalDate: true,
-        bodyStructure: true,
-      },
-      { uid: true },
-    )) {
-      const from = m.envelope?.from?.[0];
-      result.push({
-        id: `microsoft-live:${m.uid}`,
-        accountId: "microsoft-live",
-        providerMessageId: String(m.uid),
-        providerThreadId: m.envelope?.messageId,
-        folderIds: ["inbox"],
-        labelIds: [],
-        from: address(from),
-        to: (m.envelope?.to ?? []).map(address),
-        cc: (m.envelope?.cc ?? []).map(address),
-        subject: m.envelope?.subject ?? "(No subject)",
-        preview: "Open this message to load its content securely.",
-        isRead: m.flags?.has("\\Seen") ?? false,
-        isStarred: m.flags?.has("\\Flagged") ?? false,
-        hasAttachments: Boolean(
-          m.bodyStructure?.childNodes?.some(
-            (n) => n.disposition === "attachment",
-          ),
-        ),
-        receivedAt: iso(m.internalDate ?? m.envelope?.date),
-      });
+    const junkPath = findJunkMailboxPath(await c.list());
+    const folders = [{ path: "INBOX", folderId: "inbox" }, ...(junkPath ? [{ path: junkPath, folderId: "spam" }] : [])];
+    const groups: MailMessage[][] = [];
+    for (const folder of folders) {
+      const lock = await c.getMailboxLock(folder.path);
+      try {
+        const found = await c.search({ all: true }, { uid: true });
+        const uids = (found || []).slice(-Math.max(1, Math.min(limit, 100)));
+        const result: MailMessage[] = [];
+        if (uids.length) for await (const m of c.fetch(uids, { uid: true, envelope: true, flags: true, internalDate: true, bodyStructure: true }, { uid: true })) {
+          const from = m.envelope?.from?.[0]; const mailboxToken = encodeMailboxPath(folder.path);
+          result.push({
+            id: folder.folderId === "inbox" ? `microsoft-live:${m.uid}` : `microsoft-live:${mailboxToken}:${m.uid}`,
+            accountId: "microsoft-live",
+            providerMessageId: folder.folderId === "inbox" ? String(m.uid) : `${mailboxToken}:${m.uid}`,
+            providerThreadId: m.envelope?.messageId,
+            folderIds: [folder.folderId],
+            labelIds: folder.folderId === "spam" ? ["Junk"] : [],
+            from: address(from),
+            to: (m.envelope?.to ?? []).map(address),
+            cc: (m.envelope?.cc ?? []).map(address),
+            subject: m.envelope?.subject ?? "(No subject)",
+            preview: "Open this message to load its content securely.",
+            isRead: m.flags?.has("\\Seen") ?? false,
+            isStarred: m.flags?.has("\\Flagged") ?? false,
+            hasAttachments: Boolean(m.bodyStructure?.childNodes?.some((n) => n.disposition === "attachment")),
+            receivedAt: iso(m.internalDate ?? m.envelope?.date),
+          });
+        }
+        groups.push(result);
+      } finally { lock.release(); }
     }
-    const items = result.reverse();
+    const items = mergeLatestMessages(groups, limit);
     inboxCache = { items, expires: Date.now() + 8_000 };
     return items;
   } finally {
-    lock.release();
     await c.logout();
   }
 }
@@ -116,11 +109,14 @@ export async function listMicrosoftInbox(limit = 30): Promise<MailMessage[]> {
 export async function getMicrosoftMessage(id: string): Promise<MailMessage> {
   const cached = detailCache.get(id);
   if (cached && cached.expires > Date.now()) return cached.message;
-  const uid = Number(id.split(":").at(-1));
+  const parts = id.split(":");
+  const uid = Number(parts.at(-1));
   if (!Number.isInteger(uid)) throw new Error("Invalid Microsoft message id");
+  const mailboxPath = parts.length > 2 ? decodeMailboxPath(parts.at(-2)) : "INBOX";
+  const folderId = mailboxPath.toLowerCase() === "inbox" ? "inbox" : "spam";
   const c = await client();
   await c.connect();
-  const lock = await c.getMailboxLock("INBOX");
+  const lock = await c.getMailboxLock(mailboxPath);
   try {
     let found: MailMessage | undefined;
     for await (const m of c.fetch(
@@ -137,11 +133,11 @@ export async function getMicrosoftMessage(id: string): Promise<MailMessage> {
       const parsed = await simpleParser(m.source!);
       const from = m.envelope?.from?.[0];
       found = {
-        id: `microsoft-live:${m.uid}`,
+        id,
         accountId: "microsoft-live",
-        providerMessageId: String(m.uid),
-        folderIds: ["inbox"],
-        labelIds: [],
+        providerMessageId: folderId === "inbox" ? String(m.uid) : `${encodeMailboxPath(mailboxPath)}:${m.uid}`,
+        folderIds: [folderId],
+        labelIds: folderId === "spam" ? ["Junk"] : [],
         from: address(from),
         to: (m.envelope?.to ?? []).map(address),
         cc: (m.envelope?.cc ?? []).map(address),
