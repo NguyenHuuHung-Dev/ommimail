@@ -1,33 +1,8 @@
 .mail-sharing-page {
-  padding: 0 clamp(22px, 3vw, 48px) 48px!important;
+  padding: 18px clamp(22px, 3vw, 48px) 48px!important;
   background: #f7dce4!important;
 }
 
-.share-dashboard-header {
-  min-height: 126px;
-  margin: 0 calc(clamp(22px, 3vw, 48px) * -1) 18px;
-  padding: 24px clamp(22px, 3vw, 48px);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border-bottom: 1px solid #0a0a0a;
-  background: #fff;
-}
-
-.share-dashboard-header h1 {
-  margin: 4px 0 7px;
-  font-size: clamp(28px, 3.2vw, 48px);
-  letter-spacing: -.045em;
-}
-
-.share-dashboard-header p {
-  margin: 0;
-  color: #806d73;
-  font-size: 11px;
-}
-
-.share-dashboard-header > button,
 .share-access-header > button {
   height: 40px;
   padding: 0 14px;
@@ -43,13 +18,11 @@
   white-space: nowrap;
 }
 
-.share-dashboard-header > button:hover,
 .share-access-header > button:hover:not(:disabled) {
   background: #f2bdcc;
   color: #0a0a0a;
 }
 
-.share-dashboard-header svg,
 .share-access-header > button svg {
   width: 14px;
 }
@@ -586,16 +559,6 @@
 @media (max-width: 720px) {
   .mail-sharing-page {
     padding-inline: 14px!important;
-  }
-
-  .share-dashboard-header {
-    margin-inline: -14px;
-    padding-inline: 16px;
-  }
-
-  .share-dashboard-header p,
-  .share-dashboard-header > button span {
-    display: none;
   }
 
   .share-batch-builder {

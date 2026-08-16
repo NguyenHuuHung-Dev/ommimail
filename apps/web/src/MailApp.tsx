@@ -624,7 +624,7 @@ function ProfileModal({
         <header>
           <div className="profile-heading">
             <span className="profile-avatar-large">{initials(fullName || me?.email || user?.email || undefined)}</span>
-            <div><span className="eyebrow">Personal dashboard</span><h2 id="profile-title">Quản lý tài khoản</h2><p>Hồ sơ, lịch sử đăng nhập và toàn bộ mailbox tại một nơi.</p></div>
+            <div><h2 id="profile-title">Quản lý tài khoản</h2></div>
           </div>
           <button type="button" onClick={onClose} aria-label="Đóng hồ sơ"><X /></button>
         </header>
@@ -783,7 +783,7 @@ function HomeLanding({
           <img src="/homepage.png" alt="OmniMail character" />
         </figure>
         <span className="poster-side-label">READ · REFRESH · REPEAT</span>
-        <div className="poster-socials"><a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a><a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a><a href="https://github.com/NguyenHuuHung-Dev" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a></div>
+        <div className="poster-socials"><a href="https://www.facebook.com/zingne1302" target="_blank" rel="noreferrer" aria-label="Facebook của Hữu Hưng"><Facebook /></a><a href="https://www.instagram.com/huuhungstart/" target="_blank" rel="noreferrer" aria-label="Instagram của Hữu Hưng"><Instagram /></a><a href="https://github.com/NguyenHuuHung-Dev" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a></div>
       </main>
     </div>
   );
@@ -973,10 +973,6 @@ function PageContent({
     };
     return (
       <main className="page-pane mail-sharing-page dashboard-page">
-        <header className="share-dashboard-header">
-          <div><span className="eyebrow">Access control center</span><h1>Share Mail Dashboard</h1><p>Chọn nhiều mailbox và nhiều người nhận trong một lần cấp quyền.</p></div>
-          <button type="button" onClick={() => qc.invalidateQueries({ queryKey: ["mailbox-shares"] })}><RefreshCw /> Làm mới</button>
-        </header>
         {(sharingError || shareMailboxBatch.error) && <div className="connect-error">{(sharingError ?? shareMailboxBatch.error)?.message}</div>}
         {sharingPending ? <Skeleton /> : !shareMailboxes.length ? (
           <section className="share-empty-state"><Mail /><h2>Bạn chưa có mailbox để chia sẻ</h2><p>Kết nối Gmail, Microsoft hoặc Temp Mail trước, sau đó quay lại trang này để cấp quyền.</p><button className="primary" onClick={openConnect}><Plus /> Kết nối mailbox</button></section>
