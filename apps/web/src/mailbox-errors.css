@@ -425,3 +425,46 @@
     display: none;
   }
 }
+
+.temp-message-error {
+  min-height: 190px;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  color: #7e384d;
+  text-align: center;
+}
+
+.temp-message-error > svg {
+  width: 25px;
+  color: #b85b76;
+}
+
+.temp-message-error strong,
+.temp-message-error small {
+  display: block;
+}
+
+.temp-message-error strong {
+  font-size: 12px;
+}
+
+.temp-message-error small {
+  max-width: 320px;
+  color: #8a747b;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.temp-message-error button {
+  margin-top: 5px;
+  padding: 7px 11px;
+  border: 1px solid #0a0a0a;
+  background: #0a0a0a;
+  color: #f2bdcc;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+}

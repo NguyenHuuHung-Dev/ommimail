@@ -18,7 +18,7 @@ import { hiddenMessages } from "./hidden-messages.js";
 import { MailboxAlreadyConnectedError, reserveMailboxConnection } from "./connection-policy.js";
 import { compositeMessageAccountId, mayReadMailbox, mayRevealMailboxAddress } from "./access-control.js";
 import { oauth, removeOAuthCredential } from "./oauth.js";
-import { deleteMailbox, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveUserProfile } from "./firestore-store.js";
+import { deleteMailbox, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveUserProfile, updateMailboxSyncState } from "./firestore-store.js";
 import {
   listMicrosoftInbox,
   getMicrosoftMessage,
@@ -459,7 +459,10 @@ app.get("/api/sync-jobs/:id", (q, r) => {
 });
 app.get("/api/messages", async (q, r) => {
   const account = String(q.query.accountId ?? "");
-  const cached = account && canReadAccount(q, account) ? getCachedMailboxMessages(account) : undefined;
+  // Temp inboxes are time-sensitive. An empty sync cache must never hide a
+  // message that arrived at mail.tm after the last background synchronization.
+  const mayUseCache = !account.startsWith("mailtm:") && q.query.refresh !== "1";
+  const cached = mayUseCache && account && canReadAccount(q, account) ? getCachedMailboxMessages(account) : undefined;
   if (cached) {
     const list = filterLoadedMessages(q, cached);
     return ok(r, { items: list, total: list.length, synced: true });
@@ -522,6 +525,13 @@ app.get("/api/messages", async (q, r) => {
       return fail(r, 403, "FORBIDDEN", "Mailbox does not belong to this user");
     try {
       const list = filterLoadedMessages(q, await mailTm.list(account.slice("mailtm:".length)));
+      const mailbox = accounts.find((candidate) => candidate.id === account);
+      if (mailbox) {
+        mailbox.status = "connected";
+        mailbox.unreadCount = list.filter((message) => !message.isRead).length;
+        mailbox.lastSyncedAt = new Date().toISOString();
+        void updateMailboxSyncState(mailbox).catch(() => undefined);
+      }
       return ok(r, { items: list, total: list.length });
     } catch (e) {
       return fail(
