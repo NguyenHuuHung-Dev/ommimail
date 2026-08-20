@@ -97,6 +97,37 @@
 .message-share-success small { color: #466351; font-size: 10px; }
 
 .shared-messages-page { overflow: auto!important; padding: 24px clamp(22px, 3vw, 46px) 42px!important; }
+.sharing-hub-page { overflow: auto!important; padding: 24px clamp(22px, 3vw, 46px) 46px!important; }
+.sharing-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+  max-width: 760px;
+  margin: 22px 0 18px;
+}
+.sharing-mode-tabs > button {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #0a0a0a;
+  background: #fff;
+  color: #0a0a0a;
+  text-align: left;
+}
+.sharing-mode-tabs > button > svg { width: 20px; flex: none; }
+.sharing-mode-tabs > button > span { display: grid; gap: 4px; }
+.sharing-mode-tabs strong { font-size: 12px; }
+.sharing-mode-tabs small { color: #806d73; font-size: 9px; }
+.sharing-mode-tabs > button.active { background: #0a0a0a; color: #f2bdcc; box-shadow: 5px 5px 0 #df9fb3; }
+.sharing-mode-tabs > button.active small { color: #dcb5c0; }
+.sharing-mode-panel { min-width: 0; }
+.sharing-hub-page .sharing-hub-content {
+  padding: 0!important;
+  overflow: visible!important;
+  background: transparent!important;
+}
 .shared-message-tabs { display: flex; gap: 7px; margin: 22px 0 14px; }
 .shared-message-tabs button { height: 39px; padding: 0 14px; border: 1px solid #0a0a0a; background: #fff; color: #0a0a0a; font-size: 10px; font-weight: 900; }
 .shared-message-tabs button.active { background: #0a0a0a; color: #f2bdcc; }
@@ -145,6 +176,8 @@
   .message-share-modal { padding: 18px; box-shadow: 7px 7px 0 #d991a8; }
   .shared-message-tabs { display: grid; grid-template-columns: 1fr; }
   .shared-messages-page { padding: 18px!important; }
+  .sharing-hub-page { padding: 18px!important; }
+  .sharing-mode-tabs { grid-template-columns: 1fr; }
   .upgrade-request-card,
   .upgrade-process-card { padding: 20px; }
 }
@@ -157,3 +190,5 @@
 .shell.dark .shared-message-list article { border-color: #493942; }
 .shell.dark .shared-message-list article:hover,
 .shell.dark .shared-message-list article.active { background: #6b203b; }
+.shell.dark .sharing-mode-tabs > button { background: #21191e; color: var(--text); border-color: #6a4c59; }
+.shell.dark .sharing-mode-tabs > button.active { background: #6b203b; color: #fff; }

@@ -66,9 +66,9 @@ function AppNav({
   const items = [
     ...APP_NAV_ITEMS,
     ...(role === "admin" ? [{ page: "mail-admin", label: "Mail Admin", icon: ShieldCheck }] : role === "basic" ? [{ page: "mail-admin", label: "Upgrade", icon: ShieldCheck }] : []),
-    { page: "mail-sharing", label: "Shared Messages", icon: UserRoundCheck },
-    { page: "mailbox-sharing", label: "Share Mailbox", icon: Mail },
+    { page: "mail-sharing", label: "Sharing", icon: UserRoundCheck },
   ];
+  const activePage = page === "mailbox-sharing" ? "mail-sharing" : page;
   return (
     <nav className={className} aria-label="Primary navigation">
       {items.map((item) => {
@@ -76,9 +76,9 @@ function AppNav({
         return (
           <button
             key={item.page}
-            className={`navitem ${page === item.page ? "active" : ""}`}
+            className={`navitem ${activePage === item.page ? "active" : ""}`}
             onClick={() => onNavigate(`/app/${item.page}`)}
-            aria-current={page === item.page ? "page" : undefined}
+            aria-current={activePage === item.page ? "page" : undefined}
           >
             <Icon />
             <span>{item.label}</span>
@@ -916,8 +916,8 @@ function PageContent({
         </section>
       </main>
     );
-  if (page === "mail-sharing") return <MessageSharingPage />;
-  if (page === "mailbox-sharing") return <MailboxSharingPage openConnect={openConnect} />;
+  if (page === "mail-sharing" || page === "mailbox-sharing")
+    return <SharingHubPage openConnect={openConnect} initialMode={page === "mailbox-sharing" ? "mailbox" : "message"} />;
   if (page === "mail-admin") {
     if (role === "basic") return <UpgradeRequestPage />;
     if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Truy cập mailbox được chia sẻ</h1><p>Để chống dò địa chỉ, OmniMail không liệt kê mailbox được Admin cấp. Hãy mở Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ mailbox.</p></div></div><section className="shared-mail-grid"><article><ShieldCheck/><div><strong>Private mailbox discovery</strong><small>Quyền xem vẫn được kiểm tra ở API sau khi địa chỉ khớp.</small></div></article></section></main>;
@@ -1069,6 +1069,28 @@ function MailboxManager({
   );
 }
 
+function SharingHubPage({
+  openConnect,
+  initialMode,
+}: {
+  openConnect: () => void;
+  initialMode: "message" | "mailbox";
+}) {
+  const [mode, setMode] = useState<"message" | "mailbox">(initialMode);
+  return (
+    <main className="page-pane sharing-hub-page dashboard-page">
+      <div className="page-header"><div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1><p>Chọn chia sẻ một tin nhắn riêng lẻ hoặc cấp quyền chỉ đọc cho toàn bộ mailbox.</p></div></div>
+      <div className="sharing-mode-tabs" role="tablist" aria-label="Chọn loại chia sẻ">
+        <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><UserRoundCheck /><span><strong>Tin nhắn riêng lẻ</strong><small>Chỉ mở đúng một thư</small></span></button>
+        <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><Mail /><span><strong>Toàn bộ mailbox</strong><small>Quyền đọc toàn hộp thư</small></span></button>
+      </div>
+      <section className="sharing-mode-panel">
+        {mode === "message" ? <MessageSharingPage /> : <MailboxSharingPage openConnect={openConnect} />}
+      </section>
+    </main>
+  );
+}
+
 function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
   const qc = useQueryClient();
   const [mailboxSearch, setMailboxSearch] = useState("");
@@ -1125,8 +1147,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
       })));
   };
   return (
-    <main className="page-pane mail-sharing-page dashboard-page">
-      <div className="page-header"><div><span className="eyebrow">Chia sẻ toàn bộ hộp thư</span><h1>Share Mailbox</h1><p>Cấp quyền chỉ đọc cho Premium user đối với toàn bộ mailbox đã chọn. Chia sẻ từng thư vẫn nằm ở mục Shared Messages.</p></div></div>
+    <div className="mail-sharing-page sharing-hub-content">
       {(sharingError || updateShares.error) && <div className="connect-error">{(sharingError ?? updateShares.error)?.message}</div>}
       {isLoading ? <Skeleton /> : !mailboxes.length ? (
         <section className="share-empty-state"><Mail /><h2>Bạn chưa có mailbox để chia sẻ</h2><p>Kết nối Gmail, Microsoft hoặc Temp Mail trước, sau đó quay lại trang này để cấp quyền.</p><button className="primary" onClick={openConnect}><Plus /> Kết nối mailbox</button></section>
@@ -1214,7 +1235,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
         </section>
       </>}
       <section className="shared-with-me-panel"><div className="share-section-heading"><div><span className="eyebrow">Private discovery</span><h2>Mailbox được chia sẻ cho tôi</h2></div><span>Bảo mật</span></div><p className="shared-with-me-empty">Vào Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ để mở mailbox đã được cấp quyền.</p></section>
-    </main>
+    </div>
   );
 }
 
@@ -1275,8 +1296,7 @@ function MessageSharingPage() {
     access: "shared",
   });
   return (
-    <main className="page-pane shared-messages-page dashboard-page">
-      <div className="page-header"><div><span className="eyebrow">Chia sẻ từng tin nhắn</span><h1>Shared messages</h1><p>Mỗi quyền chỉ mở đúng một thư. Người nhận không thể duyệt mailbox hoặc xem các email khác.</p></div></div>
+    <div className="shared-messages-page sharing-hub-content">
       <div className="shared-message-tabs">
         <button className={tab === "received" ? "active" : ""} onClick={() => { setTab("received"); setSelectedId(undefined); }}>Được chia sẻ với tôi <b>{data?.received.length ?? 0}</b></button>
         <button className={tab === "sent" ? "active" : ""} onClick={() => { setTab("sent"); setSelectedId(undefined); }}>Tôi đã chia sẻ <b>{data?.sent.length ?? 0}</b></button>
@@ -1293,7 +1313,7 @@ function MessageSharingPage() {
         </div>
         <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} sharedMessage /></div>
       </section> : <section className="share-empty-state"><UserRoundCheck /><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
-    </main>
+    </div>
   );
 }
 
