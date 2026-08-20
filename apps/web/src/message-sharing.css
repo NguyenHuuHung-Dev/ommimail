@@ -1,0 +1,159 @@
+.message-row {
+  position: relative;
+  grid-template-columns: 22px 38px minmax(0, 1fr) 30px!important;
+}
+
+.message-more {
+  position: relative;
+  align-self: start;
+}
+
+.message-more summary {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  color: var(--muted);
+  list-style: none;
+}
+
+.message-more summary::-webkit-details-marker { display: none; }
+.message-more summary:hover,
+.message-more[open] summary { border-color: var(--line); background: var(--bg); color: var(--text); }
+.message-more summary svg { width: 16px; }
+.message-more > div {
+  position: absolute;
+  z-index: 20;
+  top: 31px;
+  right: 0;
+  width: 176px;
+  padding: 5px;
+  border: 1px solid #0a0a0a;
+  background: var(--bg);
+  box-shadow: 5px 5px 0 #e6a9ba;
+}
+.message-more > div button {
+  width: 100%;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: left;
+}
+.message-more > div button:hover { background: #f5c7d3; color: #0a0a0a; }
+.message-more > div svg { width: 14px; }
+
+.message-share-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: #09090a99;
+  backdrop-filter: blur(4px);
+}
+.message-share-modal {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid #0a0a0a;
+  background: #fffafc;
+  color: #0a0a0a;
+  box-shadow: 12px 12px 0 #d991a8;
+}
+.message-share-modal > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.message-share-modal h2 { margin: 5px 0 0; font-size: 25px; }
+.message-share-modal > header > button { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid #d9bbc4; background: #fff; }
+.message-share-modal > header svg { width: 17px; }
+.message-share-preview { display: flex; align-items: center; gap: 12px; margin: 22px 0; padding: 14px; border: 1px solid #dfcbd1; background: #fff; }
+.message-share-preview > svg { flex: none; width: 22px; color: #b75f7a; }
+.message-share-preview > div { display: grid; min-width: 0; gap: 5px; }
+.message-share-preview strong,
+.message-share-preview small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.message-share-preview strong { font-size: 13px; }
+.message-share-preview small { color: #806d73; font-size: 10px; }
+.message-share-modal form label { display: grid; gap: 7px; }
+.message-share-modal form label > span { font-size: 9px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.message-share-modal form input { width: 100%; height: 44px; padding: 0 12px; border: 1px solid #cdb8bf; background: #fff; outline: 0; }
+.message-share-modal form input:focus { border-color: #0a0a0a; box-shadow: 0 0 0 3px #f3c4d2; }
+.message-share-modal form label small { color: #806d73; font-size: 10px; }
+.message-share-note { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: #66545a; font-size: 10px; }
+.message-share-note svg { width: 14px; }
+.message-share-modal footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+.message-share-modal footer button { min-width: 96px; height: 39px; padding: 0 14px; border: 1px solid #0a0a0a; background: #fff; font-size: 10px; font-weight: 900; }
+.message-share-modal footer .primary { background: #0a0a0a; color: #f2bdcc; }
+.message-share-success { display: flex; gap: 12px; align-items: center; padding: 16px; border: 1px solid #75a98b; background: #edf8f1; }
+.message-share-success svg { width: 22px; color: #28734a; }
+.message-share-success div { display: grid; gap: 4px; }
+.message-share-success small { color: #466351; font-size: 10px; }
+
+.shared-messages-page { overflow: auto!important; padding: 24px clamp(22px, 3vw, 46px) 42px!important; }
+.shared-message-tabs { display: flex; gap: 7px; margin: 22px 0 14px; }
+.shared-message-tabs button { height: 39px; padding: 0 14px; border: 1px solid #0a0a0a; background: #fff; color: #0a0a0a; font-size: 10px; font-weight: 900; }
+.shared-message-tabs button.active { background: #0a0a0a; color: #f2bdcc; }
+.shared-message-tabs b { margin-left: 7px; padding: 2px 6px; background: #f2bdcc; color: #0a0a0a; }
+.shared-message-workspace { min-height: 520px; display: grid; grid-template-columns: minmax(290px, .78fr) minmax(0, 1.5fr); border: 1px solid #0a0a0a; background: #fff; box-shadow: 9px 9px 0 #df9fb3; }
+.shared-message-list { min-width: 0; max-height: 650px; overflow: auto; border-right: 1px solid #0a0a0a; background: #fff8fa; }
+.shared-message-list article { display: grid; grid-template-columns: 34px minmax(0, 1fr) 30px; align-items: center; gap: 10px; padding: 14px 12px; border-bottom: 1px solid #eadde1; cursor: pointer; }
+.shared-message-list article:hover,
+.shared-message-list article.active { background: #f3c4d2; }
+.shared-message-list article > div { display: grid; min-width: 0; gap: 4px; }
+.shared-message-list strong,
+.shared-message-list small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shared-message-list strong { font-size: 11px; }
+.shared-message-list small,
+.shared-message-list time { color: #806d73; font-size: 8px; }
+.shared-message-list article > button { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid #d9bbc4; background: #fff; color: #a14561; }
+.shared-message-list article > button svg { width: 13px; }
+.shared-message-reader { min-width: 0; max-height: 650px; overflow: hidden; }
+.shared-message-reader .detail { height: 100%; }
+
+.upgrade-request-grid { display: grid; grid-template-columns: minmax(320px, 1.25fr) minmax(280px, .75fr); gap: 20px; max-width: 980px; margin-top: 32px; }
+.upgrade-request-card,
+.upgrade-process-card { padding: 28px; border: 1px solid #0a0a0a; background: #fff; box-shadow: 9px 9px 0 #dfa3b6; }
+.upgrade-request-card > span,
+.upgrade-process-card > span { font-size: 9px; font-weight: 900; letter-spacing: .16em; }
+.upgrade-request-card h2 { margin: 10px 0 16px; font-size: 27px; }
+.upgrade-request-card ul { min-height: 132px; padding-left: 20px; color: #55484c; font-size: 12px; line-height: 2; }
+.upgrade-request-card > button { width: 100%; min-height: 45px; border: 0; background: #0a0a0a; color: #f2bdcc; font-weight: 900; }
+.upgrade-request-card > button:disabled { background: #d9cfd2; color: #6f6266; cursor: default; }
+.upgrade-request-time { display: block; margin-top: 12px; color: #6c595f; font-size: 10px; line-height: 1.5; }
+.upgrade-process-card ol { display: grid; gap: 0; margin: 18px 0 0; padding: 0; list-style: none; }
+.upgrade-process-card li { display: flex; gap: 12px; padding: 16px 0; border-top: 1px solid #eadde1; }
+.upgrade-process-card li > b { width: 28px; height: 28px; flex: none; display: grid; place-items: center; background: #f2bdcc; font-size: 10px; }
+.upgrade-process-card li > div { display: grid; gap: 5px; }
+.upgrade-process-card li strong { font-size: 12px; }
+.upgrade-process-card li small { color: #806d73; font-size: 9px; line-height: 1.5; }
+
+@media (max-width: 900px) {
+  .shared-message-workspace,
+  .upgrade-request-grid { grid-template-columns: 1fr; }
+  .shared-message-list { max-height: 270px; border-right: 0; border-bottom: 1px solid #0a0a0a; }
+  .shared-message-reader { min-height: 500px; }
+}
+@media (max-width: 560px) {
+  .message-row { grid-template-columns: 18px 32px minmax(0, 1fr) 28px!important; }
+  .message-share-modal { padding: 18px; box-shadow: 7px 7px 0 #d991a8; }
+  .shared-message-tabs { display: grid; grid-template-columns: 1fr; }
+  .shared-messages-page { padding: 18px!important; }
+  .upgrade-request-card,
+  .upgrade-process-card { padding: 20px; }
+}
+
+.shell.dark .message-more > div,
+.shell.dark .shared-message-workspace,
+.shell.dark .shared-message-list,
+.shell.dark .upgrade-request-card,
+.shell.dark .upgrade-process-card { background: #21191e; color: var(--text); border-color: #6a4c59; }
+.shell.dark .shared-message-list article { border-color: #493942; }
+.shell.dark .shared-message-list article:hover,
+.shell.dark .shared-message-list article.active { background: #6b203b; }

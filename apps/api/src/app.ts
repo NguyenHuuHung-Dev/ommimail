@@ -11,6 +11,8 @@ import { mailTm } from "./mail-tm.js";
 import { microsoftTokens } from "./microsoft-token-accounts.js";
 import { accountOwners } from "./ownership.js";
 import { isMailboxShared, mailboxShares, setMailboxShare } from "./sharing.js";
+import { messageShareId, messageShares, removeMessageShare, setMessageShare } from "./message-sharing.js";
+import { setUpgradeRequest, upgradeRequests } from "./upgrade-requests.js";
 import { gmail } from "./gmail.js";
 import { gmailAppPasswords } from "./gmail-app-password.js";
 import { microsoftGraph } from "./microsoft-graph.js";
@@ -18,7 +20,7 @@ import { hiddenMessages } from "./hidden-messages.js";
 import { MailboxAlreadyConnectedError, reserveMailboxConnection } from "./connection-policy.js";
 import { compositeMessageAccountId, mayReadMailbox, mayRevealMailboxAddress } from "./access-control.js";
 import { oauth, removeOAuthCredential } from "./oauth.js";
-import { deleteMailbox, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveUserProfile, updateMailboxSyncState } from "./firestore-store.js";
+import { deleteMailbox, deleteMessageShare, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveMessageShare, saveUpgradeRequest, saveUserProfile, updateMailboxSyncState } from "./firestore-store.js";
 import {
   listMicrosoftInbox,
   getMicrosoftMessage,
@@ -164,6 +166,7 @@ app.get("/api/admin/overview", requireAdmin, (_q, r) =>
       displayName: userDirectory.get(userId)?.displayName,
       lastSeenAt: userDirectory.get(userId)?.lastSeenAt,
       role: userDirectory.get(userId)?.role ?? 'basic',
+      upgradeRequestedAt: upgradeRequests.get(userId),
       accounts: accounts.filter((account) => accountOwners.get(account.id) === userId),
       sharedAccountIds: accounts.filter((account)=>isMailboxShared(account.id,userId)).map((account)=>account.id),
     })),
@@ -176,8 +179,20 @@ app.patch('/api/admin/users/:userId/role',requireAdmin,async(q,r)=>{
   if(serviceAccountConfigured)await getAuth().setCustomUserClaims(userId,{role:parsed.data.role});
   user.role=parsed.data.role;
   void saveUserProfile({userId,...user}).catch(()=>undefined);
+  if(parsed.data.role==='premium'){
+    setUpgradeRequest(userId);
+    void saveUpgradeRequest(userId).catch(()=>undefined);
+  }
   if(parsed.data.role==='basic')for(const [accountId,users] of mailboxShares){users.delete(userId);void saveMailboxShare(accountId,userId,false).catch(()=>undefined);if(!users.size)mailboxShares.delete(accountId)}
   return ok(r,{userId,role:parsed.data.role});
+});
+app.get('/api/upgrade-requests/me',(q,r)=>ok(r,{requestedAt:upgradeRequests.get(identity(q).userId)}));
+app.post('/api/upgrade-requests',async(q,r)=>{
+  if(identity(q).role!=='basic')return fail(r,400,'ALREADY_UPGRADED','Tài khoản của bạn đã có quyền Premium hoặc Admin');
+  const requestedAt=upgradeRequests.get(identity(q).userId)??new Date().toISOString();
+  setUpgradeRequest(identity(q).userId,requestedAt);
+  await saveUpgradeRequest(identity(q).userId,requestedAt);
+  return ok(r,{requestedAt,status:'pending' as const});
 });
 app.put('/api/admin/mailbox-shares',requireAdmin,async(q,r)=>{
   const parsed=z.object({accountId:z.string().min(1),userId:z.string().min(1),allowed:z.boolean()}).safeParse(q.body);if(!parsed.success)return fail(r,400,'VALIDATION_ERROR','Invalid sharing request');
@@ -582,116 +597,141 @@ app.get("/api/messages", async (q, r) => {
     total: list.length,
   });
 });
-app.get("/api/messages/:id", async (q, r) => {
-  if (q.params.id.startsWith("gmail-imap-message:")) {
-    const [, connectionId, mailboxTokenOrUid, encodedUid] = q.params.id.split(":");
+class MessageOperationError extends Error {
+  constructor(readonly status: number, readonly code: string, message: string) {
+    super(message);
+  }
+}
+
+async function loadMessageDetail(q: express.Request, messageId: string) {
+  if (messageId.startsWith("gmail-imap-message:")) {
+    const [, connectionId, mailboxTokenOrUid, encodedUid] = messageId.split(":");
     const mailboxToken = encodedUid ? mailboxTokenOrUid : undefined;
     const uid = encodedUid ?? mailboxTokenOrUid;
     const accountId = `gmail-imap:${connectionId}`;
-    if (!canReadAccount(q,accountId)) return fail(r, 403, "FORBIDDEN", "Mailbox access was not granted");
-    try { return ok(r, await gmailAppPasswords.get(connectionId, Number(uid), mailboxToken)); }
-    catch (e) { return fail(r, 502, "GMAIL_IMAP_ERROR", e instanceof Error ? e.message : "Could not read Gmail message"); }
+    if (!canReadAccount(q, accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Mailbox access was not granted");
+    try { return await gmailAppPasswords.get(connectionId, Number(uid), mailboxToken); }
+    catch (e) { throw new MessageOperationError(502, "GMAIL_IMAP_ERROR", e instanceof Error ? e.message : "Could not read Gmail message"); }
   }
-  if (q.params.id.startsWith("gmail-live:")) {
+  if (messageId.startsWith("gmail-live:")) {
+    const [, accountId, providerMessageId] = messageId.split(":");
+    if (!canReadAccount(q, accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Message does not belong to this user");
     try {
-      const [, accountId, messageId] = q.params.id.split(":");
-      if (!canReadAccount(q,accountId))
-        return fail(
-          r,
-          403,
-          "FORBIDDEN",
-          "Message does not belong to this user",
-        );
-      return ok(r, await gmail.get(accountId, messageId));
+      return await gmail.get(accountId, providerMessageId);
     } catch (e) {
-      return fail(
-        r,
-        502,
-        "GMAIL_ERROR",
-        e instanceof Error ? e.message : "Could not read Gmail message",
-      );
+      throw new MessageOperationError(502, "GMAIL_ERROR", e instanceof Error ? e.message : "Could not read Gmail message");
     }
   }
-  if (q.params.id.startsWith("microsoft-token:")) {
+  if (messageId.startsWith("microsoft-token:")) {
+    const [, connectionId, uid, folderId] = messageId.split(":");
+    const accountId = `microsoft-token:${connectionId}`;
+    if (!canReadAccount(q, accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Message does not belong to this user");
     try {
-      const [, connectionId, uid, folderId] = q.params.id.split(":");
-      const accountId = `microsoft-token:${connectionId}`;
-      if (!canReadAccount(q,accountId))
-        return fail(
-          r,
-          403,
-          "FORBIDDEN",
-          "Message does not belong to this user",
-        );
-      return ok(r, await microsoftTokens.get(connectionId, uid, folderId));
+      return await microsoftTokens.get(connectionId, uid, folderId);
     } catch (e) {
-      return fail(
-        r,
-        502,
-        "MICROSOFT_GRAPH_ERROR",
-        e instanceof Error ? e.message : "Could not read Microsoft message",
-      );
+      throw new MessageOperationError(502, "MICROSOFT_GRAPH_ERROR", e instanceof Error ? e.message : "Could not read Microsoft message");
     }
   }
-  if (q.params.id.startsWith("mailtm:")) {
+  if (messageId.startsWith("mailtm:")) {
+    const [, accountId, providerMessageId] = messageId.split(":");
+    if (!canReadAccount(q, `mailtm:${accountId}`)) throw new MessageOperationError(403, "FORBIDDEN", "Message does not belong to this user");
     try {
-      const [, accountId, messageId] = q.params.id.split(":");
-      if (!canReadAccount(q,`mailtm:${accountId}`))
-        return fail(
-          r,
-          403,
-          "FORBIDDEN",
-          "Message does not belong to this user",
-        );
-      return ok(r, await mailTm.get(accountId, messageId));
+      return await mailTm.get(accountId, providerMessageId);
     } catch (e) {
-      return fail(
-        r,
-        502,
-        "TEMP_PROVIDER_ERROR",
-        e instanceof Error ? e.message : "Could not read temp message",
-      );
+      throw new MessageOperationError(502, "TEMP_PROVIDER_ERROR", e instanceof Error ? e.message : "Could not read temp message");
     }
   }
-  if (q.params.id.startsWith("microsoft-graph-message:")) {
+  if (messageId.startsWith("microsoft-graph-message:")) {
+    const [, accountId, providerMessageId, folderId] = messageId.split(":");
+    if (!canReadAccount(q, accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Message does not belong to this user");
     try {
-      const [, accountId, messageId, folderId] = q.params.id.split(":");
-      if (!canReadAccount(q, accountId))
-        return fail(
-          r,
-          403,
-          "FORBIDDEN",
-          "Message does not belong to this user",
-        );
-      return ok(r, await microsoftGraph.get(accountId, messageId, folderId));
+      return await microsoftGraph.get(accountId, providerMessageId, folderId);
     } catch (e) {
-      return fail(
-        r,
-        502,
-        "MICROSOFT_GRAPH_ERROR",
-        e instanceof Error ? e.message : "Could not read Microsoft message",
-      );
+      throw new MessageOperationError(502, "MICROSOFT_GRAPH_ERROR", e instanceof Error ? e.message : "Could not read Microsoft message");
     }
   }
-  if (q.params.id.startsWith("microsoft-live:")) {
+  if (messageId.startsWith("microsoft-live:")) {
+    if (!ownsSeed(q)) throw new MessageOperationError(403, "FORBIDDEN", "Mailbox access was not granted");
     try {
-      if (!ownsSeed(q))
-        return fail(r, 403, "FORBIDDEN", "Mailbox access was not granted");
-      return ok(r, await getMicrosoftMessage(q.params.id));
+      return await getMicrosoftMessage(messageId);
     } catch (e) {
-      return fail(
-        r,
-        502,
-        "MICROSOFT_IMAP_ERROR",
-        e instanceof Error ? e.message : "Could not read Outlook message",
-      );
+      throw new MessageOperationError(502, "MICROSOFT_IMAP_ERROR", e instanceof Error ? e.message : "Could not read Outlook message");
     }
   }
-  const m = messages.find((x) => x.id === q.params.id);
-  if (!m) return fail(r, 404, "NOT_FOUND", "Message not found");
-  if (!canReadAccount(q, m.accountId))
-    return fail(r, 403, "FORBIDDEN", "Message access was not granted");
-  return ok(r, m);
+  const message = messages.find((candidate) => candidate.id === messageId);
+  if (!message) throw new MessageOperationError(404, "NOT_FOUND", "Message not found");
+  if (!canReadAccount(q, message.accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Message access was not granted");
+  return message;
+}
+
+app.get("/api/messages/:id", async (q, r) => {
+  try {
+    return ok(r, await loadMessageDetail(q, q.params.id));
+  } catch (cause) {
+    if (cause instanceof MessageOperationError) return fail(r, cause.status, cause.code, cause.message);
+    return fail(r, 500, "MESSAGE_LOAD_FAILED", cause instanceof Error ? cause.message : "Could not read message");
+  }
+});
+app.get("/api/message-shares", (q, r) => {
+  const userId = identity(q).userId;
+  const visible = [...messageShares.values()]
+    .filter((share) => share.owner.userId === userId || share.recipient.userId === userId)
+    .sort((left, right) => right.sharedAt.localeCompare(left.sharedAt));
+  return ok(r, {
+    received: visible.filter((share) => share.recipient.userId === userId),
+    sent: visible.filter((share) => share.owner.userId === userId),
+  });
+});
+app.post("/api/message-shares", async (q, r) => {
+  const parsed = z.object({ messageId: z.string().min(1), email: z.string().trim().email() }).safeParse(q.body);
+  if (!parsed.success) return fail(r, 400, "VALIDATION_ERROR", "Nhập email OmniMail hợp lệ");
+  const ownerId = identity(q).userId;
+  try {
+    const message = await loadMessageDetail(q, parsed.data.messageId);
+    if (accountOwners.get(message.accountId) !== ownerId)
+      return fail(r, 403, "FORBIDDEN", "Bạn chỉ có thể chia sẻ tin nhắn trong mailbox của mình");
+    const targetEmail = parsed.data.email.toLowerCase();
+    const target = [...userDirectory.entries()].find(([, profile]) => profile.email.toLowerCase() === targetEmail);
+    if (!target) return fail(r, 404, "USER_NOT_FOUND", "Email này chưa đăng ký tài khoản OmniMail");
+    const [recipientUserId, recipientProfile] = target;
+    if (recipientUserId === ownerId) return fail(r, 400, "SELF_SHARE", "Bạn không thể chia sẻ tin nhắn cho chính mình");
+    const account = accounts.find((candidate) => candidate.id === message.accountId);
+    if (!account) return fail(r, 404, "MAILBOX_NOT_FOUND", "Mailbox chứa tin nhắn không còn tồn tại");
+    const ownerProfile = userDirectory.get(ownerId);
+    const id = messageShareId(ownerId, message.id, recipientUserId);
+    const existing = messageShares.get(id);
+    const share = {
+      id,
+      message: structuredClone(message),
+      mailbox: { emailAddress: account.emailAddress, provider: account.provider },
+      owner: {
+        userId: ownerId,
+        email: identity(q).email ?? ownerProfile?.email ?? "Unknown user",
+        displayName: identity(q).displayName ?? ownerProfile?.displayName,
+      },
+      recipient: {
+        userId: recipientUserId,
+        email: recipientProfile.email,
+        displayName: recipientProfile.displayName,
+      },
+      sharedAt: existing?.sharedAt ?? new Date().toISOString(),
+    };
+    await saveMessageShare(share);
+    setMessageShare(share);
+    return ok(r, share);
+  } catch (cause) {
+    if (cause instanceof MessageOperationError) return fail(r, cause.status, cause.code, cause.message);
+    return fail(r, 500, "MESSAGE_SHARE_FAILED", cause instanceof Error ? cause.message : "Không thể chia sẻ tin nhắn");
+  }
+});
+app.delete("/api/message-shares/:id", async (q, r) => {
+  const share = messageShares.get(q.params.id);
+  if (!share) return fail(r, 404, "NOT_FOUND", "Quyền chia sẻ không còn tồn tại");
+  if (share.owner.userId !== identity(q).userId)
+    return fail(r, 403, "FORBIDDEN", "Chỉ người chia sẻ mới có thể thu hồi tin nhắn");
+  await deleteMessageShare(share.id);
+  removeMessageShare(share.id);
+  return ok(r, { deleted: true });
 });
 app.patch("/api/messages/:id", (q, r) => {
   const schema = z.object({

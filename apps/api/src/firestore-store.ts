@@ -1,6 +1,6 @@
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { getApps } from "firebase-admin/app";
-import type { MailAccount } from "@omnimail/shared";
+import type { MailAccount, MessageShare } from "@omnimail/shared";
 import { EncryptionService } from "./security.js";
 import crypto from "node:crypto";
 
@@ -113,6 +113,35 @@ export async function loadMailboxShares() {
   });
 }
 
+export async function saveMessageShare(share: MessageShare) {
+  if (!persistentStoreEnabled || !getApps().length) return;
+  const firestoreSafeShare = JSON.parse(JSON.stringify(share)) as MessageShare;
+  await db().collection("messageShares").doc(share.id).set({
+    ...firestoreSafeShare,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+export async function deleteMessageShare(shareId: string) {
+  if (!persistentStoreEnabled || !getApps().length) return;
+  await db().collection("messageShares").doc(shareId).delete();
+}
+
+export async function loadMessageShares(): Promise<MessageShare[]> {
+  if (!persistentStoreEnabled || !getApps().length) return [];
+  const snapshot = await db().collection("messageShares").get();
+  return snapshot.docs.flatMap((document) => {
+    const { updatedAt, ...value } = document.data();
+    return typeof value.id === "string"
+      && typeof value.sharedAt === "string"
+      && typeof value.owner?.userId === "string"
+      && typeof value.recipient?.userId === "string"
+      && typeof value.message?.id === "string"
+      ? [value as MessageShare]
+      : [];
+  });
+}
+
 export async function saveUserProfile(user: StoredUser) {
   if (!persistentStoreEnabled || !getApps().length) return;
   await db().collection("users").doc(user.userId).set({ ...user, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
@@ -126,6 +155,23 @@ export async function loadUserProfiles(): Promise<StoredUser[]> {
     return typeof value.email === "string" && typeof value.lastSeenAt === "string" && (value.role === "admin" || value.role === "premium" || value.role === "basic")
       ? [{ userId: document.id, email: value.email, displayName: typeof value.displayName === "string" ? value.displayName : undefined, lastSeenAt: value.lastSeenAt, role: value.role }]
       : [];
+  });
+}
+
+export async function saveUpgradeRequest(userId: string, requestedAt?: string) {
+  if (!persistentStoreEnabled || !getApps().length) return;
+  await db().collection("users").doc(userId).set({
+    upgradeRequestedAt: requestedAt ?? FieldValue.delete(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function loadUpgradeRequests() {
+  if (!persistentStoreEnabled || !getApps().length) return [] as Array<{ userId: string; requestedAt: string }>;
+  const snapshot = await db().collection("users").get();
+  return snapshot.docs.flatMap((document) => {
+    const requestedAt = document.data().upgradeRequestedAt;
+    return typeof requestedAt === "string" ? [{ userId: document.id, requestedAt }] : [];
   });
 }
 

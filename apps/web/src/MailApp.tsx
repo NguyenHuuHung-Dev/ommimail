@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import DOMPurify from "dompurify";
 import { io } from "socket.io-client";
-import type { MailAccount, MailMessage, MailSyncJob } from "@omnimail/shared";
+import type { MailAccount, MailMessage, MailSyncJob, MessageShare } from "@omnimail/shared";
 import { api, apiBaseUrl } from "./api";
 import { auth } from "./firebase";
 import { useUI } from "./store";
@@ -66,7 +66,7 @@ function AppNav({
   const items = [
     ...APP_NAV_ITEMS,
     ...(role === "admin" ? [{ page: "mail-admin", label: "Mail Admin", icon: ShieldCheck }] : role === "basic" ? [{ page: "mail-admin", label: "Upgrade", icon: ShieldCheck }] : []),
-    { page: "mail-sharing", label: "Share Mail", icon: UserRoundCheck },
+    { page: "mail-sharing", label: "Shared Messages", icon: UserRoundCheck },
   ];
   return (
     <nav className={className} aria-label="Primary navigation">
@@ -102,14 +102,6 @@ function initials(value?: string) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return `${parts[0][0]}${parts.at(-1)?.[0] ?? ""}`.toUpperCase();
 }
-function parseShareRecipients(value: string) {
-  const entries = [...new Set(value.split(/[\s,;]+/).map((entry) => entry.trim().toLowerCase()).filter(Boolean))];
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return {
-    valid: entries.filter((entry) => emailPattern.test(entry)),
-    invalid: entries.filter((entry) => !emailPattern.test(entry)),
-  };
-}
 function ApiStatus({ pending, error, onRetry }: { pending: boolean; error: boolean; onRetry: () => void }) {
   if (!pending && !error) return null;
   return (
@@ -128,6 +120,7 @@ export function MailApp() {
   const routePage = location.pathname.split("/")[2] || "home";
   const page = routePage === "accounts" ? "mailboxes" : routePage;
   const [profileOpen, setProfileOpen] = useState(false);
+  const [shareTarget, setShareTarget] = useState<MailMessage | null>(null);
   const [mailFolder, setMailFolder] = useState<"main" | "spam">("main");
   useEffect(() => {
     let active = true;
@@ -452,6 +445,8 @@ export function MailApp() {
                       account={visibleAccounts.find((a) => a.id === m.accountId)}
                       selected={selected?.id === m.id}
                       onSelect={() => ui.set({ selectedMessage: m.id })}
+                      canShare={visibleAccounts.find((a) => a.id === m.accountId)?.access !== "shared"}
+                      onShare={() => setShareTarget(m)}
                     />
                   ))}
                 </>
@@ -496,6 +491,7 @@ export function MailApp() {
         />
       )}
       {profileOpen && <ProfileModal me={me} accounts={accounts} onClose={() => setProfileOpen(false)} />}
+      {shareTarget && <MessageShareModal message={shareTarget} onClose={() => setShareTarget(null)} />}
     </div>
   );
 }
@@ -812,12 +808,6 @@ function PageContent({
   const [selectedTempMessage, setSelectedTempMessage] = useState<string | null>(null);
   const [copiedTemp, setCopiedTemp] = useState(false);
   const [grantUserId, setGrantUserId] = useState("");
-  const [shareMailboxSearch, setShareMailboxSearch] = useState("");
-  const [selectedShareMailboxIds, setSelectedShareMailboxIds] = useState<Set<string>>(new Set());
-  const [shareRecipientInput, setShareRecipientInput] = useState("");
-  const [shareGrantSearch, setShareGrantSearch] = useState("");
-  const [selectedShareGrants, setSelectedShareGrants] = useState<Set<string>>(new Set());
-  const [shareReport, setShareReport] = useState<Awaited<ReturnType<typeof api.shareMailboxesBatch>>>();
   const [adminSearch, setAdminSearch] = useState("");
   const [adminRoleFilter, setAdminRoleFilter] = useState<"all"|"admin"|"premium"|"basic">("all");
   const tempAccounts = accounts.filter((account) => account.provider === "temp");
@@ -836,24 +826,10 @@ function PageContent({
   const { data: admin, error: adminError } = useQuery({
     queryKey: ["admin-overview"],
     queryFn: api.admin,
-    enabled: (page === "mail-admin" || page === "mail-sharing") && role === "admin",
+    enabled: page === "mail-admin" && role === "admin",
   });
   const updateRole=useMutation({mutationFn:({userId,nextRole}:{userId:string;nextRole:"basic"|"premium"})=>api.setUserRole(userId,nextRole),onSuccess:()=>qc.invalidateQueries({queryKey:["admin-overview"]})});
   const updateShare=useMutation({mutationFn:({accountId,userId,allowed}:{accountId:string;userId:string;allowed:boolean})=>api.setMailboxShare(accountId,userId,allowed),onSuccess:()=>qc.invalidateQueries({queryKey:["admin-overview"]})});
-  const { data: sharing, error: sharingError, isLoading: sharingPending } = useQuery({
-    queryKey: ["mailbox-shares"],
-    queryFn: api.mailboxShares,
-    enabled: page === "mail-sharing",
-  });
-  const shareMailboxBatch = useMutation({
-    mutationFn: api.shareMailboxesBatch,
-    onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: ["mailbox-shares"] });
-      qc.invalidateQueries({ queryKey: ["accounts"] });
-      setShareReport(result);
-      setSelectedShareGrants(new Set());
-    },
-  });
   if (page === "accounts")
     return (
       <MailboxManager
@@ -931,160 +907,9 @@ function PageContent({
         </section>
       </main>
     );
-  if (page === "mail-sharing") {
-    const shareMailboxes = sharing?.mailboxes ?? [];
-    const mailboxTerm = shareMailboxSearch.trim().toLowerCase();
-    const filteredShareMailboxes = shareMailboxes.filter(({ account }) =>
-      account.emailAddress.toLowerCase().includes(mailboxTerm),
-    );
-    const visibleMailboxesSelected = filteredShareMailboxes.length > 0
-      && filteredShareMailboxes.every(({ account }) => selectedShareMailboxIds.has(account.id));
-    const selectedMailboxes = shareMailboxes.filter(({ account }) => selectedShareMailboxIds.has(account.id));
-    const parsedRecipients = parseShareRecipients(shareRecipientInput);
-    const grantRows = shareMailboxes.flatMap(({ account, recipients }) =>
-      recipients.map((recipient) => ({
-        key: `${account.id}\u0000${recipient.userId}`,
-        account,
-        recipient,
-      })),
-    );
-    const grantTerm = shareGrantSearch.trim().toLowerCase();
-    const filteredGrantRows = grantRows.filter(({ account, recipient }) =>
-      `${account.emailAddress} ${recipient.email}`.toLowerCase().includes(grantTerm),
-    );
-    const visibleGrantsSelected = filteredGrantRows.length > 0
-      && filteredGrantRows.every((grant) => selectedShareGrants.has(grant.key));
-    const uniqueRecipientEmails = [...new Set(grantRows.map((grant) => grant.recipient.email))];
-    const submitBatchShare = () => {
-      const items = selectedMailboxes.flatMap(({ account }) =>
-        parsedRecipients.valid.map((email) => ({ accountId: account.id, email, allowed: true })),
-      );
-      if (items.length) shareMailboxBatch.mutate(items);
-    };
-    const revokeSelectedGrants = () => {
-      const selected = grantRows.filter((grant) => selectedShareGrants.has(grant.key));
-      if (!selected.length) return;
-      if (window.confirm(`Thu hồi ${selected.length} quyền truy cập đã chọn?`))
-        shareMailboxBatch.mutate(selected.map(({ account, recipient }) => ({
-          accountId: account.id,
-          email: recipient.email,
-          allowed: false,
-        })));
-    };
-    return (
-      <main className="page-pane mail-sharing-page dashboard-page">
-        {(sharingError || shareMailboxBatch.error) && <div className="connect-error">{(sharingError ?? shareMailboxBatch.error)?.message}</div>}
-        {sharingPending ? <Skeleton /> : !shareMailboxes.length ? (
-          <section className="share-empty-state"><Mail /><h2>Bạn chưa có mailbox để chia sẻ</h2><p>Kết nối Gmail, Microsoft hoặc Temp Mail trước, sau đó quay lại trang này để cấp quyền.</p><button className="primary" onClick={openConnect}><Plus /> Kết nối mailbox</button></section>
-        ) : <>
-          <section className="share-stat-grid">
-            <article><small>Mailbox của bạn</small><strong>{shareMailboxes.length}</strong><span>Sẵn sàng chia sẻ</span></article>
-            <article><small>Người đang có quyền</small><strong>{uniqueRecipientEmails.length}</strong><span>Premium users</span></article>
-            <article><small>Tổng quyền truy cập</small><strong>{grantRows.length}</strong><span>Mailbox × người nhận</span></article>
-            <article><small>Đang chọn</small><strong>{selectedMailboxes.length}</strong><span>{parsedRecipients.valid.length} người nhận</span></article>
-          </section>
-
-          <section className="share-batch-builder">
-            <div className="share-builder-heading"><span>01</span><div><strong>Chọn mailbox</strong><small>Có thể chọn toàn bộ kết quả đang hiển thị.</small></div></div>
-            <div className="share-mailbox-selector">
-              <div className="share-selector-toolbar">
-                <label><Search /><input value={shareMailboxSearch} onChange={(event) => setShareMailboxSearch(event.target.value)} placeholder="Tìm địa chỉ mailbox" /></label>
-                <label className="share-check-all"><input type="checkbox" checked={visibleMailboxesSelected} onChange={(event) => setSelectedShareMailboxIds((current) => {
-                  const next = new Set(current);
-                  for (const { account } of filteredShareMailboxes) {
-                    if (event.target.checked) next.add(account.id);
-                    else next.delete(account.id);
-                  }
-                  return next;
-                })} /> Chọn tất cả ({filteredShareMailboxes.length})</label>
-              </div>
-              <div className="share-mailbox-check-grid">
-                {filteredShareMailboxes.map(({ account, recipients }) => <label key={account.id} className={selectedShareMailboxIds.has(account.id) ? "selected" : ""}>
-                  <input type="checkbox" checked={selectedShareMailboxIds.has(account.id)} onChange={(event) => setSelectedShareMailboxIds((current) => {
-                    const next = new Set(current);
-                    if (event.target.checked) next.add(account.id);
-                    else next.delete(account.id);
-                    return next;
-                  })} />
-                  <ProviderDot p={account.provider} />
-                  <span><strong>{account.emailAddress}</strong><small>{recipients.length} người đang có quyền</small></span>
-                </label>)}
-              </div>
-            </div>
-
-            <div className="share-builder-heading"><span>02</span><div><strong>Thêm nhiều người nhận</strong><small>Dán danh sách email, ngăn cách bằng dấu phẩy, dấu chấm phẩy hoặc xuống dòng.</small></div></div>
-            <div className="share-recipient-batch">
-              <textarea value={shareRecipientInput} onChange={(event) => setShareRecipientInput(event.target.value)} placeholder={'premium1@gmail.com\npremium2@outlook.com\npremium3@example.com'} />
-              <div className="share-recipient-preview">
-                <span>{parsedRecipients.valid.length} email hợp lệ</span>
-                {parsedRecipients.invalid.length > 0 && <span className="invalid">{parsedRecipients.invalid.length} email sai định dạng</span>}
-                {uniqueRecipientEmails.length > 0 && <div><small>Người đã từng chia sẻ:</small>{uniqueRecipientEmails.slice(0, 8).map((email) => <button type="button" key={email} onClick={() => {
-                  const current = parseShareRecipients(shareRecipientInput).valid;
-                  setShareRecipientInput([...new Set([...current, email])].join("\n"));
-                }}>{email}</button>)}</div>}
-              </div>
-            </div>
-
-            <footer className="share-batch-action">
-              <div><strong>{selectedMailboxes.length} mailbox × {parsedRecipients.valid.length} người</strong><small>{selectedMailboxes.length * parsedRecipients.valid.length} quyền sẽ được kiểm tra và cập nhật.</small></div>
-              <button type="button" disabled={!selectedMailboxes.length || !parsedRecipients.valid.length || shareMailboxBatch.isPending} onClick={submitBatchShare}><UserRoundCheck />{shareMailboxBatch.isPending ? "Đang xử lý…" : "Chia sẻ hàng loạt"}</button>
-            </footer>
-          </section>
-
-          {shareReport && <section className={`share-batch-report ${shareReport.failed ? "has-errors" : ""}`}>
-            <strong>Đã xử lý {shareReport.successful + shareReport.failed} quyền</strong>
-            <span>{shareReport.changed} thay đổi · {shareReport.failed} lỗi</span>
-            {shareReport.failed > 0 && <div>{shareReport.results.filter((result) => !result.success).slice(0, 8).map((result, index) => <small key={`${result.accountId}-${result.email}-${index}`}><b>{result.mailboxEmail ?? result.accountId}</b> → {result.email}: {result.error}</small>)}</div>}
-          </section>}
-
-          <section className="share-access-dashboard">
-            <div className="share-access-header">
-              <div><span className="eyebrow">Current access</span><h2>Quyền đang hoạt động</h2><p>Tìm theo mailbox hoặc người nhận, sau đó thu hồi nhiều quyền cùng lúc.</p></div>
-              <button type="button" disabled={!selectedShareGrants.size || shareMailboxBatch.isPending} onClick={revokeSelectedGrants}><Trash2 /> Thu hồi đã chọn ({selectedShareGrants.size})</button>
-            </div>
-            <div className="share-access-toolbar">
-              <label><Search /><input value={shareGrantSearch} onChange={(event) => setShareGrantSearch(event.target.value)} placeholder="Tìm mailbox hoặc email người nhận" /></label>
-              <label><input type="checkbox" checked={visibleGrantsSelected} disabled={!filteredGrantRows.length} onChange={(event) => setSelectedShareGrants((current) => {
-                const next = new Set(current);
-                for (const grant of filteredGrantRows) {
-                  if (event.target.checked) next.add(grant.key);
-                  else next.delete(grant.key);
-                }
-                return next;
-              })} /> Chọn tất cả kết quả</label>
-            </div>
-            <div className="share-access-table">
-              <header><span /><span>Mailbox</span><span>Người nhận</span><span>Quyền</span><span>Thao tác</span></header>
-              {filteredGrantRows.length ? filteredGrantRows.map(({ key, account, recipient }) => <article key={key}>
-                <input type="checkbox" checked={selectedShareGrants.has(key)} onChange={(event) => setSelectedShareGrants((current) => {
-                  const next = new Set(current);
-                  if (event.target.checked) next.add(key);
-                  else next.delete(key);
-                  return next;
-                })} />
-                <div><ProviderDot p={account.provider} /><strong>{account.emailAddress}</strong></div>
-                <div><span className="share-recipient-avatar">{recipient.email.slice(0, 1).toUpperCase()}</span><span><strong>{recipient.email}</strong><small>{recipient.role === "premium" ? "Premium user" : recipient.role}</small></span></div>
-                <span className="share-access-badge">Read only</span>
-                <button type="button" disabled={shareMailboxBatch.isPending} onClick={() => shareMailboxBatch.mutate([{ accountId: account.id, email: recipient.email, allowed: false }])}>Thu hồi</button>
-              </article>) : <div className="share-no-access"><UserRoundCheck /><p>{grantRows.length ? "Không có quyền nào khớp tìm kiếm." : "Chưa có quyền chia sẻ nào."}</p></div>}
-            </div>
-          </section>
-        </>}
-        <section className="shared-with-me-panel"><div className="share-section-heading"><div><span className="eyebrow">Private discovery</span><h2>Mailbox được chia sẻ cho tôi</h2></div><span>Bảo mật</span></div><p className="shared-with-me-empty">Danh sách mailbox được chia sẻ không hiển thị công khai. Vào Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ để mở mailbox đã được cấp quyền.</p></section>
-      </main>
-    );
-  }
+  if (page === "mail-sharing") return <MessageSharingPage />;
   if (page === "mail-admin") {
-    if (role === "basic")
-      return (
-        <main className="page-pane upgrade-page dashboard-page">
-          <div className="page-header"><div><span className="eyebrow">Nâng cấp tài khoản</span><h1>Mở khóa Premium</h1><p>Basic không thể xem hộp thư do Admin chia sẻ. Nâng cấp để nhận quyền truy cập.</p></div></div>
-          <section className="pricing-grid">
-            <article><span>BASIC</span><h2>Miễn phí</h2><strong>0đ<small>/tháng</small></strong><ul><li>Hộp thư cá nhân</li><li>Temp Mail</li><li>Không nhận mail Admin chia sẻ</li></ul><button disabled>Gói hiện tại</button></article>
-            <article className="featured"><span>PREMIUM</span><h2>Cộng tác an toàn</h2><strong>99.000đ<small>/tháng</small></strong><ul><li>Tất cả tính năng Basic</li><li>Xem mail Admin cấp phép</li><li>Admin thu hồi quyền bất kỳ lúc nào</li></ul><button onClick={()=>window.alert("Cổng thanh toán đang được chuẩn bị. Vui lòng liên hệ Admin để nâng cấp.")}>Thanh toán & nâng cấp</button></article>
-          </section>
-        </main>
-      );
+    if (role === "basic") return <UpgradeRequestPage />;
     if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Truy cập mailbox được chia sẻ</h1><p>Để chống dò địa chỉ, OmniMail không liệt kê mailbox được Admin cấp. Hãy mở Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ mailbox.</p></div></div><section className="shared-mail-grid"><article><ShieldCheck/><div><strong>Private mailbox discovery</strong><small>Quyền xem vẫn được kiểm tra ở API sau khi địa chỉ khớp.</small></div></article></section></main>;
     return (
       <main className="page-pane dashboard-page admin-dashboard-page">
@@ -1151,7 +976,7 @@ function PageContent({
             {(admin?.directory ?? []).filter((user)=>adminRoleFilter==="all"||user.role===adminRoleFilter).filter((user)=>`${user.displayName ?? ""} ${user.email} ${user.userId}`.toLowerCase().includes(adminSearch.trim().toLowerCase())).map((user) => (
               <article key={user.userId}>
                 <div><span className={`role-badge ${user.role}`}>{user.role}</span><strong>{user.displayName ?? "Chưa cập nhật họ tên"}</strong><small>{user.email}</small><small>{user.userId}</small>{user.role!=="admin"&&<select value={user.role} disabled={updateRole.isPending} onChange={e=>updateRole.mutate({userId:user.userId,nextRole:e.target.value as "basic"|"premium"})}><option value="basic">Chuyển thành Basic</option><option value="premium">Nâng lên Premium</option></select>}</div>
-                <div className="admin-mailboxes"><strong>{user.role === "premium" ? `${user.sharedAccountIds.length} mailbox` : user.role === "basic" ? "Không có quyền chia sẻ" : "Toàn quyền hệ thống"}</strong><small>{user.role === "premium" ? "Đã được Admin cấp quyền xem" : user.role === "basic" ? "Nâng Premium để nhận mailbox" : "Administrator"}</small></div>
+                <div className="admin-mailboxes"><strong>{user.role === "premium" ? `${user.sharedAccountIds.length} mailbox` : user.role === "basic" ? "Không có quyền chia sẻ" : "Toàn quyền hệ thống"}</strong><small>{user.upgradeRequestedAt ? `Đang yêu cầu Premium · ${new Date(user.upgradeRequestedAt).toLocaleString()}` : user.role === "premium" ? "Đã được Admin cấp quyền xem" : user.role === "basic" ? "Chưa gửi yêu cầu nâng cấp" : "Administrator"}</small></div>
                 <time>{user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : "—"}</time>
               </article>
             ))}
@@ -1233,16 +1058,126 @@ function MailboxManager({
     </main>
   );
 }
+
+function MessageShareModal({ message, onClose }: { message: MailMessage; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState("");
+  const share = useMutation({
+    mutationFn: () => api.shareMessage(message.id, email.trim()),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["message-shares"] }),
+  });
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    if (email.trim()) share.mutate();
+  };
+  return (
+    <div className="message-share-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <section className="message-share-modal" role="dialog" aria-modal="true" aria-labelledby="message-share-title">
+        <header>
+          <div><span className="eyebrow">Chia sẻ riêng tư</span><h2 id="message-share-title">Chia sẻ một tin nhắn</h2></div>
+          <button type="button" onClick={onClose} aria-label="Đóng"><X /></button>
+        </header>
+        <div className="message-share-preview">
+          <Mail />
+          <div><strong>{message.subject || "(Không có tiêu đề)"}</strong><small>Từ {message.from.name ?? message.from.address} · {new Date(message.receivedAt).toLocaleString()}</small></div>
+        </div>
+        {share.isSuccess ? <div className="message-share-success" role="status"><ShieldCheck /><div><strong>Đã chia sẻ tin nhắn</strong><small>{share.data.recipient.email} chỉ có thể xem bản thư này trong OmniMail.</small></div></div> : <form onSubmit={submit}>
+          <label><span>Email người nhận</span><input autoFocus type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nguoinhan@gmail.com" required /><small>Email phải thuộc một tài khoản đã đăng ký OmniMail.</small></label>
+          {share.error && <div className="connect-error">{share.error.message}</div>}
+          <div className="message-share-note"><LockKeyhole /><span>Không chia sẻ mailbox, thông tin đăng nhập hoặc các thư khác.</span></div>
+          <footer><button type="button" onClick={onClose}>Hủy</button><button className="primary" disabled={share.isPending || !email.trim()}>{share.isPending ? "Đang chia sẻ…" : "Chia sẻ tin nhắn"}</button></footer>
+        </form>}
+        {share.isSuccess && <footer><button className="primary" type="button" onClick={onClose}>Hoàn tất</button></footer>}
+      </section>
+    </div>
+  );
+}
+
+function MessageSharingPage() {
+  const qc = useQueryClient();
+  const [tab, setTab] = useState<"received" | "sent">("received");
+  const [selectedId, setSelectedId] = useState<string>();
+  const { data, isLoading, error } = useQuery({ queryKey: ["message-shares"], queryFn: api.messageShares });
+  const shares = data?.[tab] ?? [];
+  const selected = shares.find((share) => share.id === selectedId) ?? shares[0];
+  const revoke = useMutation({
+    mutationFn: api.revokeMessageShare,
+    onSuccess: async (_result, id) => {
+      if (selectedId === id) setSelectedId(undefined);
+      await qc.invalidateQueries({ queryKey: ["message-shares"] });
+    },
+  });
+  const accountFor = (share: MessageShare): MailAccount => ({
+    id: `shared-message:${share.id}`,
+    provider: share.mailbox.provider,
+    emailAddress: share.mailbox.emailAddress,
+    status: "connected",
+    unreadCount: 0,
+    access: "shared",
+  });
+  return (
+    <main className="page-pane shared-messages-page dashboard-page">
+      <div className="page-header"><div><span className="eyebrow">Chia sẻ từng tin nhắn</span><h1>Shared messages</h1><p>Mỗi quyền chỉ mở đúng một thư. Người nhận không thể duyệt mailbox hoặc xem các email khác.</p></div></div>
+      <div className="shared-message-tabs">
+        <button className={tab === "received" ? "active" : ""} onClick={() => { setTab("received"); setSelectedId(undefined); }}>Được chia sẻ với tôi <b>{data?.received.length ?? 0}</b></button>
+        <button className={tab === "sent" ? "active" : ""} onClick={() => { setTab("sent"); setSelectedId(undefined); }}>Tôi đã chia sẻ <b>{data?.sent.length ?? 0}</b></button>
+      </div>
+      {error && <div className="connect-error">{error.message}</div>}
+      {revoke.error && <div className="connect-error">{revoke.error.message}</div>}
+      {isLoading ? <Skeleton /> : shares.length ? <section className="shared-message-workspace">
+        <div className="shared-message-list">
+          {shares.map((share) => <article className={selected?.id === share.id ? "active" : ""} key={share.id} onClick={() => setSelectedId(share.id)}>
+            <span className="share-recipient-avatar">{(tab === "received" ? share.owner.email : share.recipient.email).slice(0, 1).toUpperCase()}</span>
+            <div><strong>{share.message.subject || "(Không có tiêu đề)"}</strong><small>{tab === "received" ? `Từ ${share.owner.displayName ?? share.owner.email}` : `Đến ${share.recipient.displayName ?? share.recipient.email}`}</small><time>{new Date(share.sharedAt).toLocaleString()}</time></div>
+            {tab === "sent" && <button type="button" title="Thu hồi" disabled={revoke.isPending} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Thu hồi quyền xem thư của ${share.recipient.email}?`)) revoke.mutate(share.id); }}><Trash2 /></button>}
+          </article>)}
+        </div>
+        <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} sharedMessage /></div>
+      </section> : <section className="share-empty-state"><UserRoundCheck /><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
+    </main>
+  );
+}
+
+function UpgradeRequestPage() {
+  const qc = useQueryClient();
+  const { data, isLoading, error } = useQuery({ queryKey: ["upgrade-request"], queryFn: api.myUpgradeRequest });
+  const request = useMutation({
+    mutationFn: api.requestUpgrade,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["upgrade-request"] }),
+  });
+  const requestedAt = request.data?.requestedAt ?? data?.requestedAt;
+  return (
+    <main className="page-pane upgrade-page dashboard-page">
+      <div className="page-header"><div><span className="eyebrow">Tài khoản Basic</span><h1>Yêu cầu Admin nâng cấp</h1><p>OmniMail không thu tiền trực tiếp tại đây. Admin của hệ thống sẽ xem xét và chuyển tài khoản của bạn sang Premium.</p></div></div>
+      <section className="upgrade-request-grid">
+        <article className="upgrade-request-card">
+          <span>PREMIUM ACCESS</span><h2>Mở rộng quyền cộng tác</h2>
+          <ul><li>Giữ toàn bộ mailbox cá nhân và Temp Mail hiện có</li><li>Nhận quyền xem mailbox do Admin cấp</li><li>Quyền truy cập luôn ở chế độ chỉ đọc và có thể bị thu hồi</li></ul>
+          {error && <div className="connect-error">{error.message}</div>}
+          {request.error && <div className="connect-error">{request.error.message}</div>}
+          <button type="button" disabled={isLoading || request.isPending || Boolean(requestedAt)} onClick={() => request.mutate()}>{request.isPending ? "Đang gửi yêu cầu…" : requestedAt ? "Đã gửi yêu cầu" : "Yêu cầu Admin nâng cấp"}</button>
+          {requestedAt && <small className="upgrade-request-time">Đã gửi lúc {new Date(requestedAt).toLocaleString()}. Bạn có thể tiếp tục dùng OmniMail trong khi chờ Admin xử lý.</small>}
+        </article>
+        <article className="upgrade-process-card"><span>QUY TRÌNH</span><ol><li><b>1</b><div><strong>Gửi yêu cầu</strong><small>Admin nhận được trạng thái yêu cầu ngay trong trang quản trị.</small></div></li><li><b>2</b><div><strong>Admin xem xét</strong><small>Việc nâng cấp do Admin của tổ chức quyết định, không yêu cầu thanh toán online.</small></div></li><li><b>3</b><div><strong>Kích hoạt Premium</strong><small>Đăng nhập lại hoặc làm mới trang sau khi Admin duyệt.</small></div></li></ol></article>
+      </section>
+    </main>
+  );
+}
+
 function MessageRow({
   m,
   account,
   selected,
   onSelect,
+  canShare,
+  onShare,
 }: {
   m: MailMessage;
   account?: MailAccount;
   selected: boolean;
   onSelect: () => void;
+  canShare: boolean;
+  onShare: () => void;
 }) {
   const folderLabels = m.folderIds
     .filter((folder) => folder !== "inbox" && folder !== "all")
@@ -1289,6 +1224,15 @@ function MessageRow({
           )}
         </div>
       </div>
+      {canShare && <details className="message-more" onClick={(event) => event.stopPropagation()}>
+        <summary title="Thao tác khác" aria-label={`Thao tác với thư ${m.subject}`}><MoreHorizontal /></summary>
+        <div>
+          <button type="button" onClick={(event) => {
+            event.currentTarget.closest("details")?.removeAttribute("open");
+            onShare();
+          }}><UserRoundCheck /> Chia sẻ tin nhắn</button>
+        </div>
+      </details>}
     </article>
   );
 }
@@ -1296,10 +1240,12 @@ function MessageDetail({
   m,
   account,
   onClose,
+  sharedMessage = false,
 }: {
   m: MailMessage;
   account?: MailAccount;
   onClose: () => void;
+  sharedMessage?: boolean;
 }) {
   const folderLabel = m.folderIds.includes("spam") ? "Spam" : m.folderIds.includes("promotions") ? "Promotions" : "Inbox";
   return (
@@ -1357,8 +1303,8 @@ function MessageDetail({
         <div className="note">
           <ShieldCheck />
           <div>
-            <strong>Read-only mailbox</strong>
-            <p>OmniMail observes provider messages and never sends email.</p>
+            <strong>{sharedMessage ? "Read-only shared message" : "Read-only mailbox"}</strong>
+            <p>{sharedMessage ? "Quyền truy cập chỉ áp dụng cho tin nhắn này, không bao gồm mailbox chứa thư." : "OmniMail observes provider messages and never sends email."}</p>
           </div>
         </div>
       </div>

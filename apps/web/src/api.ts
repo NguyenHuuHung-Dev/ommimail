@@ -1,6 +1,7 @@
 import type {
   MailAccount,
   MailMessage,
+  MessageShare,
   MailSyncJob,
   PaginatedMessages,
 } from "@omnimail/shared";
@@ -65,7 +66,7 @@ export const api = {
       users: number;
       connectedAccounts: number;
       serviceStatus: string;
-      directory: { userId: string; email: string; displayName?: string; role:"basic"|"premium"|"admin"; lastSeenAt?: string; accounts: MailAccount[]; sharedAccountIds:string[] }[];
+      directory: { userId: string; email: string; displayName?: string; role:"basic"|"premium"|"admin"; lastSeenAt?: string; upgradeRequestedAt?: string; accounts: MailAccount[]; sharedAccountIds:string[] }[];
     }>("/api/admin/overview"),
   setUserRole:(userId:string,role:"basic"|"premium")=>request(`/api/admin/users/${encodeURIComponent(userId)}/role`,{method:"PATCH",body:JSON.stringify({role})}),
   setMailboxShare:(accountId:string,userId:string,allowed:boolean)=>request('/api/admin/mailbox-shares',{method:'PUT',body:JSON.stringify({accountId,userId,allowed})}),
@@ -91,6 +92,16 @@ export const api = {
       error?: string;
     }[];
   }>("/api/mailbox-shares/batch", { method: "PUT", body: JSON.stringify({ items }) }),
+  messageShares: () => request<{ received: MessageShare[]; sent: MessageShare[] }>("/api/message-shares"),
+  shareMessage: (messageId: string, email: string) => request<MessageShare>("/api/message-shares", {
+    method: "POST",
+    body: JSON.stringify({ messageId, email }),
+  }),
+  revokeMessageShare: (id: string) => request<{ deleted: true }>(`/api/message-shares/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  }),
+  myUpgradeRequest: () => request<{ requestedAt?: string }>("/api/upgrade-requests/me"),
+  requestUpgrade: () => request<{ requestedAt: string; status: "pending" }>("/api/upgrade-requests", { method: "POST" }),
   oauthStart: (provider: "google" | "microsoft") =>
     request<{ url: string }>(`/api/oauth/${provider}/start`),
   connectMicrosoftToken: (input: {

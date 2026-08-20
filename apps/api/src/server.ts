@@ -11,9 +11,11 @@ import { microsoftTokens } from "./microsoft-token-accounts.js";
 import { mailTm } from "./mail-tm.js";
 import { restoreOAuthCredential } from "./oauth.js";
 import { mailboxShares, restoreMailboxShare } from "./sharing.js";
+import { restoreMessageShare } from "./message-sharing.js";
+import { setUpgradeRequest } from "./upgrade-requests.js";
 import { hiddenMessages } from "./hidden-messages.js";
 import { authConfigured, userDirectory } from "./auth.js";
-import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
+import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadMessageShares, loadUpgradeRequests, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
 import { onMailboxSyncUpdate, startMailboxSyncScheduler } from "./sync-jobs.js";
 
 const port = Number(process.env.PORT ?? 4000);
@@ -71,7 +73,14 @@ onMailboxSyncUpdate((job) => {
 });
 async function restorePersistentState() {
   if (!persistentStoreEnabled) return;
-  const [mailboxes, shares, users, hidden] = await Promise.all([loadMailboxes(), loadMailboxShares(), loadUserProfiles(), loadHiddenMessageIds()]);
+  const [mailboxes, shares, users, hidden, savedMessageShares, savedUpgradeRequests] = await Promise.all([
+    loadMailboxes(),
+    loadMailboxShares(),
+    loadUserProfiles(),
+    loadHiddenMessageIds(),
+    loadMessageShares(),
+    loadUpgradeRequests(),
+  ]);
   for (const user of users) userDirectory.set(user.userId, { email: user.email, displayName: user.displayName, lastSeenAt: user.lastSeenAt, role: user.role });
   for (const saved of mailboxes) {
     if (!accounts.some((account) => account.id === saved.account.id)) accounts.push(saved.account);
@@ -84,6 +93,8 @@ async function restorePersistentState() {
   }
   for (const share of shares) restoreMailboxShare(share.accountId, share.userId);
   for (const record of hidden) hiddenMessages.restore(record.userId, record.messageId);
+  for (const share of savedMessageShares) restoreMessageShare(share);
+  for (const request of savedUpgradeRequests) setUpgradeRequest(request.userId, request.requestedAt);
 }
 
 void restorePersistentState()
