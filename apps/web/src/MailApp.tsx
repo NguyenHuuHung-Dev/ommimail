@@ -209,7 +209,7 @@ export function MailApp() {
     queryFn: () => api.messages(query),
     enabled: page === "mailboxes" && Boolean(selectedInboxAccount),
     refetchInterval:
-      page === "mailboxes" && selectedInboxAccount ? 10_000 : false,
+      page === "mailboxes" && selectedInboxAccount ? 5_000 : false,
     refetchIntervalInBackground: false,
   });
   const allMessages = data?.items ?? [];
@@ -824,7 +824,7 @@ function PageContent({
   const activeTempAccount = tempAccounts.find((account) => account.id === activeTempId);
   const { data: tempDomains = [], error: tempDomainError } = useQuery({ queryKey: ["temp-domains"], queryFn: api.tempDomains, enabled: page === "temp-mail" });
   const createTemp = useMutation({ mutationFn: () => api.createTemp({ localPart: tempLocal, domain: tempDomain || tempDomains[0]?.name || "" }), onSuccess: (account) => { qc.invalidateQueries({ queryKey: ["accounts"] }); setSelectedTemp(account.id); setSelectedTempMessage(null); } });
-  const { data: tempMessages, isLoading: tempLoading, isFetching: tempRefreshing, error: tempMessagesError, refetch: refreshTemp } = useQuery({ queryKey: ["temp-messages", activeTempId], queryFn: () => api.messages(`?limit=30&refresh=1&accountId=${activeTempId}`), enabled: page === "temp-mail" && Boolean(activeTempId), refetchInterval: page === "temp-mail" && activeTempId ? 10_000 : false, refetchIntervalInBackground: false });
+  const { data: tempMessages, isLoading: tempLoading, isFetching: tempRefreshing, error: tempMessagesError, refetch: refreshTemp } = useQuery({ queryKey: ["temp-messages", activeTempId], queryFn: () => api.messages(`?limit=30&refresh=1&accountId=${activeTempId}`), enabled: page === "temp-mail" && Boolean(activeTempId), refetchInterval: page === "temp-mail" && activeTempId ? 3_000 : false, refetchIntervalInBackground: false });
   const { data: tempMessage } = useQuery({ queryKey: ["message", selectedTempMessage], queryFn: () => api.message(selectedTempMessage!), enabled: page === "temp-mail" && Boolean(selectedTempMessage) });
   const copyTempAddress = async () => {
     if (!activeTempAccount) return;
