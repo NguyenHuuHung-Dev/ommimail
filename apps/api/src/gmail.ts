@@ -1,4 +1,4 @@
-import type { MailMessage } from "@omnimail/shared";
+import type { Attachment, MailMessage } from "@omnimail/shared";
 import { getOAuthCredential, setOAuthCredential } from "./oauth.js";
 import { gmailFolderIds, mergeLatestMessages } from "./mail-folders.js";
 async function access(accountId: string) {
@@ -50,6 +50,31 @@ type Gmail = {
   internalDate?: string;
   payload?: Part;
 };
+type GmailListPage = {
+  messages?: { id: string }[];
+  nextPageToken?: string;
+};
+type GmailListCache = {
+  messages: Map<string, MailMessage>;
+  orderedIds: string[];
+  discoveredAt: number;
+  metadataRefreshedAt: number;
+};
+type GmailContent = {
+  text?: string;
+  html?: string;
+  attachments: Attachment[];
+};
+
+const MAIN_MESSAGE_LIMIT = 200;
+const SPAM_MESSAGE_LIMIT = 50;
+const FULL_DISCOVERY_AGE_MS = 5 * 60_000;
+const METADATA_REFRESH_AGE_MS = 60_000;
+const QUICK_CHECK_MAIN_LIMIT = 25;
+const QUICK_CHECK_SPAM_LIMIT = 10;
+const METADATA_BATCH_SIZE = 10;
+const listCaches = new Map<string, GmailListCache>();
+const listRequests = new Map<string, Promise<MailMessage[]>>();
 const header = (m: Gmail, name: string) =>
   m.payload?.headers?.find((h) => h.name.toLowerCase() === name.toLowerCase())
     ?.value ?? "";
@@ -66,17 +91,68 @@ const decode = (value?: string) =>
         "base64",
       ).toString("utf8")
     : "";
-function text(part?: Part): string {
-  if (!part) return "";
-  if (part.mimeType === "text/plain" && part.body?.data)
-    return decode(part.body.data);
-  for (const child of part.parts ?? []) {
-    const found = text(child);
-    if (found) return found;
+const partHeader = (part: Part, name: string) =>
+  part.headers?.find((item) => item.name.toLowerCase() === name.toLowerCase())
+    ?.value ?? "";
+
+export async function extractGmailContent(
+  part?: Part,
+  loadAttachment?: (attachmentId: string) => Promise<string>,
+): Promise<GmailContent> {
+  const textParts: string[] = [];
+  const htmlParts: string[] = [];
+  const attachments: Attachment[] = [];
+  const inlineAssets: Array<{ cid: string; mimeType: string; data: string }> = [];
+  let attachmentIndex = 0;
+
+  const bodyData = async (current: Part) => {
+    if (current.body?.data) return current.body.data;
+    if (current.body?.attachmentId && loadAttachment)
+      return loadAttachment(current.body.attachmentId);
+    return "";
+  };
+
+  const visit = async (current?: Part): Promise<void> => {
+    if (!current) return;
+    const mimeType = current.mimeType?.toLowerCase() ?? "application/octet-stream";
+    if (mimeType === "text/plain" || mimeType === "text/html") {
+      const data = await bodyData(current);
+      if (data) (mimeType === "text/html" ? htmlParts : textParts).push(decode(data));
+    } else if (!mimeType.startsWith("multipart/")) {
+      const contentId = partHeader(current, "Content-ID").replace(/^<|>$/g, "");
+      const disposition = partHeader(current, "Content-Disposition").toLowerCase();
+      if (contentId) {
+        const data = await bodyData(current);
+        if (data) inlineAssets.push({ cid: contentId, mimeType, data });
+      }
+      if (current.filename || disposition.includes("attachment")) {
+        attachmentIndex += 1;
+        attachments.push({
+          id: current.body?.attachmentId ?? `part-${attachmentIndex}`,
+          filename: current.filename || `attachment-${attachmentIndex}`,
+          mimeType,
+          size: current.body?.size ?? 0,
+        });
+      }
+    }
+    for (const child of current.parts ?? []) await visit(child);
+  };
+
+  await visit(part);
+  let html = htmlParts.join("\n").trim();
+  for (const asset of inlineAssets) {
+    const source = `data:${asset.mimeType};base64,${asset.data.replace(/-/g, "+").replace(/_/g, "/")}`;
+    html = html.replaceAll(`cid:${asset.cid}`, source);
   }
-  return "";
+  const text = textParts.join("\n\n").trim();
+  return {
+    text: text || undefined,
+    html: html || undefined,
+    attachments,
+  };
 }
-function dto(m: Gmail, accountId: string): MailMessage {
+
+function summaryDto(m: Gmail, accountId: string): MailMessage {
   const labelIds = m.labelIds ?? [];
   return {
     id: `gmail-live:${accountId}:${m.id}`,
@@ -90,40 +166,121 @@ function dto(m: Gmail, accountId: string): MailMessage {
     cc: header(m, "Cc").split(",").filter(Boolean).map(address),
     subject: header(m, "Subject") || "(No subject)",
     preview: m.snippet ?? "",
-    textBody: text(m.payload) || undefined,
     isRead: !m.labelIds?.includes("UNREAD"),
     isStarred: Boolean(m.labelIds?.includes("STARRED")),
     hasAttachments: Boolean(m.payload?.parts?.some((p) => p.filename)),
     receivedAt: new Date(Number(m.internalDate ?? Date.now())).toISOString(),
   };
 }
-export const gmail = {
-  async list(accountId: string) {
-    const loadIds = (query: string, maxResults: number) =>
-      call<{ messages?: { id: string }[] }>(
-        accountId,
-        `/messages?maxResults=${maxResults}&includeSpamTrash=true&q=${encodeURIComponent(query)}`,
-      );
-    // Read Spam separately so it remains available even when Inbox is busy.
-    const [mainPage, spamPage] = await Promise.all([
-      loadIds("{in:inbox category:promotions}", 20),
-      loadIds("in:spam", 10),
-    ]);
-    const ids = [...new Set([...(mainPage.messages ?? []), ...(spamPage.messages ?? [])].map((message) => message.id))];
-    const items = await Promise.all(
-      ids.map((id) =>
+
+async function loadMessageIds(accountId: string, query: string, limit: number) {
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+  do {
+    const remaining = limit - ids.length;
+    const page = await call<GmailListPage>(
+      accountId,
+      `/messages?maxResults=${Math.min(500, remaining)}&includeSpamTrash=true&q=${encodeURIComponent(query)}${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ""}`,
+    );
+    ids.push(...(page.messages ?? []).map((message) => message.id));
+    pageToken = page.nextPageToken;
+  } while (pageToken && ids.length < limit);
+  return ids.slice(0, limit);
+}
+
+async function loadSummaries(accountId: string, ids: string[]) {
+  const summaries: MailMessage[] = [];
+  for (let offset = 0; offset < ids.length; offset += METADATA_BATCH_SIZE) {
+    const batch = await Promise.all(
+      ids.slice(offset, offset + METADATA_BATCH_SIZE).map((id) =>
         call<Gmail>(
           accountId,
           `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Cc&metadataHeaders=Subject&metadataHeaders=Date`,
         ),
       ),
     );
-    return mergeLatestMessages([items.map((message) => dto(message, accountId))], 30);
+    summaries.push(...batch.map((message) => summaryDto(message, accountId)));
+  }
+  return summaries;
+}
+
+async function listMessages(accountId: string) {
+  const now = Date.now();
+  const previous = listCaches.get(accountId);
+  const fullDiscovery = !previous || now - previous.discoveredAt >= FULL_DISCOVERY_AGE_MS;
+  const [mainIds, spamIds] = await Promise.all([
+    loadMessageIds(
+      accountId,
+      "{in:inbox category:promotions}",
+      fullDiscovery ? MAIN_MESSAGE_LIMIT : QUICK_CHECK_MAIN_LIMIT,
+    ),
+    loadMessageIds(
+      accountId,
+      "in:spam",
+      fullDiscovery ? SPAM_MESSAGE_LIMIT : QUICK_CHECK_SPAM_LIMIT,
+    ),
+  ]);
+  const discoveredIds = [...new Set([...mainIds, ...spamIds])];
+  const messages = previous?.messages ?? new Map<string, MailMessage>();
+  if (fullDiscovery) {
+    const activeIds = new Set(discoveredIds);
+    for (const id of messages.keys()) if (!activeIds.has(id)) messages.delete(id);
+  }
+
+  const refreshMetadata =
+    !previous || now - previous.metadataRefreshedAt >= METADATA_REFRESH_AGE_MS;
+  const idsToLoad = discoveredIds.filter(
+    (id, index) => !messages.has(id) || (refreshMetadata && index < QUICK_CHECK_MAIN_LIMIT + QUICK_CHECK_SPAM_LIMIT),
+  );
+  for (const message of await loadSummaries(accountId, idsToLoad))
+    messages.set(message.providerMessageId, message);
+
+  const orderedIds = fullDiscovery
+    ? discoveredIds
+    : [...new Set([...discoveredIds, ...(previous?.orderedIds ?? [])])];
+  const cache: GmailListCache = {
+    messages,
+    orderedIds,
+    discoveredAt: fullDiscovery ? now : (previous?.discoveredAt ?? now),
+    metadataRefreshedAt: refreshMetadata ? now : (previous?.metadataRefreshedAt ?? now),
+  };
+  listCaches.set(accountId, cache);
+  return mergeLatestMessages(
+    [orderedIds.flatMap((id) => {
+      const message = messages.get(id);
+      return message ? [message] : [];
+    })],
+    MAIN_MESSAGE_LIMIT + SPAM_MESSAGE_LIMIT,
+  );
+}
+
+export const gmail = {
+  async list(accountId: string) {
+    const active = listRequests.get(accountId);
+    if (active) return active;
+    const request = listMessages(accountId).finally(() => listRequests.delete(accountId));
+    listRequests.set(accountId, request);
+    return request;
   },
   async get(accountId: string, messageId: string) {
-    return dto(
-      await call<Gmail>(accountId, `/messages/${messageId}?format=full`),
-      accountId,
-    );
+    const message = await call<Gmail>(accountId, `/messages/${messageId}?format=full`);
+    const content = await extractGmailContent(message.payload, async (attachmentId) => {
+      const body = await call<{ data?: string }>(
+        accountId,
+        `/messages/${messageId}/attachments/${encodeURIComponent(attachmentId)}`,
+      );
+      return body.data ?? "";
+    });
+    return {
+      ...summaryDto(message, accountId),
+      textBody: content.text,
+      sanitizedHtmlBody: content.html,
+      hasAttachments: content.attachments.length > 0,
+      attachments: content.attachments,
+    };
+  },
+  clear(accountId: string) {
+    listCaches.delete(accountId);
+    listRequests.delete(accountId);
   },
 };

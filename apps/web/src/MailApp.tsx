@@ -203,7 +203,7 @@ export function MailApp() {
   const servicePending = accountsPending || mePending;
   const serviceError = Boolean(accountsError || meError);
   const retryService = () => { void refetchAccounts(); void refetchMe(); };
-  const query = `?limit=100${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
+  const query = `?limit=250&refresh=1${selectedInboxAccount ? `&accountId=${selectedInboxAccount}` : ""}`;
   const { data, isLoading, error, refetch: refetchMessages } = useQuery({
     queryKey: ["messages", query],
     queryFn: () => api.messages(query),

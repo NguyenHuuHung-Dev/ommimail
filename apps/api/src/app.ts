@@ -72,7 +72,7 @@ const filterLoadedMessages = (q: express.Request, list: typeof messages) => {
       filtered = filtered.filter((message) => `${message.subject} ${message.preview} ${message.from.name ?? ""} ${message.from.address}`.toLowerCase().includes(search));
     }
   }
-  const limit = Math.min(Math.max(Number(q.query.limit) || 30, 1), 100);
+  const limit = Math.min(Math.max(Number(q.query.limit) || 30, 1), 250);
   return filtered.slice(0, limit);
 };
 export const app = express();
@@ -394,7 +394,10 @@ async function disconnectMailbox(accountId: string) {
     } catch {
       // The local connection should still be removable if the provider expired it.
     }
-  } else removeOAuthCredential(account.id);
+  } else {
+    gmail.clear(account.id);
+    removeOAuthCredential(account.id);
+  }
   accounts.splice(index, 1);
   accountOwners.delete(accountId);
   mailboxShares.delete(accountId);
