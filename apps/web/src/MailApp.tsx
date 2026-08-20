@@ -1079,10 +1079,10 @@ function SharingHubPage({
   const [mode, setMode] = useState<"message" | "mailbox">(initialMode);
   return (
     <main className="page-pane sharing-hub-page dashboard-page">
-      <div className="page-header"><div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1><p>Chọn chia sẻ một tin nhắn riêng lẻ hoặc cấp quyền chỉ đọc cho toàn bộ mailbox.</p></div></div>
+      <div className="page-header"><div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1></div></div>
       <div className="sharing-mode-tabs" role="tablist" aria-label="Chọn loại chia sẻ">
-        <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><UserRoundCheck /><span><strong>Tin nhắn riêng lẻ</strong><small>Chỉ mở đúng một thư</small></span></button>
-        <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><Mail /><span><strong>Toàn bộ mailbox</strong><small>Quyền đọc toàn hộp thư</small></span></button>
+        <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><UserRoundCheck /><strong>Tin nhắn</strong></button>
+        <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><Mail /><strong>Mailbox</strong></button>
       </div>
       <section className="sharing-mode-panel">
         {mode === "message" ? <MessageSharingPage /> : <MailboxSharingPage openConnect={openConnect} />}
@@ -1264,7 +1264,6 @@ function MessageShareModal({ message, onClose }: { message: MailMessage; onClose
         {share.isSuccess ? <div className="message-share-success" role="status"><ShieldCheck /><div><strong>Đã chia sẻ tin nhắn</strong><small>{share.data.recipient.email} chỉ có thể xem bản thư này trong OmniMail.</small></div></div> : <form onSubmit={submit}>
           <label><span>Email người nhận</span><input autoFocus type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nguoinhan@gmail.com" required /><small>Email phải thuộc một tài khoản đã đăng ký OmniMail.</small></label>
           {share.error && <div className="connect-error">{share.error.message}</div>}
-          <div className="message-share-note"><LockKeyhole /><span>Không chia sẻ mailbox, thông tin đăng nhập hoặc các thư khác.</span></div>
           <footer><button type="button" onClick={onClose}>Hủy</button><button className="primary" disabled={share.isPending || !email.trim()}>{share.isPending ? "Đang chia sẻ…" : "Chia sẻ tin nhắn"}</button></footer>
         </form>}
         {share.isSuccess && <footer><button className="primary" type="button" onClick={onClose}>Hoàn tất</button></footer>}
@@ -1311,7 +1310,7 @@ function MessageSharingPage() {
             {tab === "sent" && <button type="button" title="Thu hồi" disabled={revoke.isPending} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Thu hồi quyền xem thư của ${share.recipient.email}?`)) revoke.mutate(share.id); }}><Trash2 /></button>}
           </article>)}
         </div>
-        <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} sharedMessage /></div>
+        <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} /></div>
       </section> : <section className="share-empty-state"><UserRoundCheck /><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
     </div>
   );
@@ -1419,12 +1418,10 @@ function MessageDetail({
   m,
   account,
   onClose,
-  sharedMessage = false,
 }: {
   m: MailMessage;
   account?: MailAccount;
   onClose: () => void;
-  sharedMessage?: boolean;
 }) {
   const folderLabel = m.folderIds.includes("spam") ? "Spam" : m.folderIds.includes("promotions") ? "Promotions" : "Inbox";
   return (
@@ -1479,13 +1476,6 @@ function MessageDetail({
             </span>
           </div>
         ))}
-        <div className="note">
-          <ShieldCheck />
-          <div>
-            <strong>{sharedMessage ? "Read-only shared message" : "Read-only mailbox"}</strong>
-            <p>{sharedMessage ? "Quyền truy cập chỉ áp dụng cho tin nhắn này, không bao gồm mailbox chứa thư." : "OmniMail observes provider messages and never sends email."}</p>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -1819,10 +1809,6 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
         </div>
         </section>
         </div>
-        <footer>
-          <ShieldCheck /> Credentials stay on the server and are never exposed
-          to the browser.
-        </footer>
       </section>
     </main>
   );

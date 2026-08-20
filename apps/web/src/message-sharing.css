@@ -86,8 +86,6 @@
 .message-share-modal form input { width: 100%; height: 44px; padding: 0 12px; border: 1px solid #cdb8bf; background: #fff; outline: 0; }
 .message-share-modal form input:focus { border-color: #0a0a0a; box-shadow: 0 0 0 3px #f3c4d2; }
 .message-share-modal form label small { color: #806d73; font-size: 10px; }
-.message-share-note { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: #66545a; font-size: 10px; }
-.message-share-note svg { width: 14px; }
 .message-share-modal footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
 .message-share-modal footer button { min-width: 96px; height: 39px; padding: 0 14px; border: 1px solid #0a0a0a; background: #fff; font-size: 10px; font-weight: 900; }
 .message-share-modal footer .primary { background: #0a0a0a; color: #f2bdcc; }
@@ -117,11 +115,8 @@
   text-align: left;
 }
 .sharing-mode-tabs > button > svg { width: 20px; flex: none; }
-.sharing-mode-tabs > button > span { display: grid; gap: 4px; }
 .sharing-mode-tabs strong { font-size: 12px; }
-.sharing-mode-tabs small { color: #806d73; font-size: 9px; }
 .sharing-mode-tabs > button.active { background: #0a0a0a; color: #f2bdcc; box-shadow: 5px 5px 0 #df9fb3; }
-.sharing-mode-tabs > button.active small { color: #dcb5c0; }
 .sharing-mode-panel { min-width: 0; }
 .sharing-hub-page .sharing-hub-content {
   padding: 0!important;
