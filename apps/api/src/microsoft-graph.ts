@@ -1,6 +1,16 @@
 import type { MailMessage } from "@omnimail/shared";
 import { getOAuthCredential, setOAuthCredential } from "./oauth.js";
 import { mergeLatestMessages } from "./mail-folders.js";
+import {
+  extractMicrosoftContent,
+  type MicrosoftFileAttachment,
+} from "./microsoft-message-content.js";
+
+const listCache = new Map<string, { items: MailMessage[]; discoveredAt: number }>();
+const listRequests = new Map<string, Promise<MailMessage[]>>();
+const FULL_LIST_AGE_MS = 5 * 60_000;
+const INBOX_LIMIT = 200;
+const JUNK_LIMIT = 50;
 
 async function access(accountId: string) {
   const c = getOAuthCredential(accountId);
@@ -51,7 +61,10 @@ async function access(accountId: string) {
 
 async function call<T>(accountId: string, path: string) {
   let token = await access(accountId);
-  let r = await fetch(`https://graph.microsoft.com/v1.0/me${path}`, {
+  const url = path.startsWith("https://graph.microsoft.com/")
+    ? path
+    : `https://graph.microsoft.com/v1.0/me${path}`;
+  let r = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (r.status === 401) {
@@ -59,7 +72,7 @@ async function call<T>(accountId: string, path: string) {
     if (credential?.refresh_token) {
       setOAuthCredential(accountId, { ...credential, expires_at: 0 });
       token = await access(accountId);
-      r = await fetch(`https://graph.microsoft.com/v1.0/me${path}`, {
+      r = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
     }
@@ -97,7 +110,13 @@ function recipient(r?: GraphRecipient) {
   };
 }
 
-function dto(m: GraphMessage, accountId: string, folderId = "inbox"): MailMessage {
+function dto(
+  m: GraphMessage,
+  accountId: string,
+  folderId = "inbox",
+  sourceAttachments: MicrosoftFileAttachment[] = [],
+): MailMessage {
+  const content = extractMicrosoftContent(m.body, sourceAttachments);
   return {
     id: `microsoft-graph-message:${accountId}:${m.id}:${folderId}`,
     accountId,
@@ -109,46 +128,84 @@ function dto(m: GraphMessage, accountId: string, folderId = "inbox"): MailMessag
     cc: (m.ccRecipients ?? []).map(recipient),
     subject: m.subject || "(No subject)",
     preview: m.bodyPreview ?? "",
-    textBody: m.body?.content,
+    textBody: content.textBody,
+    sanitizedHtmlBody: content.sanitizedHtmlBody,
     isRead: Boolean(m.isRead),
     isStarred: m.flag?.flagStatus === "flagged",
-    hasAttachments: Boolean(m.hasAttachments),
+    hasAttachments: content.attachments.length > 0 || Boolean(m.hasAttachments),
+    attachments: content.attachments,
     receivedAt: new Date(m.receivedDateTime ?? Date.now()).toISOString(),
   };
 }
 
+const messageFields = "id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
+type GraphPage<T> = { value?: T[]; "@odata.nextLink"?: string };
+
+async function loadFolder(
+  accountId: string,
+  folder: "inbox" | "junkemail",
+  limit: number,
+) {
+  const messages: GraphMessage[] = [];
+  let next: string | undefined = `/mailFolders/${folder}/messages?$top=${Math.min(50, limit)}&$orderby=receivedDateTime%20desc&$select=${messageFields}`;
+  while (next && messages.length < limit) {
+    const page: GraphPage<GraphMessage> = await call<GraphPage<GraphMessage>>(accountId, next);
+    messages.push(...(page.value ?? []).slice(0, limit - messages.length));
+    next = page["@odata.nextLink"];
+  }
+  return messages.map((message) =>
+    dto(message, accountId, folder === "junkemail" ? "spam" : "inbox"),
+  );
+}
+
+async function listMessages(accountId: string) {
+  const previous = listCache.get(accountId);
+  const fullDiscovery = !previous || Date.now() - previous.discoveredAt >= FULL_LIST_AGE_MS;
+  const [inbox, junk] = await Promise.allSettled([
+    loadFolder(accountId, "inbox", fullDiscovery ? INBOX_LIMIT : 20),
+    loadFolder(accountId, "junkemail", fullDiscovery ? JUNK_LIMIT : 10),
+  ]);
+  const groups = [inbox, junk]
+    .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
+    .map((result) => result.value);
+  if (!groups.length)
+    throw inbox.status === "rejected" ? inbox.reason : junk.status === "rejected" ? junk.reason : new Error("Microsoft folders are unavailable");
+  const latest = mergeLatestMessages(groups, INBOX_LIMIT + JUNK_LIMIT);
+  const items = fullDiscovery || !previous
+    ? latest
+    : mergeLatestMessages([previous.items, latest], INBOX_LIMIT + JUNK_LIMIT);
+  listCache.set(accountId, {
+    items,
+    discoveredAt: fullDiscovery ? Date.now() : previous.discoveredAt,
+  });
+  return items;
+}
+
 export const microsoftGraph = {
   async list(accountId: string) {
-    const fields = "id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
-    const loadFolder = async (folder: "inbox" | "junkemail") => {
-      const data = await call<{ value?: GraphMessage[] }>(
-        accountId,
-        `/mailFolders/${folder}/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${fields}`,
-      );
-      return (data.value ?? []).map((message) =>
-        dto(message, accountId, folder === "junkemail" ? "spam" : "inbox"),
-      );
-    };
-    const [inbox, junk] = await Promise.allSettled([loadFolder("inbox"), loadFolder("junkemail")]);
-    const groups = [inbox, junk]
-      .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
-      .map((result) => result.value);
-    if (groups.length) return mergeLatestMessages(groups, 20);
-    console.error("microsoftGraph.list folder reads failed", {
-      inbox: inbox.status === "rejected" ? inbox.reason : undefined,
-      junk: junk.status === "rejected" ? junk.reason : undefined,
-    });
-    const data = await call<{ value?: GraphMessage[] }>(
-      accountId,
-      `/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${fields}`,
-    );
-    return (data.value ?? []).map((message) => dto(message, accountId, "all"));
+    const active = listRequests.get(accountId);
+    if (active) return active;
+    const request = listMessages(accountId).finally(() => listRequests.delete(accountId));
+    listRequests.set(accountId, request);
+    return request;
   },
   async get(accountId: string, messageId: string, folderId = "inbox") {
     const m = await call<GraphMessage>(
       accountId,
-      `/messages/${encodeURIComponent(messageId)}`,
+      `/messages/${encodeURIComponent(messageId)}?$select=${messageFields},body`,
     );
-    return dto(m, accountId, folderId);
+    let attachments: MicrosoftFileAttachment[] = [];
+    if (m.hasAttachments || /cid:/i.test(m.body?.content ?? "")) {
+      const data = await call<GraphPage<MicrosoftFileAttachment>>(
+        accountId,
+        `/messages/${encodeURIComponent(messageId)}/attachments?$top=100`,
+      ).catch(() => ({ value: [] }));
+      attachments = data.value ?? [];
+    }
+    return dto(m, accountId, folderId, attachments);
+  },
+  clear(accountId: string) {
+    listCache.delete(accountId);
+    listRequests.delete(accountId);
   },
 };

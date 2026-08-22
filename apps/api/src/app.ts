@@ -395,7 +395,8 @@ async function disconnectMailbox(accountId: string) {
       // The local connection should still be removable if the provider expired it.
     }
   } else {
-    gmail.clear(account.id);
+    if (account.provider === "microsoft") microsoftGraph.clear(account.id);
+    else gmail.clear(account.id);
     removeOAuthCredential(account.id);
   }
   accounts.splice(index, 1);

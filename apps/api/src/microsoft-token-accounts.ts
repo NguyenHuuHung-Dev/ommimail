@@ -2,6 +2,10 @@ import crypto from "node:crypto";
 import type { MailMessage } from "@omnimail/shared";
 import { updateMailboxCredential } from "./firestore-store.js";
 import { mergeLatestMessages } from "./mail-folders.js";
+import {
+  extractMicrosoftContent,
+  type MicrosoftFileAttachment,
+} from "./microsoft-message-content.js";
 
 type Credential = { email: string; clientId: string; refreshToken: string };
 type GraphRecipient = { emailAddress?: { name?: string; address?: string } };
@@ -21,6 +25,11 @@ type GraphMessage = {
 
 const credentials = new Map<string, Credential>();
 const tokenCache = new Map<string, { value: string; expires: number }>();
+const listCache = new Map<string, { items: MailMessage[]; discoveredAt: number }>();
+const listRequests = new Map<string, Promise<MailMessage[]>>();
+const FULL_LIST_AGE_MS = 5 * 60_000;
+const INBOX_LIMIT = 200;
+const JUNK_LIMIT = 50;
 
 async function access(id: string) {
   const cached = tokenCache.get(id);
@@ -73,7 +82,10 @@ async function access(id: string) {
 }
 
 async function graph<T>(id: string, path: string) {
-  const response = await fetch(`https://graph.microsoft.com/v1.0/me${path}`, {
+  const url = path.startsWith("https://graph.microsoft.com/")
+    ? path
+    : `https://graph.microsoft.com/v1.0/me${path}`;
+  const response = await fetch(url, {
     headers: { Authorization: `Bearer ${await access(id)}` },
   });
   const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
@@ -89,24 +101,13 @@ const recipient = (value?: GraphRecipient) => ({
   address: value?.emailAddress?.address ?? "",
 });
 
-const htmlToText = (value: string) => value
-  .replace(/<style[\s\S]*?<\/style>/gi, " ")
-  .replace(/<script[\s\S]*?<\/script>/gi, " ")
-  .replace(/<br\s*\/?\s*>/gi, "\n")
-  .replace(/<\/p>/gi, "\n")
-  .replace(/<[^>]+>/g, " ")
-  .replace(/&nbsp;/gi, " ")
-  .replace(/&amp;/gi, "&")
-  .replace(/&lt;/gi, "<")
-  .replace(/&gt;/gi, ">")
-  .replace(/&#39;/gi, "'")
-  .replace(/&quot;/gi, '"')
-  .replace(/[ \t]+/g, " ")
-  .replace(/\n{3,}/g, "\n\n")
-  .trim();
-
-function dto(message: GraphMessage, connectionId: string, folderId = "inbox"): MailMessage {
-  const content = message.body?.content;
+function dto(
+  message: GraphMessage,
+  connectionId: string,
+  folderId = "inbox",
+  sourceAttachments: MicrosoftFileAttachment[] = [],
+): MailMessage {
+  const content = extractMicrosoftContent(message.body, sourceAttachments);
   return {
     id: `microsoft-token:${connectionId}:${message.id}:${folderId}`,
     accountId: `microsoft-token:${connectionId}`,
@@ -118,19 +119,53 @@ function dto(message: GraphMessage, connectionId: string, folderId = "inbox"): M
     cc: (message.ccRecipients ?? []).map(recipient),
     subject: message.subject || "(No subject)",
     preview: message.bodyPreview ?? "",
-    textBody: content
-      ? message.body?.contentType?.toLowerCase() === "html"
-        ? htmlToText(content)
-        : content
-      : undefined,
+    textBody: content.textBody,
+    sanitizedHtmlBody: content.sanitizedHtmlBody,
     isRead: Boolean(message.isRead),
     isStarred: message.flag?.flagStatus === "flagged",
-    hasAttachments: Boolean(message.hasAttachments),
+    hasAttachments: content.attachments.length > 0 || Boolean(message.hasAttachments),
+    attachments: content.attachments,
     receivedAt: new Date(message.receivedDateTime ?? Date.now()).toISOString(),
   };
 }
 
 const messageFields = "id,subject,bodyPreview,isRead,hasAttachments,receivedDateTime,from,toRecipients,ccRecipients,flag";
+
+type GraphPage<T> = { value?: T[]; "@odata.nextLink"?: string };
+
+async function loadFolder(id: string, folder: "inbox" | "junkemail", limit: number) {
+  const messages: GraphMessage[] = [];
+  let next: string | undefined = `/mailFolders/${folder}/messages?$top=${Math.min(50, limit)}&$orderby=receivedDateTime%20desc&$select=${messageFields}`;
+  while (next && messages.length < limit) {
+    const page: GraphPage<GraphMessage> = await graph<GraphPage<GraphMessage>>(id, next);
+    messages.push(...(page.value ?? []).slice(0, limit - messages.length));
+    next = page["@odata.nextLink"];
+  }
+  return messages.map((message) => dto(message, id, folder === "junkemail" ? "spam" : "inbox"));
+}
+
+async function listMessages(id: string) {
+  const previous = listCache.get(id);
+  const fullDiscovery = !previous || Date.now() - previous.discoveredAt >= FULL_LIST_AGE_MS;
+  const [inbox, junk] = await Promise.allSettled([
+    loadFolder(id, "inbox", fullDiscovery ? INBOX_LIMIT : 20),
+    loadFolder(id, "junkemail", fullDiscovery ? JUNK_LIMIT : 10),
+  ]);
+  const groups = [inbox, junk]
+    .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
+    .map((result) => result.value);
+  if (!groups.length)
+    throw inbox.status === "rejected" ? inbox.reason : junk.status === "rejected" ? junk.reason : new Error("Microsoft folders are unavailable");
+  const latest = mergeLatestMessages(groups, INBOX_LIMIT + JUNK_LIMIT);
+  const items = fullDiscovery || !previous
+    ? latest
+    : mergeLatestMessages([previous.items, latest], INBOX_LIMIT + JUNK_LIMIT);
+  listCache.set(id, {
+    items,
+    discoveredAt: fullDiscovery ? Date.now() : previous.discoveredAt,
+  });
+  return items;
+}
 
 export const microsoftTokens = {
   async connect(input: Credential) {
@@ -146,23 +181,26 @@ export const microsoftTokens = {
     }
   },
   async list(id: string) {
-    const loadFolder = async (folder: "inbox" | "junkemail") => {
-      const data = await graph<{ value?: GraphMessage[] }>(id, `/mailFolders/${folder}/messages?$top=10&$orderby=receivedDateTime%20desc&$select=${messageFields}`);
-      return (data.value ?? []).map((message) => dto(message, id, folder === "junkemail" ? "spam" : "inbox"));
-    };
-    const [inbox, junk] = await Promise.allSettled([loadFolder("inbox"), loadFolder("junkemail")]);
-    const groups = [inbox, junk]
-      .filter((result): result is PromiseFulfilledResult<MailMessage[]> => result.status === "fulfilled")
-      .map((result) => result.value);
-    if (!groups.length) throw inbox.status === "rejected" ? inbox.reason : junk.status === "rejected" ? junk.reason : new Error("Microsoft folders are unavailable");
-    return mergeLatestMessages(groups, 20);
+    const active = listRequests.get(id);
+    if (active) return active;
+    const request = listMessages(id).finally(() => listRequests.delete(id));
+    listRequests.set(id, request);
+    return request;
   },
   async get(id: string, messageId: string, folderId = "inbox") {
     const message = await graph<GraphMessage>(
       id,
       `/messages/${encodeURIComponent(messageId)}?$select=${messageFields},body`,
     );
-    return dto(message, id, folderId);
+    let attachments: MicrosoftFileAttachment[] = [];
+    if (message.hasAttachments || /cid:/i.test(message.body?.content ?? "")) {
+      const data = await graph<GraphPage<MicrosoftFileAttachment>>(
+        id,
+        `/messages/${encodeURIComponent(messageId)}/attachments?$top=100`,
+      ).catch(() => ({ value: [] }));
+      attachments = data.value ?? [];
+    }
+    return dto(message, id, folderId, attachments);
   },
   restore(id: string, credential: Credential) {
     credentials.set(id, { ...credential });
@@ -170,5 +208,7 @@ export const microsoftTokens = {
   remove(id: string) {
     credentials.delete(id);
     tokenCache.delete(id);
+    listCache.delete(id);
+    listRequests.delete(id);
   },
 };
