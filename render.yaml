@@ -31,3 +31,5 @@ services:
         value: https://omnimail.io.vn,https://ommimail.web.app
       - key: OAUTH_STATE_SECRET
         sync: false
+      - key: MICROSOFT_TENANT_ID
+        value: common

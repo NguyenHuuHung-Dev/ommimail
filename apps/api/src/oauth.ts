@@ -29,6 +29,8 @@ const web = () => {
     .find(Boolean);
   return configured || "http://localhost:5173";
 };
+export const microsoftTenant = () =>
+  process.env.MICROSOFT_TENANT_ID?.trim() || "common";
 function issue(provider: State["provider"], userId: string) {
   const payload = Buffer.from(JSON.stringify({
     provider,
@@ -205,7 +207,7 @@ export const oauth = {
         },
       });
     const state = issue("microsoft", user(req));
-    const tenant = process.env.MICROSOFT_TENANT_ID ?? "consumers";
+    const tenant = microsoftTenant();
     const url = new URL(
       `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`,
     );
@@ -224,7 +226,7 @@ export const oauth = {
     try {
       const code = String(req.query.code ?? "");
       const session = take(String(req.query.state ?? ""), "microsoft");
-      const tenant = process.env.MICROSOFT_TENANT_ID ?? "consumers";
+      const tenant = microsoftTenant();
       const tokenInput: Record<string, string> = {
         client_id: process.env.MICROSOFT_CLIENT_ID!,
         redirect_uri: process.env.MICROSOFT_REDIRECT_URI!,
