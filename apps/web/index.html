@@ -1,1 +1,124 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="theme-color" content="#ffc400"/><link rel="icon" type="image/jpeg" href="/logo.jpg?v=2"/><title>OmniMail</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ffc400" />
+    <meta
+      name="description"
+      content="OmniMail giúp bạn đọc và quản lý Gmail, Outlook cùng email tạm thời trong một giao diện tập trung, bảo mật và dễ sử dụng."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta
+      property="og:title"
+      content="OmniMail – Quản lý Gmail, Outlook và email tạm thời"
+    />
+    <meta
+      property="og:description"
+      content="Mọi hộp thư trong một nơi quản lý tập trung."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta property="og:url" content="https://omnimail.io.vn/" />
+    <meta property="og:image" content="https://omnimail.io.vn/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://omnimail.io.vn/" />
+    <link rel="icon" type="image/jpeg" href="/logo.jpg?v=2" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>OmniMail – Quản lý Gmail, Outlook và email tạm thời</title>
+    <script type="application/ld+json" id="omnimail-structured-data">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "OmniMail",
+        "url": "https://omnimail.io.vn/",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "Web",
+        "inLanguage": ["vi", "en"],
+        "description": "Không gian quản lý Gmail, Outlook và email tạm thời trong một giao diện tập trung.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" }
+      }
+    </script>
+    <script>
+      (() => {
+        const path = window.location.pathname.replace(/\/$/, "") || "/";
+        const publicPages = {
+          "/": [
+            "OmniMail – Quản lý Gmail, Outlook và email tạm thời",
+            "https://omnimail.io.vn/",
+          ],
+          "/security": [
+            "Bảo mật và kiểm soát truy cập | OmniMail",
+            "https://omnimail.io.vn/security",
+          ],
+          "/privacy": [
+            "Thông tin quyền riêng tư | OmniMail",
+            "https://omnimail.io.vn/privacy",
+          ],
+        };
+        if (publicPages[path]) {
+          document.title = publicPages[path][0];
+          document.querySelector('link[rel="canonical"]').href =
+            publicPages[path][1];
+        } else {
+          document.querySelector('meta[name="robots"]').content =
+            "noindex, nofollow";
+          document.querySelector('link[rel="canonical"]')?.remove();
+          document.getElementById("omnimail-structured-data")?.remove();
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <main
+        style="
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 72px 24px;
+          font-family: Arial, Helvetica, sans-serif;
+          color: #0a0a08;
+        "
+      >
+        <p
+          style="
+            font-weight: 700;
+            color: #806600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+          "
+        >
+          OmniMail · Không gian email hợp nhất
+        </p>
+        <h1
+          style="
+            font-size: clamp(48px, 8vw, 96px);
+            line-height: 0.9;
+            margin: 24px 0;
+          "
+        >
+          Mọi hộp thư.<br />Một nơi quản lý.
+        </h1>
+        <p style="max-width: 680px; font-size: 18px; line-height: 1.7">
+          Quản lý Gmail, Microsoft Outlook và email tạm thời trong một giao diện
+          tập trung. Đọc, tìm kiếm và kiểm soát quyền truy cập mailbox dễ dàng
+          hơn.
+        </p>
+        <p>
+          <a href="/register">Tạo tài khoản OmniMail</a> ·
+          <a href="/login">Đăng nhập</a>
+        </p>
+        <section>
+          <h2>Quản lý nhiều tài khoản email</h2>
+          <p>
+            OmniMail cung cấp hộp thư hợp nhất, tìm kiếm nhanh, email tạm thời
+            và chia sẻ quyền xem có kiểm soát.
+          </p>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

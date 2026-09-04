@@ -1,2 +1,15 @@
-import React from 'react'; import {createRoot} from 'react-dom/client'; import {QueryClient,QueryClientProvider} from '@tanstack/react-query'; import {BrowserRouter} from 'react-router-dom'; import {App} from './App'; import './modern.css'; import './styles.css'; import './admin-access.css'; import './dashboard-polish.css'; import './responsive.css'; import './mailbox-errors.css'; import './share-dashboard.css'; import './message-sharing.css';
-createRoot(document.getElementById('root')!).render(<React.StrictMode><QueryClientProvider client={new QueryClient()}><BrowserRouter><App/></BrowserRouter></QueryClientProvider></React.StrictMode>);
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter } from "react-router-dom";
+import { App } from "./App";
+import "./public-home.css";
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={new QueryClient()}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  </React.StrictMode>,
+);

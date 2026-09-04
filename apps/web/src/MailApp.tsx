@@ -785,7 +785,7 @@ function HomeLanding({
           </form>
         </section>
         <figure className="poster-product" aria-label="OmniMail unified inbox">
-          <img src="/homepage.png" alt="OmniMail character" />
+          <img src="/homepage-760.png" width="760" height="1187" alt="OmniMail character" />
         </figure>
         <span className="poster-side-label">READ · REFRESH · REPEAT</span>
         <div className="poster-socials"><a href="https://www.facebook.com/zingne1302" target="_blank" rel="noreferrer" aria-label="Facebook của Hữu Hưng"><Facebook /></a><a href="https://www.instagram.com/huuhungstart/" target="_blank" rel="noreferrer" aria-label="Instagram của Hữu Hưng"><Instagram /></a><a href="https://github.com/NguyenHuuHung-Dev" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a></div>

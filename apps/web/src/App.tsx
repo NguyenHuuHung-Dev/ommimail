@@ -1,35 +1,74 @@
-import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { MailApp } from "./MailApp";
-import { AuthPage } from "./AuthPage";
-import { auth } from "./firebase";
-function Guard() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  useEffect(() => {
-    let active = true;
-    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
-      if (nextUser) await nextUser.getIdToken(true);
-      if (active) setUser(nextUser);
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
-  if (user === undefined)
-    return <div className="app-loading">Loading OmniMail…</div>;
-  if (!user) return <Navigate to="/login" replace />;
-  return <MailApp />;
+import { lazy, Suspense } from "react";
+import { Link, Route, Routes } from "react-router-dom";
+import { PrivacyPage, PublicHome, SecurityPage } from "./PublicHome";
+import { Seo } from "./Seo";
+
+const Guard = lazy(() =>
+  import("./PrivatePages").then((module) => ({ default: module.Guard })),
+);
+const AuthRoute = lazy(() =>
+  import("./PrivatePages").then((module) => ({ default: module.AuthRoute })),
+);
+
+function PrivateFallback() {
+  return <div className="app-loading">Loading OmniMail…</div>;
+}
+function NotFound() {
+  return (
+    <main className="not-found-page">
+      <Seo
+        title="Không tìm thấy trang | OmniMail"
+        description="Trang bạn yêu cầu không tồn tại."
+        noIndex
+      />
+      <div>
+        <strong>404</strong>
+        <h1>Không tìm thấy trang</h1>
+        <p>Đường dẫn này không tồn tại hoặc đã được thay đổi.</p>
+        <Link to="/">Về trang chủ</Link>
+      </div>
+    </main>
+  );
 }
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={<AuthPage mode="login" />} />
-      <Route path="/register" element={<AuthPage mode="register" />} />
-      <Route path="/forgot-password" element={<AuthPage mode="forgot" />} />
-      <Route path="/app/*" element={<Guard />} />
-      <Route path="*" element={<Navigate to="/app/home" replace />} />
+      <Route path="/" element={<PublicHome />} />
+      <Route path="/security" element={<SecurityPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <AuthRoute mode="login" />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <AuthRoute mode="register" />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <AuthRoute mode="forgot" />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/app/*"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <Guard />
+          </Suspense>
+        }
+      />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

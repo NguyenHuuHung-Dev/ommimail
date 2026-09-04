@@ -1,0 +1,17 @@
+{
+  "name": "OmniMail",
+  "short_name": "OmniMail",
+  "description": "Quản lý Gmail, Outlook và email tạm thời trong một giao diện tập trung.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf5",
+  "theme_color": "#ffc400",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "1228x1280",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
