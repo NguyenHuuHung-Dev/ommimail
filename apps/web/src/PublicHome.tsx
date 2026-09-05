@@ -11,7 +11,27 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { omnimailSchema, Seo } from "./Seo";
+
+// Load authentication without pulling the private application's styles into landing pages.
+const PublicAccountNav = lazy(() => import("./PublicAccountNav"));
+
+function PublicNavActions() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="public-nav-actions public-account-loading"
+          aria-busy="true"
+          aria-label="Đang tải tài khoản"
+        />
+      }
+    >
+      <PublicAccountNav />
+    </Suspense>
+  );
+}
 
 const features = [
   {
@@ -65,14 +85,7 @@ export function PublicHome() {
           <a href="#cach-hoat-dong">Cách hoạt động</a>
           <Link to="/security">Bảo mật</Link>
         </nav>
-        <div className="public-nav-actions">
-          <Link className="public-login" to="/login">
-            Đăng nhập
-          </Link>
-          <Link className="public-button small" to="/register">
-            Dùng thử <ArrowRight />
-          </Link>
-        </div>
+        <PublicNavActions />
       </header>
 
       <main>
@@ -410,14 +423,7 @@ function PublicInfoPage({
           <strong>OmniMail</strong>
           <span>.</span>
         </Link>
-        <div className="public-nav-actions">
-          <Link className="public-login" to="/login">
-            Đăng nhập
-          </Link>
-          <Link className="public-button small" to="/register">
-            Dùng thử <ArrowRight />
-          </Link>
-        </div>
+        <PublicNavActions />
       </header>
       <main className="info-main">
         <Link className="info-back" to="/">
