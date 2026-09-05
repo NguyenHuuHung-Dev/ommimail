@@ -6,6 +6,8 @@ import {
   Mail,
   Search,
   ShieldCheck,
+  Plus,
+  Minus,
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -16,6 +18,11 @@ const features = [
     icon: Inbox,
     title: "Một hộp thư tập trung",
     copy: "Theo dõi Gmail, Outlook và email tạm thời trong cùng một không gian làm việc.",
+  },
+  {
+    icon: Mail,
+    title: "Email tạm thời",
+    copy: "Tạo địa chỉ tạm và nhận thư trực tiếp khi cần đăng ký hoặc kiểm thử nhanh.",
   },
   {
     icon: Search,
@@ -31,11 +38,6 @@ const features = [
     icon: ShieldCheck,
     title: "Phân quyền rõ ràng",
     copy: "Vai trò Basic, Premium và Admin giúp giới hạn dữ liệu theo đúng nhu cầu sử dụng.",
-  },
-  {
-    icon: Mail,
-    title: "Email tạm thời",
-    copy: "Tạo địa chỉ tạm và nhận thư trực tiếp khi cần đăng ký hoặc kiểm thử nhanh.",
   },
   {
     icon: Zap,
@@ -126,13 +128,39 @@ export function PublicHome() {
         <section className="public-section" id="tinh-nang">
           <div className="public-section-heading">
             <h2>Tính năng</h2>
+            <a className="public-text-link" href="#cach-hoat-dong">
+              Cách bắt đầu <ArrowRight />
+            </a>
           </div>
           <div className="public-feature-grid">
-            {features.map(({ icon: Icon, title, copy }) => (
-              <article key={title}>
-                <Icon />
+            {features.map(({ icon: Icon, title, copy }, index) => (
+              <article
+                key={title}
+                className={
+                  index < 2
+                    ? `public-feature-lead feature-lead-${index}`
+                    : "public-feature-detail"
+                }
+              >
+                <div className="public-feature-top">
+                  <Icon />
+                  {index < 2 && (
+                    <span aria-hidden="true">
+                      {index === 0 ? "Gmail / Outlook" : "Temp Mail"}
+                    </span>
+                  )}
+                </div>
                 <h3>{title}</h3>
                 <p>{copy}</p>
+                {index < 2 && (
+                  <Link
+                    className="public-text-link"
+                    to={index === 0 ? "/register" : "/login"}
+                  >
+                    {index === 0 ? "Kết nối tài khoản" : "Tạo email tạm"}
+                    <ArrowRight />
+                  </Link>
+                )}
               </article>
             ))}
           </div>
@@ -141,6 +169,9 @@ export function PublicHome() {
         <section className="public-how" id="cach-hoat-dong">
           <div className="public-how-intro">
             <h2>Cách sử dụng</h2>
+            <Link className="public-text-link" to="/register">
+              Tạo tài khoản <ArrowRight />
+            </Link>
           </div>
           <ol>
             <li>
@@ -175,35 +206,60 @@ export function PublicHome() {
         </section>
 
         <section className="public-security">
-          <div className="public-security-icon">
-            <LockKeyhole />
+          <div className="public-security-aside">
+            <div className="public-security-icon">
+              <LockKeyhole />
+            </div>
+            <span>Bảo mật</span>
+            <Link className="public-text-link" to="/security">
+              Tìm hiểu thêm <ArrowRight />
+            </Link>
           </div>
-          <div>
+          <div className="public-security-copy">
             <h2>Bạn quyết định ai được xem thư.</h2>
             <p>
               Chia sẻ quyền xem hộp thư với người cần và thu hồi khi muốn. Thông
               tin kết nối email được mã hóa khi lưu trữ.
             </p>
+            <ul className="public-security-points">
+              <li>
+                <ShieldCheck />
+                <span>Thông tin kết nối được mã hóa</span>
+              </li>
+              <li>
+                <Eye />
+                <span>Chia sẻ quyền xem, có thể thu hồi</span>
+              </li>
+            </ul>
           </div>
-          <Link className="public-button light" to="/security">
-            Tìm hiểu về bảo mật <ArrowRight />
-          </Link>
         </section>
 
         <section className="public-faq">
           <div className="public-section-heading compact">
             <h2>Câu hỏi thường gặp</h2>
           </div>
-          <div>
+          <div className="public-faq-list">
             <details>
-              <summary>OmniMail có gửi email thay tôi không?</summary>
+              <summary>
+                OmniMail có gửi email thay tôi không?
+                <span className="public-faq-toggle" aria-hidden="true">
+                  <Plus />
+                  <Minus />
+                </span>
+              </summary>
               <p>
                 Không. Ứng dụng hiện tập trung vào đọc, đồng bộ, tìm kiếm và
                 chia sẻ quyền xem email.
               </p>
             </details>
             <details>
-              <summary>Tôi có thể kết nối những loại email nào?</summary>
+              <summary>
+                Tôi có thể kết nối những loại email nào?
+                <span className="public-faq-toggle" aria-hidden="true">
+                  <Plus />
+                  <Minus />
+                </span>
+              </summary>
               <p>
                 OmniMail hỗ trợ Gmail, Microsoft Outlook và địa chỉ email tạm
                 thời từ dịch vụ được tích hợp.
@@ -212,6 +268,10 @@ export function PublicHome() {
             <details>
               <summary>
                 Trang này có sử dụng được trên điện thoại không?
+                <span className="public-faq-toggle" aria-hidden="true">
+                  <Plus />
+                  <Minus />
+                </span>
               </summary>
               <p>
                 Có. Giao diện được thiết kế thích ứng cho cả màn hình máy tính
@@ -222,10 +282,21 @@ export function PublicHome() {
         </section>
 
         <section className="public-final-cta">
-          <h2>Bắt đầu dùng OmniMail</h2>
-          <Link className="public-button light" to="/register">
-            Tạo tài khoản <ArrowRight />
-          </Link>
+          <div>
+            <h2>
+              Bắt đầu dùng
+              <br />
+              <em>OmniMail.</em>
+            </h2>
+          </div>
+          <div className="public-final-actions">
+            <Link className="public-button light" to="/register">
+              Tạo tài khoản <ArrowRight />
+            </Link>
+            <Link className="public-text-link" to="/login">
+              Đã có tài khoản? Đăng nhập <ArrowRight />
+            </Link>
+          </div>
         </section>
       </main>
 
