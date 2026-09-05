@@ -151,6 +151,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
       <section className="auth-panel">
         <section className="auth-card">
+          <Link className="auth-home-link" to="/">
+            <ArrowLeft size={16} aria-hidden="true" /> Về trang chủ
+          </Link>
           <div className="auth-card-topline">
             <div className="brand large">
               <span className="brandmark"><img src="/logo.jpg" alt="OmniMail logo" /></span>
