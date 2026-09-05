@@ -4,8 +4,8 @@
   "description": "Quản lý Gmail, Outlook và email tạm thời trong một giao diện tập trung.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbfaf5",
-  "theme_color": "#ffc400",
+  "background_color": "#ffffff",
+  "theme_color": "#f2bdcc",
   "icons": [
     {
       "src": "/logo.jpg",

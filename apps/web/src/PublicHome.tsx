@@ -1,13 +1,11 @@
 import {
   ArrowRight,
-  CheckCircle2,
   Eye,
   Inbox,
   LockKeyhole,
   Mail,
   Search,
   ShieldCheck,
-  Sparkles,
   Zap,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -78,36 +76,19 @@ export function PublicHome() {
       <main>
         <section className="public-hero">
           <div className="public-hero-copy">
-            <span className="public-kicker">
-              <Sparkles /> Không gian email hợp nhất
-            </span>
             <h1>
               Mọi hộp thư.
               <br />
               <em>Một nơi quản lý.</em>
             </h1>
-            <p>
-              Gom Gmail, Outlook và email tạm thời vào một giao diện tập trung
-              để bạn đọc, tìm kiếm và kiểm soát quyền truy cập dễ dàng hơn.
-            </p>
+            <p>Đọc Gmail, Outlook và sử dụng email tạm thời ngay tại đây.</p>
             <div className="public-hero-actions">
               <Link className="public-button" to="/register">
-                Tạo tài khoản miễn phí <ArrowRight />
+                Tạo tài khoản <ArrowRight />
               </Link>
               <a className="public-button ghost" href="#tinh-nang">
-                Khám phá tính năng
+                Xem tính năng
               </a>
-            </div>
-            <div className="public-trust-line">
-              <span>
-                <CheckCircle2 /> Không cần thẻ thanh toán
-              </span>
-              <span>
-                <CheckCircle2 /> Giao diện responsive
-              </span>
-              <span>
-                <CheckCircle2 /> Quyền xem có kiểm soát
-              </span>
             </div>
           </div>
           <div
@@ -125,11 +106,7 @@ export function PublicHome() {
               alt="Nhân vật minh họa cho hộp thư hợp nhất OmniMail"
             />
             <div className="public-live-card">
-              <i />
-              <span>
-                <strong>3 nguồn email</strong>
-                <small>Một luồng làm việc</small>
-              </span>
+              <strong>Temp Mail</strong>
             </div>
           </div>
         </section>
@@ -148,21 +125,11 @@ export function PublicHome() {
 
         <section className="public-section" id="tinh-nang">
           <div className="public-section-heading">
-            <span>01 · Tính năng</span>
-            <h2>
-              Ít chuyển tab hơn.
-              <br />
-              Tập trung hơn.
-            </h2>
-            <p>
-              Những công cụ thiết yếu để theo dõi nhiều mailbox mà không làm quy
-              trình trở nên phức tạp.
-            </p>
+            <h2>Tính năng</h2>
           </div>
           <div className="public-feature-grid">
-            {features.map(({ icon: Icon, title, copy }, index) => (
+            {features.map(({ icon: Icon, title, copy }) => (
               <article key={title}>
-                <span className="public-feature-number">0{index + 1}</span>
                 <Icon />
                 <h3>{title}</h3>
                 <p>{copy}</p>
@@ -173,8 +140,7 @@ export function PublicHome() {
 
         <section className="public-how" id="cach-hoat-dong">
           <div className="public-how-intro">
-            <span>02 · Bắt đầu</span>
-            <h2>Ba bước để gom các hộp thư về một nơi.</h2>
+            <h2>Cách sử dụng</h2>
           </div>
           <ol>
             <li>
@@ -213,12 +179,10 @@ export function PublicHome() {
             <LockKeyhole />
           </div>
           <div>
-            <span>03 · Bảo mật</span>
-            <h2>Quyền truy cập được kiểm tra ở phía máy chủ.</h2>
+            <h2>Bạn quyết định ai được xem thư.</h2>
             <p>
-              OmniMail lưu thông tin kết nối đã mã hóa và kiểm tra quyền sở hữu
-              mailbox trước khi trả dữ liệu. Giao diện được thiết kế cho việc
-              đọc và chia sẻ quyền xem có kiểm soát.
+              Chia sẻ quyền xem hộp thư với người cần và thu hồi khi muốn. Thông
+              tin kết nối email được mã hóa khi lưu trữ.
             </p>
           </div>
           <Link className="public-button light" to="/security">
@@ -228,8 +192,7 @@ export function PublicHome() {
 
         <section className="public-faq">
           <div className="public-section-heading compact">
-            <span>04 · Câu hỏi thường gặp</span>
-            <h2>Trước khi bạn bắt đầu.</h2>
+            <h2>Câu hỏi thường gặp</h2>
           </div>
           <div>
             <details>
@@ -259,8 +222,7 @@ export function PublicHome() {
         </section>
 
         <section className="public-final-cta">
-          <span>Bắt đầu với OmniMail</span>
-          <h2>Một nơi yên tĩnh hơn cho mọi hộp thư.</h2>
+          <h2>Bắt đầu dùng OmniMail</h2>
           <Link className="public-button light" to="/register">
             Tạo tài khoản <ArrowRight />
           </Link>
