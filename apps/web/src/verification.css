@@ -1,0 +1,29 @@
+.verification-layout {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+}
+
+.verification-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 480px);
+  overflow-wrap: anywhere;
+}
+
+.verification-card .primary,
+.verification-card .secondary-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+}
+
+.verification-card button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { getAuth } from "firebase-admin/auth";
 import { app } from "./app.js";
 import { listMicrosoftInbox } from "./microsoft-imap.js";
 import { accounts } from "./demo-data.js";
@@ -14,7 +13,8 @@ import { mailboxShares, restoreMailboxShare } from "./sharing.js";
 import { restoreMessageShare } from "./message-sharing.js";
 import { setUpgradeRequest } from "./upgrade-requests.js";
 import { hiddenMessages } from "./hidden-messages.js";
-import { authConfigured, userDirectory } from "./auth.js";
+import { userDirectory } from "./auth.js";
+import { authenticateSocket } from "./socket-auth.js";
 import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadMessageShares, loadUpgradeRequests, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
 import { onMailboxSyncUpdate, startMailboxSyncScheduler } from "./sync-jobs.js";
 
@@ -39,23 +39,7 @@ const io = new Server(server, {
     },
   },
 });
-io.use(async (socket, next) => {
-  if (!authConfigured) {
-    socket.data.userId = "local-user";
-    return next();
-  }
-  const authToken = typeof socket.handshake.auth?.token === "string"
-    ? socket.handshake.auth.token
-    : socket.handshake.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
-  if (!authToken) return next(new Error("Authentication required"));
-  try {
-    const decoded = await getAuth().verifyIdToken(authToken);
-    socket.data.userId = decoded.uid;
-    return next();
-  } catch {
-    return next(new Error("Invalid or expired session"));
-  }
-});
+io.use(authenticateSocket);
 io.on("connection", (socket) => socket.join(`user:${String(socket.data.userId)}`));
 onMailboxSyncUpdate((job) => {
   const viewers = new Set([job.ownerId, ...(mailboxShares.get(job.accountId) ?? [])]);

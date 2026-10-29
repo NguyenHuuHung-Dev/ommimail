@@ -23,6 +23,7 @@ import {
 } from "firebase/auth";
 import { api } from "./api";
 import { auth } from "./firebase";
+import { sendVerification } from "./email-verification";
 
 type AuthMode = "login" | "register" | "forgot";
 type SocialProvider = "google" | "facebook" | "microsoft";
@@ -83,8 +84,8 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     setProviderBusy(name);
     setError("");
     try {
-      await signInWithPopup(auth, providerFor(name));
-      nav("/app/home");
+      const { user } = await signInWithPopup(auth, providerFor(name));
+      nav(user.emailVerified ? "/app/home" : "/verify-email", { replace: true });
     } catch (e) {
       setError(readableAuthError(e));
     } finally {
@@ -99,24 +100,23 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     setNotice("");
     try {
       if (mode === "login") {
-        await signInWithEmailAndPassword(auth, email, password);
-        nav("/app/home");
+        const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
+        nav(user.emailVerified ? "/app/home" : "/verify-email", { replace: true });
         return;
       }
       if (mode === "register") {
         if (password !== confirmPassword) {
           throw new Error("Mật khẩu xác nhận không khớp.");
         }
-        await api.registrationPolicy(email);
-        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await api.registrationPolicy(email.trim());
+        const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
         await updateProfile(result.user, { displayName: fullName.trim() });
-        await result.user.getIdToken(true);
-        await api.updateMe(fullName.trim()).catch(() => undefined);
-        nav("/app/home");
+        await sendVerification(result.user);
+        nav("/verify-email", { replace: true });
         return;
       }
       if (mode === "forgot") {
-        await sendPasswordResetEmail(auth, email);
+        await sendPasswordResetEmail(auth, email.trim());
         setResetSent(true);
         setNotice("Đã gửi liên kết đặt lại mật khẩu. Hãy kiểm tra hộp thư và thư mục spam.");
         return;
@@ -165,7 +165,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           <p className="muted">
             {mode === "forgot"
               ? "Nhập email để nhận liên kết đặt lại mật khẩu."
-              : "One calm place for every inbox."}
+              : mode === "register"
+                ? "Bạn cần xác minh địa chỉ email qua liên kết được gửi đến hộp thư trước khi sử dụng OmniMail."
+                : "One calm place for every inbox."}
           </p>
 
           {mode === "forgot" && resetSent ? (
@@ -208,7 +210,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
               {error && <p className="form-error">{error}</p>}
               {notice && <p className="auth-notice">{notice}</p>}
               <button className="primary" disabled={busy || Boolean(providerBusy)}>
-                {busy ? <><LoaderCircle className="spin" size={16} /> Please wait…</> : mode === "login" ? "Sign in" : mode === "register" ? "Create account" : "Send reset link"}
+                {busy ? <><LoaderCircle className="spin" size={16} /> Please wait…</> : mode === "login" ? "Sign in" : mode === "register" ? "Tạo tài khoản và gửi email xác minh" : "Send reset link"}
               </button>
             </form>
           )}

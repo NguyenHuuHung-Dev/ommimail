@@ -8,14 +8,13 @@ import type {
 import { auth } from "./firebase";
 export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  await auth.authStateReady();
   const token = await auth.currentUser?.getIdToken();
   const r = await fetch(`${apiBaseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...(token
-        ? { Authorization: `Bearer ${token}` }
-        : { Authorization: "Bearer local-session" }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
   });

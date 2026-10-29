@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
-import { Link, Route, Routes } from "react-router-dom";
-import { PrivacyPage, PublicHome, SecurityPage } from "./PublicHome";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { PrivacyPage, SecurityPage } from "./PublicHome";
 import { Seo } from "./Seo";
 
 const Guard = lazy(() =>
@@ -8,6 +8,11 @@ const Guard = lazy(() =>
 );
 const AuthRoute = lazy(() =>
   import("./PrivatePages").then((module) => ({ default: module.AuthRoute })),
+);
+const VerifyEmailRoute = lazy(() =>
+  import("./PrivatePages").then((module) => ({
+    default: module.VerifyEmailRoute,
+  })),
 );
 
 function PrivateFallback() {
@@ -33,7 +38,7 @@ function NotFound() {
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<PublicHome />} />
+      <Route path="/" element={<Navigate to="/app/home" replace />} />
       <Route path="/security" element={<SecurityPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route
@@ -60,6 +65,15 @@ export function App() {
           </Suspense>
         }
       />
+      <Route
+        path="/verify-email"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <VerifyEmailRoute />
+          </Suspense>
+        }
+      />
+      <Route path="/app" element={<Navigate to="/app/home" replace />} />
       <Route
         path="/app/*"
         element={

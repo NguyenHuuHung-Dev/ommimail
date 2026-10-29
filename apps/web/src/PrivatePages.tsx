@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { onAuthStateChanged, type User } from "firebase/auth";
 import { AuthPage } from "./AuthPage";
-import { auth } from "./firebase";
+import { SessionError, SessionLoading, useAuthSession } from "./AuthSession";
+import { VerifyEmailPage } from "./VerifyEmailPage";
 import { MailApp } from "./MailApp";
 import { Seo } from "./Seo";
 import "./modern.css";
@@ -13,6 +12,7 @@ import "./responsive.css";
 import "./mailbox-errors.css";
 import "./share-dashboard.css";
 import "./message-sharing.css";
+import "./verification.css";
 
 function PrivateSeo() {
   return (
@@ -25,25 +25,15 @@ function PrivateSeo() {
 }
 
 export function Guard() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  useEffect(() => {
-    let active = true;
-    const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
-      if (nextUser) await nextUser.getIdToken(true);
-      if (active) setUser(nextUser);
-    });
-    return () => {
-      active = false;
-      unsubscribe();
-    };
-  }, []);
-  if (user === undefined)
+  const { user, verified, loading, error } = useAuthSession();
+  if (loading)
     return (
       <>
         <PrivateSeo />
-        <div className="app-loading">Loading OmniMail…</div>
+        <SessionLoading />
       </>
     );
+  if (error) return <SessionError />;
   if (!user)
     return (
       <>
@@ -51,6 +41,7 @@ export function Guard() {
         <Navigate to="/login" replace />
       </>
     );
+  if (!verified) return <Navigate to="/verify-email" replace />;
   return (
     <>
       <PrivateSeo />
@@ -60,6 +51,13 @@ export function Guard() {
 }
 
 export function AuthRoute({ mode }: { mode: "login" | "register" | "forgot" }) {
+  const { user, verified, loading, error } = useAuthSession();
+  if (loading) return <SessionLoading />;
+  if (error) return <SessionError />;
+  if (user)
+    return (
+      <Navigate to={verified ? "/app/home" : "/verify-email"} replace />
+    );
   const titles = {
     login: "Đăng nhập | OmniMail",
     register: "Tạo tài khoản | OmniMail",
@@ -73,6 +71,20 @@ export function AuthRoute({ mode }: { mode: "login" | "register" | "forgot" }) {
         noIndex
       />
       <AuthPage mode={mode} />
+    </>
+  );
+}
+
+export function VerifyEmailRoute() {
+  const { user, verified, loading, error } = useAuthSession();
+  if (loading) return <SessionLoading />;
+  if (error) return <SessionError />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (verified) return <Navigate to="/app/home" replace />;
+  return (
+    <>
+      <PrivateSeo />
+      <VerifyEmailPage user={user} />
     </>
   );
 }

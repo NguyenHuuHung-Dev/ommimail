@@ -43,7 +43,9 @@ Shared mailbox addresses are never listed globally. A recipient must search with
 
 ## Try the demo
 
-Open **[omnimail.io.vn](https://omnimail.io.vn)** and create an account with email/password or a supported social provider.
+Open **[omnimail.io.vn](https://omnimail.io.vn)** and create an account with email/password or a supported social provider. Verify your email using the link sent to your inbox before accessing mailboxes. Accounts whose provider already verifies their email can enter directly.
+
+The original Home screen is the only landing page, with the “Every inbox. One signal.” hero, mailbox search and character illustration. Opening `/` enters `/app/home`: returning signed-in users see Home, visitors sign in, and unverified accounts must verify their email first. Sessions persist in browser storage until sign-out or Firebase invalidates them.
 
 1. Open **Connect**.
 2. Connect Gmail or Microsoft through OAuth, or use a supported app-password/refresh-token flow.
@@ -214,7 +216,7 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 
 ## Firebase setup
 
-1. Enable Firebase Email/Password Authentication and the social providers you want to expose.
+1. Enable Firebase Email/Password Authentication and the social providers you want to expose. In Authentication → Templates, configure the email verification template and ensure the web app's domain is an authorized domain for the verification return URL (`/verify-email`).
 2. Create Cloud Firestore and a private Storage bucket.
 3. Create an Admin SDK service account for the API.
 4. Put the Firebase browser configuration in `apps/web/.env`.
@@ -283,7 +285,7 @@ Temporary addresses use mail.tm's account-token flow. No provider API key is req
 | `GET/POST` | `/api/temp-mail/*` | Discover domains and manage disposable inboxes |
 | `GET` | `/api/admin/overview` | Admin-only user and mailbox directory |
 
-All protected routes require a valid Firebase bearer token. Resource access is checked again on the server; hidden UI controls are never treated as authorization.
+All protected routes require a valid Firebase bearer token with a verified email address (`email_verified: true`). Unverified accounts receive `403 EMAIL_NOT_VERIFIED`; Socket.IO applies the same verification requirement. Resource access is checked again on the server; hidden UI controls are never treated as authorization. Production never falls back to local admin authentication if Firebase configuration is missing.
 
 ## Quality checks
 

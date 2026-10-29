@@ -3,7 +3,7 @@ RewriteEngine On
 # Let Vite's built assets and existing files load normally.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(login|register|forgot-password)/?$ index.html [L]
+RewriteRule ^(login|register|forgot-password|verify-email)/?$ index.html [L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -132,20 +132,22 @@ export function MailApp() {
   const [shareTarget, setShareTarget] = useState<MailMessage | null>(null);
   const [mailFolder, setMailFolder] = useState<"main" | "spam">("main");
   useEffect(() => {
-    let active = true;
-    let socket: ReturnType<typeof io> | undefined;
-    void auth.currentUser?.getIdToken().then((token) => {
-      if (!active) return;
-      socket = io(apiBaseUrl, { auth: { token }, transports: ["websocket", "polling"] });
-      socket.on("mailbox:sync", (job: MailSyncJob) => {
-        void qc.invalidateQueries({ queryKey: ["accounts"] });
-        if (job.status === "completed" || job.status === "failed")
-          void qc.invalidateQueries({ queryKey: ["messages"] });
-      });
+    const socket = io(apiBaseUrl, {
+      auth(callback) {
+        // Socket.IO asks again on reconnect; avoid reusing an expired ID token.
+        const user = auth.currentUser;
+        if (!user) return callback({});
+        void user.getIdToken().then((token) => callback({ token })).catch(() => callback({}));
+      },
+      transports: ["websocket", "polling"],
+    });
+    socket.on("mailbox:sync", (job: MailSyncJob) => {
+      void qc.invalidateQueries({ queryKey: ["accounts"] });
+      if (job.status === "completed" || job.status === "failed")
+        void qc.invalidateQueries({ queryKey: ["messages"] });
     });
     return () => {
-      active = false;
-      socket?.disconnect();
+      socket.disconnect();
     };
   }, [qc]);
   const { data: accounts = [], isPending: accountsPending, error: accountsError, refetch: refetchAccounts } = useQuery({
@@ -848,47 +850,6 @@ function PageContent({
         removeAccount={removeAccount}
         removingAccount={removingAccount}
       />
-    );
-  if (page === "home")
-    return (
-      <main className="page-pane home-page">
-        <div className="home-hero">
-          <div className="hero-copy">
-            <span className="editorial-tag">01 / Unified mail</span>
-            <h1>
-              Every inbox.
-              <br />
-              <em>One signal.</em>
-            </h1>
-            <p>
-              Ten recent messages. Zero noise. Your Gmail, Outlook and temporary
-              addresses—live when you need them.
-            </p>
-            <button className="hero-action" onClick={openConnect}>
-              Connect a mailbox <span>↗</span>
-            </button>
-          </div>
-          <div className="hero-art" aria-hidden="true">
-            <span className="hero-word">OMNI</span>
-            <div className="mail-orbit">
-              <Mail />
-              <i />
-              <i />
-              <i />
-            </div>
-            <b>
-              LIVE
-              <br />
-              MAIL
-            </b>
-          </div>
-          <div className="hero-index">
-            <span>READ ONLY</span>
-            <strong>03</strong>
-            <small>providers</small>
-          </div>
-        </div>
-      </main>
     );
   if (page === "temp-mail")
     return (
