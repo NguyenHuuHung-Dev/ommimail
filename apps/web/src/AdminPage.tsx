@@ -32,7 +32,7 @@ type Status = "all" | "active" | "pending" | "disabled";
 type Action = "details" | "lock" | "unlock" | "delete" | "role";
 type Dialog = { user: AdminUser; action: Action };
 const statusOf = (user: AdminUser) =>
-  user.disabled ? "disabled" : user.emailVerified ? "active" : "pending";
+  user.disabled ? "disabled" : user.emailVerified || user.verificationExempt ? "active" : "pending";
 const statusLabel = {
   active: "Hoạt động",
   pending: "Chờ xác minh",
@@ -218,7 +218,7 @@ export function AdminPage() {
                 key: "active",
                 label: "Hoạt động",
                 icon: CheckCircle2,
-                note: "Đã xác minh và được truy cập",
+                note: "Được phép truy cập ứng dụng",
               },
               {
                 key: "pending",
@@ -551,7 +551,7 @@ export function AdminPage() {
                   <div>
                     <dt>Email</dt>
                     <dd>
-                      {selected.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
+                      {selected.verificationExempt ? "Được miễn xác minh" : selected.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
                     </dd>
                   </div>
                   <div>

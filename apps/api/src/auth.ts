@@ -7,7 +7,7 @@ import {
 } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { saveUserProfile } from "./firestore-store.js";
-import { hasVerifiedEmail } from "./auth-policy.js";
+import { satisfiesEmailVerification } from "./auth-policy.js";
 
 export type UserRole = "admin" | "premium" | "basic";
 export type AuthRequest = Request & {
@@ -91,7 +91,7 @@ export async function authenticate(
       });
     try {
       const decoded = await getAuth().verifyIdToken(token, true);
-      if (!hasVerifiedEmail(decoded))
+      if (!satisfiesEmailVerification(decoded))
         return res.status(403).json({
           success: false,
           error: {

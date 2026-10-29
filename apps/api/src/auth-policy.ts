@@ -8,3 +8,13 @@ export function hasVerifiedEmail(identity: {
 }) {
   return Boolean(identity.email?.trim()) && identity.email_verified === true;
 }
+import { hasOwnerVerificationException } from "@omnimail/shared";
+
+export function satisfiesEmailVerification(identity: {
+  uid?: string;
+  email?: string;
+  email_verified?: boolean;
+  admin?: unknown;
+}) {
+  return hasVerifiedEmail(identity) || hasOwnerVerificationException(identity);
+}

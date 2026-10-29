@@ -3,6 +3,7 @@ import request from "supertest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AuthRequest } from "./auth.js";
 import type { authenticateSocket as SocketAuthenticator } from "./socket-auth.js";
+import { OWNER_VERIFICATION_EXCEPTION } from "@omnimail/shared";
 
 const { verifyIdToken, saveUserProfile } = vi.hoisted(() => ({
   verifyIdToken: vi.fn(),
@@ -34,6 +35,37 @@ async function authenticatedApp() {
 }
 
 describe("verified account access", () => {
+  it("allows the existing owner to enter as admin without email verification", async () => {
+    verifyIdToken.mockResolvedValue({
+      ...OWNER_VERIFICATION_EXCEPTION,
+      admin: true,
+      email_verified: false,
+    });
+    const { app } = await authenticatedApp();
+    const response = await request(app)
+      .get("/private")
+      .set("Authorization", "Bearer owner-token");
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      userId: OWNER_VERIFICATION_EXCEPTION.uid,
+      role: "admin",
+    });
+    expect(verifyIdToken).toHaveBeenCalledWith("owner-token", true);
+  });
+  it("does not exempt a different UID that claims the owner email", async () => {
+    verifyIdToken.mockResolvedValue({
+      ...OWNER_VERIFICATION_EXCEPTION,
+      uid: "new-account",
+      admin: true,
+      email_verified: false,
+    });
+    const { app } = await authenticatedApp();
+    const response = await request(app)
+      .get("/private")
+      .set("Authorization", "Bearer token");
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("EMAIL_NOT_VERIFIED");
+  });
   it.each([
     ["auth/user-disabled", "ACCOUNT_DISABLED"],
     ["auth/user-not-found", "ACCOUNT_DELETED"],
@@ -141,6 +173,21 @@ describe("realtime account access", () => {
       data: {},
     } as unknown as Parameters<typeof SocketAuthenticator>[0];
   }
+
+  it("uses the same pinned owner exception for realtime authentication", async () => {
+    verifyIdToken.mockResolvedValue({
+      ...OWNER_VERIFICATION_EXCEPTION,
+      admin: true,
+      email_verified: false,
+    });
+    const { authenticateSocket } = await import("./socket-auth.js");
+    const client = socket("owner-token");
+    const next = vi.fn();
+    await authenticateSocket(client, next);
+    expect(next).toHaveBeenCalledWith();
+    expect(client.data.userId).toBe(OWNER_VERIFICATION_EXCEPTION.uid);
+    expect(verifyIdToken).toHaveBeenCalledWith("owner-token", true);
+  });
 
   it("rejects unverified identities before joining any user room", async () => {
     verifyIdToken.mockResolvedValue({

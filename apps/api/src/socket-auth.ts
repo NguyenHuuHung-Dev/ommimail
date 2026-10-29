@@ -1,7 +1,7 @@
 import { getAuth } from "firebase-admin/auth";
 import type { Socket } from "socket.io";
 import { authConfigured, localAuthEnabled } from "./auth.js";
-import { hasVerifiedEmail } from "./auth-policy.js";
+import { satisfiesEmailVerification } from "./auth-policy.js";
 
 export async function authenticateSocket(
   socket: Pick<Socket, "handshake" | "data">,
@@ -20,7 +20,7 @@ export async function authenticateSocket(
   if (!token) return next(new Error("Authentication required"));
   try {
     const decoded = await getAuth().verifyIdToken(token, true);
-    if (!hasVerifiedEmail(decoded))
+    if (!satisfiesEmailVerification(decoded))
       return next(new Error("Email verification required"));
     socket.data.userId = decoded.uid;
     return next();

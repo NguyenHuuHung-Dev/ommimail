@@ -1,4 +1,15 @@
 export type Provider = 'gmail' | 'microsoft' | 'imap' | 'temp';
+// Deliberately bound to the existing owner identity. Matching an email address
+// alone, an admin allowlist, or a newly created account never grants this exception.
+export const OWNER_VERIFICATION_EXCEPTION = {
+  uid: '5z1X7MJn1dTXDbnVAPJz7T9CABh1',
+  email: 'ommimail@gmail.com',
+} as const;
+export function hasOwnerVerificationException(identity: { uid?: string; email?: string | null; admin?: unknown }) {
+  return identity.uid === OWNER_VERIFICATION_EXCEPTION.uid &&
+    identity.email?.trim().toLowerCase() === OWNER_VERIFICATION_EXCEPTION.email &&
+    identity.admin === true;
+}
 export type AccountStatus = 'connected' | 'syncing' | 'expired' | 'error' | 'disconnected';
 export interface MailAddress { name?: string; address: string }
 export interface MailAccount { id:string; provider:Provider; emailAddress:string; displayName?:string; status:AccountStatus; unreadCount:number; connectedAt?:string; lastSyncedAt?:string; color?:string; access?:'owner'|'shared' }
@@ -23,6 +34,7 @@ export interface AdminUser {
   role: 'basic' | 'premium' | 'admin';
   disabled: boolean;
   emailVerified: boolean;
+  verificationExempt?: boolean;
   createdAt?: string;
   lastSeenAt?: string;
   lastSignInAt?: string;

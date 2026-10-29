@@ -291,7 +291,7 @@ Temporary addresses use mail.tm's account-token flow. No provider API key is req
 | `GET/POST` | `/api/temp-mail/*` | Discover domains and manage disposable inboxes |
 | `GET` | `/api/admin/overview` | Admin-only user and mailbox directory |
 
-All protected routes require a valid Firebase bearer token with a verified email address (`email_verified: true`). Unverified accounts receive `403 EMAIL_NOT_VERIFIED`; Socket.IO applies the same verification requirement. Resource access is checked again on the server; hidden UI controls are never treated as authorization. Production never falls back to local admin authentication if Firebase configuration is missing.
+All protected routes require a valid Firebase bearer token and completed email verification. The only exception is the existing owner identity `ommimail@gmail.com`, matched by its pinned Firebase UID and signed `admin: true` claim; this does not mark its email as verified or exempt other administrators. Other unverified accounts receive `403 EMAIL_NOT_VERIFIED`. HTTP, Socket.IO and mailbox OAuth use the same policy, and disabled or revoked sessions remain blocked. Resource access is checked again on the server; hidden UI controls are never treated as authorization. Production never falls back to local admin authentication if Firebase configuration is missing.
 
 ## Quality checks
 

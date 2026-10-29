@@ -9,16 +9,17 @@ import { onIdTokenChanged, type User } from "firebase/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { auth } from "./firebase";
 import { useUI } from "./store";
+import { satisfiesClientEmailVerification } from "./auth-access";
 
 type Session = {
   user: User | null;
-  verified: boolean;
+  canAccess: boolean;
   loading: boolean;
   error: string;
 };
 const SessionContext = createContext<Session>({
   user: null,
-  verified: false,
+  canAccess: false,
   loading: true,
   error: "",
 });
@@ -27,7 +28,7 @@ export function AuthSession({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [session, setSession] = useState<Session>({
     user: null,
-    verified: false,
+    canAccess: false,
     loading: true,
     error: "",
   });
@@ -41,24 +42,22 @@ export function AuthSession({ children }: { children: ReactNode }) {
         const currentRevision = ++revision;
         if (previousUid !== user?.uid) {
           queryClient.clear();
-          useUI
-            .getState()
-            .set({
-              selectedAccount: null,
-              selectedMessage: null,
-              search: "",
-              sidebar: false,
-            });
+          useUI.getState().set({
+            selectedAccount: null,
+            selectedMessage: null,
+            search: "",
+            sidebar: false,
+          });
           setSession({
             user,
-            verified: false,
-            loading: Boolean(user?.emailVerified),
+            canAccess: false,
+            loading: Boolean(user),
             error: "",
           });
         }
         previousUid = user?.uid;
-        if (!user || !user.emailVerified) {
-          setSession({ user, verified: false, loading: false, error: "" });
+        if (!user) {
+          setSession({ user, canAccess: false, loading: false, error: "" });
           return;
         }
         // reload() can notify listeners before the JWT has been refreshed.
@@ -70,7 +69,7 @@ export function AuthSession({ children }: { children: ReactNode }) {
             if (currentRevision !== revision) return;
             setSession({
               user,
-              verified: claims.email_verified === true,
+              canAccess: satisfiesClientEmailVerification(user, claims),
               loading: false,
               error: "",
             });
@@ -79,7 +78,7 @@ export function AuthSession({ children }: { children: ReactNode }) {
             if (currentRevision !== revision) return;
             setSession({
               user,
-              verified: false,
+              canAccess: false,
               loading: false,
               error:
                 "Không thể khôi phục phiên đăng nhập. Hãy tải lại trang để thử lại.",
@@ -91,7 +90,7 @@ export function AuthSession({ children }: { children: ReactNode }) {
         queryClient.clear();
         setSession({
           user: null,
-          verified: false,
+          canAccess: false,
           loading: false,
           error:
             "Không thể khôi phục phiên đăng nhập. Hãy tải lại trang để thử lại.",

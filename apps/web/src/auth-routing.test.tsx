@@ -5,6 +5,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { IdTokenResult, User } from "firebase/auth";
+import { OWNER_VERIFICATION_EXCEPTION } from "@omnimail/shared";
 
 const firebase = vi.hoisted(() => ({
   observer: undefined as undefined | ((user: unknown) => void),
@@ -165,6 +166,37 @@ afterEach(async () => {
 });
 
 describe("session restoration and landing routes", () => {
+  it.each(["/login", "/verify-email", "/app/home"])(
+    "lets the existing owner enter directly from %s without sending a verification email",
+    async (path) => {
+      const account = user(false);
+      Object.assign(account, OWNER_VERIFICATION_EXCEPTION);
+      vi.mocked(account.getIdTokenResult).mockResolvedValue({
+        ...tokenResult(false),
+        claims: { email_verified: false, admin: true },
+      });
+      await render(path);
+      await restored(account);
+      expect(location()).toBe("/app/home");
+      expect(
+        container.querySelector('[data-testid="workspace"]'),
+      ).not.toBeNull();
+      expect(firebase.sendEmailVerification).not.toHaveBeenCalled();
+      expect(account.emailVerified).toBe(false);
+    },
+  );
+  it("does not exempt another administrator using the same email with a different UID", async () => {
+    const account = user(false);
+    Object.assign(account, { email: OWNER_VERIFICATION_EXCEPTION.email });
+    vi.mocked(account.getIdTokenResult).mockResolvedValue({
+      ...tokenResult(false),
+      claims: { email_verified: false, admin: true },
+    });
+    await render("/app/home");
+    await restored(account);
+    expect(location()).toBe("/verify-email");
+    expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
+  });
   it.each(["/", "/login", "/register", "/app", "/app/home", "/app/mailboxes"])(
     "restores a verified session on %s without asking for a password",
     async (path) => {
@@ -225,7 +257,9 @@ describe("session restoration and landing routes", () => {
 describe("email ownership verification", () => {
   it("sends the verification email from signup even before the verification screen mounts", async () => {
     const account = user(false);
-    firebase.createUserWithEmailAndPassword.mockResolvedValueOnce({ user: account });
+    firebase.createUserWithEmailAndPassword.mockResolvedValueOnce({
+      user: account,
+    });
     await render("/register", <AuthPage mode="register" />);
     await restored(null);
     expect(container.textContent).toContain("Bạn cần xác minh địa chỉ email");

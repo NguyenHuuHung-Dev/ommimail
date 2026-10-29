@@ -27,7 +27,7 @@ function PrivateSeo() {
 }
 
 export function Guard() {
-  const { user, verified, loading, error } = useAuthSession();
+  const { user, canAccess, loading, error } = useAuthSession();
   if (loading)
     return (
       <>
@@ -43,7 +43,7 @@ export function Guard() {
         <Navigate to="/login" replace />
       </>
     );
-  if (!verified) return <Navigate to="/verify-email" replace />;
+  if (!canAccess) return <Navigate to="/verify-email" replace />;
   return (
     <>
       <PrivateSeo />
@@ -53,13 +53,11 @@ export function Guard() {
 }
 
 export function AuthRoute({ mode }: { mode: "login" | "register" | "forgot" }) {
-  const { user, verified, loading, error } = useAuthSession();
+  const { user, canAccess, loading, error } = useAuthSession();
   if (loading) return <SessionLoading />;
   if (error) return <SessionError />;
   if (user)
-    return (
-      <Navigate to={verified ? "/app/home" : "/verify-email"} replace />
-    );
+    return <Navigate to={canAccess ? "/app/home" : "/verify-email"} replace />;
   const titles = {
     login: "Đăng nhập | OmniMail",
     register: "Tạo tài khoản | OmniMail",
@@ -78,11 +76,11 @@ export function AuthRoute({ mode }: { mode: "login" | "register" | "forgot" }) {
 }
 
 export function VerifyEmailRoute() {
-  const { user, verified, loading, error } = useAuthSession();
+  const { user, canAccess, loading, error } = useAuthSession();
   if (loading) return <SessionLoading />;
   if (error) return <SessionError />;
   if (!user) return <Navigate to="/login" replace />;
-  if (verified) return <Navigate to="/app/home" replace />;
+  if (canAccess) return <Navigate to="/app/home" replace />;
   return (
     <>
       <PrivateSeo />

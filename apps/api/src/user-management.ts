@@ -1,5 +1,5 @@
 import { getAuth, type UserRecord } from "firebase-admin/auth";
-import type { AdminOverview, AdminUser } from "@omnimail/shared";
+import { hasOwnerVerificationException, type AdminOverview, type AdminUser } from "@omnimail/shared";
 import {
   resolveUserRole,
   roleOverrides,
@@ -45,6 +45,7 @@ function directoryEntry(user: UserRecord): AdminUser {
     role: resolveUserRole(user.uid, user.email, user.customClaims),
     disabled: user.disabled,
     emailVerified: user.emailVerified,
+    verificationExempt: hasOwnerVerificationException({uid: user.uid, email: user.email, admin: user.customClaims?.admin}),
     createdAt: iso(user.metadata.creationTime),
     lastSignInAt: iso(user.metadata.lastSignInTime),
     lastSeenAt: profile?.lastSeenAt,

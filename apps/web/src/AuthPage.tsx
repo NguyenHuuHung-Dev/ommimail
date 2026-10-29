@@ -25,6 +25,7 @@ import { api } from "./api";
 import { auth } from "./firebase";
 import { sendVerification } from "./email-verification";
 import { readSessionNotice, clearSessionNotice } from "./session-access";
+import { canEnterApp } from "./auth-access";
 
 type AuthMode = "login" | "register" | "forgot";
 type SocialProvider = "google" | "facebook" | "microsoft";
@@ -88,7 +89,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     setError("");
     try {
       const { user } = await signInWithPopup(auth, providerFor(name));
-      nav(user.emailVerified ? "/app/home" : "/verify-email", { replace: true });
+      nav(await canEnterApp(user) ? "/app/home" : "/verify-email", { replace: true });
     } catch (e) {
       setError(readableAuthError(e));
     } finally {
@@ -105,7 +106,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     try {
       if (mode === "login") {
         const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
-        nav(user.emailVerified ? "/app/home" : "/verify-email", { replace: true });
+        nav(await canEnterApp(user) ? "/app/home" : "/verify-email", { replace: true });
         return;
       }
       if (mode === "register") {
