@@ -109,6 +109,7 @@ app.get("/api/health", (_q, r) =>
     success: true,
     data: {
       status: "ok",
+      revision: process.env.RENDER_GIT_COMMIT ?? null,
       mode: process.env.DEMO_MODE === "false" ? "production" : "demo",
       persistentMailboxStorage: persistentStoreEnabled,
       synchronization: syncRuntimeInfo,
