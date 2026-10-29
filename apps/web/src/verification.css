@@ -3,6 +3,11 @@
   place-items: center;
   min-height: 100dvh;
   padding: 24px;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
 }
 
 .verification-card {
@@ -11,6 +16,31 @@
   gap: 16px;
   width: min(100%, 480px);
   overflow-wrap: anywhere;
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid #eadde1;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px #33212a0a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.verification-card h1 {
+  margin: 4px 0;
+  font-size: clamp(28px, 5vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+}
+
+.verification-card p {
+  margin: 0;
+}
+.verification-card button {
+  font: inherit;
+  font-weight: 600;
+}
+.verification-card .verify-badge {
+  align-self: flex-start;
+  padding: 8px 12px;
 }
 
 .verification-card .primary,
@@ -26,4 +56,21 @@
 .verification-card button:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.verification-help {
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fafaf9;
+  color: #57534e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.verification-help p {
+  margin: 8px 0 0;
+}
+.verification-help code {
+  font-size: 12px;
 }

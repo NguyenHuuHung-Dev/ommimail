@@ -47,7 +47,7 @@ vi.mock("./MailApp", () => ({
 import { App } from "./App";
 import { AuthSession } from "./AuthSession";
 import { AuthPage } from "./AuthPage";
-import { refreshVerification } from "./email-verification";
+import { refreshVerification, sendVerification } from "./email-verification";
 import { useUI } from "./store";
 
 let root: Root;
@@ -255,6 +255,63 @@ describe("session restoration and landing routes", () => {
 });
 
 describe("email ownership verification", () => {
+  it("does not claim another email was sent when returning during the cooldown", async () => {
+    const account = user(false);
+    await sendVerification(account);
+    await render("/verify-email");
+    await restored(account);
+    expect(firebase.sendEmailVerification).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Chưa gửi thêm thư",
+    );
+    expect(container.textContent).not.toContain("Đã gửi liên kết xác minh");
+  });
+
+  it("keeps the created account on the verification screen when the signup email request fails", async () => {
+    const account = user(false);
+    firebase.createUserWithEmailAndPassword.mockImplementationOnce(async () => {
+      firebase.observer?.(account);
+      return { user: account };
+    });
+    firebase.sendEmailVerification.mockRejectedValueOnce({
+      code: "auth/quota-exceeded",
+    });
+    await render("/register");
+    await restored(null);
+    await fill('[autocomplete="name"]', "Nguyễn Văn An");
+    await fill('[type="email"]', "new@gmail.com");
+    await fill('[autocomplete="new-password"]', "password123");
+    await fill('input[placeholder="Repeat your password"]', "password123");
+    await submitForm();
+    expect(location()).toBe("/verify-email");
+    expect(firebase.createUserWithEmailAndPassword).toHaveBeenCalledOnce();
+    expect(firebase.sendEmailVerification).toHaveBeenCalledOnce();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      "hết hạn mức",
+    );
+    await click("Gửi lại email");
+    expect(firebase.sendEmailVerification).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it("shows configuration failures without a success message and permits retrying", async () => {
+    firebase.sendEmailVerification.mockRejectedValueOnce({
+      code: "auth/unauthorized-continue-uri",
+    });
+    await render("/verify-email");
+    await restored(user(false));
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(
+      "chưa được cấu hình đúng",
+    );
+    expect(container.querySelector('[role="status"]')).toBeNull();
+    await click("Gửi lại email");
+    expect(firebase.sendEmailVerification).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "Đã yêu cầu gửi",
+    );
+  });
+
   it("sends the verification email from signup even before the verification screen mounts", async () => {
     const account = user(false);
     firebase.createUserWithEmailAndPassword.mockResolvedValueOnce({

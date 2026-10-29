@@ -7,15 +7,15 @@ import {
   refreshVerification,
   sendVerification,
   verificationRetryAt,
+  verificationFailure,
+  verificationError,
+  type VerificationRequest,
 } from "./email-verification";
 
-function verificationError(error: unknown) {
-  const code = (error as { code?: string })?.code;
-  if (code === "auth/too-many-requests")
-    return "Bạn đã gửi quá nhiều yêu cầu. Hãy đợi một lúc rồi thử lại.";
-  if (code === "auth/network-request-failed")
-    return "Không thể kết nối. Kiểm tra mạng rồi thử lại.";
-  return "Không thể xử lý xác minh email. Hãy thử lại hoặc đăng xuất để dùng tài khoản khác.";
+function requestNotice(result: VerificationRequest) {
+  return result.status === "requested"
+    ? "Đã yêu cầu gửi email xác minh. Thư có thể mất vài phút mới đến hộp thư của bạn."
+    : "Yêu cầu gửi trước đã được tiếp nhận. Chưa gửi thêm thư trong thời gian chờ; bạn có thể gửi lại khi hết đếm ngược.";
 }
 
 export function VerifyEmailPage({ user }: { user: User }) {
@@ -48,17 +48,24 @@ export function VerifyEmailPage({ user }: { user: User }) {
 
   useEffect(() => {
     let active = true;
+    const failed = verificationFailure(user.uid);
+    if (failed) {
+      setError(verificationError(failed));
+      return;
+    }
+    setBusy("send");
     void sendVerification(user)
-      .then((nextRetryAt) => {
+      .then((result) => {
         if (active) {
-          setRetryAt(nextRetryAt);
-          setNotice(
-            "Đã gửi liên kết xác minh. Hãy kiểm tra hộp thư đến và thư mục spam.",
-          );
+          setRetryAt(result.retryAt);
+          setNotice(requestNotice(result));
         }
       })
       .catch((e) => {
         if (active) setError(verificationError(e));
+      })
+      .finally(() => {
+        if (active) setBusy("");
       });
     return () => {
       active = false;
@@ -80,12 +87,12 @@ export function VerifyEmailPage({ user }: { user: User }) {
   async function resend() {
     setBusy("send");
     setError("");
+    setNotice("");
     try {
-      setRetryAt(await sendVerification(user));
+      const result = await sendVerification(user);
+      setRetryAt(result.retryAt);
       setNow(Date.now());
-      setNotice(
-        "Đã gửi lại liên kết xác minh. Hãy kiểm tra hộp thư và thư mục spam.",
-      );
+      setNotice(requestNotice(result));
     } catch (e) {
       setError(verificationError(e));
     } finally {
@@ -126,6 +133,18 @@ export function VerifyEmailPage({ user }: { user: User }) {
             {error}
           </p>
         )}
+        <div className="verification-help">
+          <strong>Chưa nhận được thư?</strong>
+          <p>
+            Kiểm tra cả Spam và Tất cả thư. Tìm thư có tiêu đề “Xác minh email”
+            từ <strong>OmniMail</strong>. Nếu vẫn chưa thấy, đợi vài phút rồi
+            gửi lại.
+          </p>
+          <p>
+            Nếu tài khoản đã được tạo, hãy đăng nhập để tiếp tục xác minh thay
+            vì đăng ký lại.
+          </p>
+        </div>
         <button
           className="primary"
           disabled={Boolean(busy)}

@@ -116,7 +116,9 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
         await api.registrationPolicy(email.trim());
         const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
         await updateProfile(result.user, { displayName: fullName.trim() });
-        await sendVerification(result.user);
+        // The verification screen retains send failures and offers a manual retry.
+        // Account creation has already succeeded, so never make users sign up again.
+        await sendVerification(result.user).catch(() => undefined);
         nav("/verify-email", { replace: true });
         return;
       }
