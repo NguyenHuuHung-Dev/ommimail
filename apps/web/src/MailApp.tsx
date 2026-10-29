@@ -16,22 +16,18 @@ import { auth } from "./firebase";
 import { useUI } from "./store";
 import { endRevokedSession } from "./session-access";
 import { AdminPage } from "./AdminPage";
+import { SiteHeader } from "./SiteHeader";
+import { HomeLanding } from "./HomeLanding";
 import {
   ArrowLeft,
-  AtSign,
   ChevronDown,
   Copy,
   FileText,
-  Facebook,
-  Github,
-  Inbox,
   LayoutDashboard,
   LockKeyhole,
   LoaderCircle,
-  LogOut,
   Mail,
   MoreHorizontal,
-  Instagram,
   Paperclip,
   Plus,
   RefreshCw,
@@ -42,55 +38,6 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-
-type UserRole = "admin" | "premium" | "basic";
-
-const APP_NAV_ITEMS = [
-  { page: "home", label: "Home", icon: LayoutDashboard },
-  { page: "mailboxes", label: "Mailboxes", icon: Inbox },
-  { page: "connect", label: "Connect", icon: Plus },
-  { page: "temp-mail", label: "Temp Mail", icon: AtSign },
-] as const;
-
-function AppNav({
-  page,
-  role,
-  unreadCount = 0,
-  onNavigate,
-  className,
-}: {
-  page: string;
-  role: UserRole;
-  unreadCount?: number;
-  onNavigate: (path: string) => void;
-  className?: string;
-}) {
-  const items = [
-    ...APP_NAV_ITEMS,
-    ...(role === "admin" ? [{ page: "mail-admin", label: "Người dùng", icon: ShieldCheck }] : role === "basic" ? [{ page: "mail-admin", label: "Upgrade", icon: ShieldCheck }] : []),
-    { page: "mail-sharing", label: "Sharing", icon: UserRoundCheck },
-  ];
-  const activePage = page === "mailbox-sharing" ? "mail-sharing" : page;
-  return (
-    <nav className={className} aria-label="Primary navigation">
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.page}
-            className={`navitem ${activePage === item.page ? "active" : ""}`}
-            onClick={() => onNavigate(`/app/${item.page}`)}
-            aria-current={activePage === item.page ? "page" : undefined}
-          >
-            <Icon />
-            <span>{item.label}</span>
-            {item.page === "mailboxes" && unreadCount > 0 && <b>{unreadCount}</b>}
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
 
 function ProviderDot({ p }: { p: string }) {
   return (
@@ -265,13 +212,15 @@ export function MailApp() {
   const logout = async () => {
     await signOut(auth);
     qc.clear();
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
   };
   if (page === "home")
     return (
       <>
         <ApiStatus pending={servicePending} error={serviceError} onRetry={retryService} />
         <HomeLanding
+          mode="member"
+          ready={!mePending}
           onOpenProfile={() => setProfileOpen(true)}
           profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
           onSearchMail={(value) => {
@@ -281,7 +230,6 @@ export function MailApp() {
             });
             navigate("/app/mailboxes");
           }}
-          onNavigate={(path) => navigate(path)}
           onLogout={logout}
           role={me?.role ?? "basic"}
         />
@@ -289,37 +237,17 @@ export function MailApp() {
       </>
     );
   return (
-    <div className="shell">
+    <div className="shell workspace-shell">
       <ApiStatus pending={servicePending} error={serviceError} onRetry={retryService} />
-      <aside className={ui.sidebar ? "sidebar open" : "sidebar"}>
-        <div className="brand">
-          <span className="brandmark">
-            <img src="/logo.jpg" alt="OmniMail logo" />
-          </span>
-          <span className="brand-title">OmniMail<span className="brand-dot">.</span></span>
-          <span className="demo-pill">Read only</span>
-        </div>
-        <AppNav
-          page={page}
+      <SiteHeader
+          mode="member"
+          ready={!mePending}
           role={me?.role ?? "basic"}
           unreadCount={allMessages.filter((m) => !m.isRead).length}
-          onNavigate={(path) => { ui.set({ sidebar: false }); navigate(path); }}
-        />
-        <div className="sidebar-bottom">
-          <div className="user user-card">
-            <button className="user-avatar" onClick={() => setProfileOpen(true)} title="Quản lý hồ sơ" aria-label="Quản lý hồ sơ">
-              {initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
-            </button>
-            <div>
-              <strong>{me?.displayName ?? auth.currentUser?.displayName ?? "OmniMail user"}</strong>
-              <small>{me?.email ?? auth.currentUser?.email ?? "Signed in"}</small>
-            </div>
-            <button className="logout-button" onClick={logout} title="Sign out" aria-label="Sign out">
-              <LogOut size={16} />
-            </button>
-          </div>
-        </div>
-      </aside>
+          profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
+          onOpenProfile={() => setProfileOpen(true)}
+          onLogout={logout}
+      />
       {page === "mailboxes" ? (
         <>
           <section className="inbox-pane">
@@ -756,47 +684,6 @@ function ProfileModal({
           </form>
         </div>
       </section>
-    </div>
-  );
-}
-function HomeLanding({
-  onOpenProfile,
-  profileInitials,
-  onSearchMail,
-  onNavigate,
-  onLogout,
-  role,
-}: {
-  onOpenProfile: () => void;
-  profileInitials: string;
-  onSearchMail: (value: string) => void;
-  onNavigate: (path: string) => void;
-  onLogout: () => void;
-  role: UserRole;
-}) {
-  return (
-    <div className="poster-home">
-      <header className="poster-nav">
-        <button className="poster-brand" onClick={() => window.scrollTo({ top: 0 })}><img src="/logo.jpg" alt="OmniMail logo" /><strong>OmniMail</strong><span>.</span></button>
-        <AppNav page="home" role={role} onNavigate={onNavigate} />
-        <div><button className="poster-icon" onClick={onLogout}><LogOut size={17} /></button><button className="poster-account" onClick={onOpenProfile} title="Quản lý hồ sơ" aria-label="Quản lý hồ sơ">{profileInitials}</button></div>
-      </header>
-      <main className="poster-stage">
-        <section className="poster-copy">
-          <div className="poster-copy-label"><strong>Live mail</strong><i /><span>Unified inbox</span></div>
-          <h1><span>Every inbox.</span><br /><em>One signal.</em></h1>
-          <p>Gmail, Outlook and temporary mail in one focused workspace.</p>
-          <form className="poster-mail-search" onSubmit={(event) => { event.preventDefault(); const input = event.currentTarget.elements.namedItem("mailQuery"); onSearchMail(input instanceof HTMLInputElement ? input.value : ""); }}>
-            <input name="mailQuery" inputMode="email" placeholder="Enter mailbox email address" aria-label="Search mailbox by email address" />
-            <button className="poster-copy-action" type="submit"><span>Open mailbox</span><b>→</b></button>
-          </form>
-        </section>
-        <figure className="poster-product" aria-label="OmniMail unified inbox">
-          <img src="/homepage-760.png" width="760" height="1187" alt="OmniMail character" />
-        </figure>
-        <span className="poster-side-label">READ · REFRESH · REPEAT</span>
-        <div className="poster-socials"><a href="https://www.facebook.com/zingne1302" target="_blank" rel="noreferrer" aria-label="Facebook của Hữu Hưng"><Facebook /></a><a href="https://www.instagram.com/huuhungstart/" target="_blank" rel="noreferrer" aria-label="Instagram của Hữu Hưng"><Instagram /></a><a href="https://github.com/NguyenHuuHung-Dev" target="_blank" rel="noreferrer" aria-label="GitHub"><Github /></a></div>
-      </main>
     </div>
   );
 }

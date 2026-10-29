@@ -6,6 +6,9 @@ import { Seo } from "./Seo";
 const Guard = lazy(() =>
   import("./PrivatePages").then((module) => ({ default: module.Guard })),
 );
+const HomeRoute = lazy(() =>
+  import("./PrivatePages").then((module) => ({ default: module.HomeRoute })),
+);
 const AuthRoute = lazy(() =>
   import("./PrivatePages").then((module) => ({ default: module.AuthRoute })),
 );
@@ -38,7 +41,14 @@ function NotFound() {
 export function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/app/home" replace />} />
+      <Route
+        path="/"
+        element={
+          <Suspense fallback={<PrivateFallback />}>
+            <HomeRoute />
+          </Suspense>
+        }
+      />
       <Route path="/security" element={<SecurityPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
       <Route
@@ -73,7 +83,8 @@ export function App() {
           </Suspense>
         }
       />
-      <Route path="/app" element={<Navigate to="/app/home" replace />} />
+      <Route path="/app" element={<Navigate to="/" replace />} />
+      <Route path="/app/home" element={<Navigate to="/" replace />} />
       <Route
         path="/app/*"
         element={

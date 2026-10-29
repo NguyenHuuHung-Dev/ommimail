@@ -1,9 +1,12 @@
 import { Navigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
 import { AuthPage } from "./AuthPage";
 import { SessionError, SessionLoading, useAuthSession } from "./AuthSession";
 import { VerifyEmailPage } from "./VerifyEmailPage";
 import { MailApp } from "./MailApp";
-import { Seo } from "./Seo";
+import { Seo, omnimailSchema } from "./Seo";
+import { HomeLanding } from "./HomeLanding";
+import { auth } from "./firebase";
 import "./modern.css";
 import "./styles.css";
 import "./admin-access.css";
@@ -15,6 +18,29 @@ import "./message-sharing.css";
 import "./verification.css";
 import "./workspace-polish.css";
 import "./admin-console.css";
+
+export function HomeRoute() {
+  const { user, canAccess, loading } = useAuthSession();
+  return (
+    <>
+      <Seo
+        title="OmniMail — Mọi hộp thư, một nơi quản lý"
+        description="Kết nối Gmail, Outlook và email tạm thời trong một không gian tập trung. Tạo tài khoản OmniMail miễn phí để bắt đầu."
+        path="/"
+        schema={omnimailSchema}
+      />
+      {user && canAccess ? (
+        <MailApp />
+      ) : (
+        <HomeLanding
+          mode={user ? "unverified" : "guest"}
+          ready={!loading}
+          onLogout={() => void signOut(auth)}
+        />
+      )}
+    </>
+  );
+}
 
 function PrivateSeo() {
   return (
@@ -56,8 +82,7 @@ export function AuthRoute({ mode }: { mode: "login" | "register" | "forgot" }) {
   const { user, canAccess, loading, error } = useAuthSession();
   if (loading) return <SessionLoading />;
   if (error) return <SessionError />;
-  if (user)
-    return <Navigate to={canAccess ? "/app/home" : "/verify-email"} replace />;
+  if (user) return <Navigate to={canAccess ? "/" : "/verify-email"} replace />;
   const titles = {
     login: "Đăng nhập | OmniMail",
     register: "Tạo tài khoản | OmniMail",
@@ -80,7 +105,7 @@ export function VerifyEmailRoute() {
   if (loading) return <SessionLoading />;
   if (error) return <SessionError />;
   if (!user) return <Navigate to="/login" replace />;
-  if (canAccess) return <Navigate to="/app/home" replace />;
+  if (canAccess) return <Navigate to="/" replace />;
   return (
     <>
       <PrivateSeo />

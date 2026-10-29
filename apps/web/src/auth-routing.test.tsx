@@ -177,7 +177,7 @@ describe("session restoration and landing routes", () => {
       });
       await render(path);
       await restored(account);
-      expect(location()).toBe("/app/home");
+      expect(location()).toBe("/");
       expect(
         container.querySelector('[data-testid="workspace"]'),
       ).not.toBeNull();
@@ -192,7 +192,7 @@ describe("session restoration and landing routes", () => {
       ...tokenResult(false),
       claims: { email_verified: false, admin: true },
     });
-    await render("/app/home");
+    await render("/app/mailboxes");
     await restored(account);
     expect(location()).toBe("/verify-email");
     expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
@@ -202,10 +202,9 @@ describe("session restoration and landing routes", () => {
     async (path) => {
       const account = user(true);
       await render(path);
-      expect(container.textContent).toContain("Đang khôi phục phiên đăng nhập");
       expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
       await restored(account);
-      expect(location()).toBe(path === "/app/mailboxes" ? path : "/app/home");
+      expect(location()).toBe(path === "/app/mailboxes" ? path : "/");
       expect(
         container.querySelector('[data-testid="workspace"]'),
       ).not.toBeNull();
@@ -214,13 +213,72 @@ describe("session restoration and landing routes", () => {
     },
   );
 
-  it("takes visitors to sign-in without showing the discarded public landing", async () => {
+  it.each(["/", "/app/home"])(
+    "shows the same public Home with login and signup at %s",
+    async (path) => {
+      await render(path);
+      await restored(null);
+      expect(location()).toBe("/");
+      expect(container.querySelectorAll(".home-landing")).toHaveLength(1);
+      expect(container.querySelectorAll(".poster-home")).toHaveLength(1);
+      expect(container.querySelector(".landing-content")).not.toBeNull();
+      expect(container.textContent).toContain("Every inbox.");
+      expect(
+        container.querySelector('.home-header a[href="/login"]'),
+      ).not.toBeNull();
+      expect(
+        container.querySelector('.home-header a[href="/register"]'),
+      ).not.toBeNull();
+      expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
+      expect(firebase.sendEmailVerification).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps private mailboxes behind login when a visitor follows the public navigation", async () => {
     await render("/");
     await restored(null);
+    await act(async () =>
+      container
+        .querySelector<HTMLAnchorElement>(
+          '.home-header .navitem[href="/app/mailboxes"]',
+        )!
+        .click(),
+    );
     expect(location()).toBe("/login");
-    expect(container.querySelector(".public-home")).toBeNull();
-    expect(container.querySelector(".poster-home")).toBeNull();
+    expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
   });
+
+  it("keeps the original mailbox search on the public hero and asks visitors to sign in before opening mail", async () => {
+    await render("/");
+    await restored(null);
+    expect(container.textContent).toContain("Live mail");
+    expect(container.textContent).toContain(
+      "Gmail, Outlook and temporary mail in one focused workspace.",
+    );
+    expect(
+      container.querySelector(
+        'input[aria-label="Search mailbox by email address"]',
+      ),
+    ).not.toBeNull();
+    await click("Open mailbox");
+    expect(location()).toBe("/login");
+    expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
+  });
+
+  it.each(["/", "/app/home"])(
+    "lets unverified users view Home at %s while keeping application access blocked",
+    async (path) => {
+      await render(path);
+      await restored(user(false));
+      expect(location()).toBe("/");
+      expect(container.querySelector(".home-landing")).not.toBeNull();
+      expect(
+        container.querySelector('.home-primary[href="/verify-email"]'),
+      ).not.toBeNull();
+      expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
+      expect(firebase.sendEmailVerification).not.toHaveBeenCalled();
+    },
+  );
 
   it("redirects a signed-out visitor away from private routes", async () => {
     await render("/app/mailboxes");
@@ -378,11 +436,11 @@ describe("email ownership verification", () => {
         "login@gmail.com",
         "password123",
       );
-      expect(location()).toBe(verified ? "/app/home" : "/verify-email");
+      expect(location()).toBe(verified ? "/" : "/verify-email");
     },
   );
 
-  it.each(["/", "/login", "/register", "/app/mailboxes", "/app/home"])(
+  it.each(["/login", "/register", "/app/mailboxes"])(
     "blocks unverified accounts at %s and sends only one email even in StrictMode",
     async (path) => {
       await render(path);
@@ -423,7 +481,7 @@ describe("email ownership verification", () => {
     await restored(account);
     await click("Tôi đã xác minh");
     expect(account.getIdToken).toHaveBeenCalledWith(true);
-    expect(location()).toBe("/app/home");
+    expect(location()).toBe("/");
   });
 
   it("does not treat a failed token refresh as successful verification", async () => {

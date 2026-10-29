@@ -45,7 +45,7 @@ Shared mailbox addresses are never listed globally. A recipient must search with
 
 Open **[omnimail.io.vn](https://omnimail.io.vn)** and create an account with email/password or a supported social provider. Verify your email using the link sent to your inbox before accessing mailboxes. Accounts whose provider already verifies their email can enter directly.
 
-The original Home screen is the only landing page, with the “Every inbox. One signal.” hero, mailbox search and character illustration. Opening `/` enters `/app/home`: returning signed-in users see Home, visitors sign in, and unverified accounts must verify their email first. Sessions persist in browser storage until sign-out or Firebase invalidates them.
+Home at `/` is the single public landing page, with the “Every inbox. One signal.” hero and character illustration. Visitors see sign-in and registration links; returning signed-in users can open their mailboxes from the same page. `/app/home` redirects to `/` so there is no second landing page. Unverified accounts can view Home, but must verify their email before entering mailbox or administration routes. Sessions persist in browser storage until sign-out or Firebase invalidates them.
 
 1. Open **Connect**.
 2. Connect Gmail or Microsoft through OAuth, or use a supported app-password/refresh-token flow.

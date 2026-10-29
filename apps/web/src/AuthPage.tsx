@@ -89,7 +89,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     setError("");
     try {
       const { user } = await signInWithPopup(auth, providerFor(name));
-      nav(await canEnterApp(user) ? "/app/home" : "/verify-email", { replace: true });
+      nav(await canEnterApp(user) ? "/" : "/verify-email", { replace: true });
     } catch (e) {
       setError(readableAuthError(e));
     } finally {
@@ -106,7 +106,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
     try {
       if (mode === "login") {
         const { user } = await signInWithEmailAndPassword(auth, email.trim(), password);
-        nav(await canEnterApp(user) ? "/app/home" : "/verify-email", { replace: true });
+        nav(await canEnterApp(user) ? "/" : "/verify-email", { replace: true });
         return;
       }
       if (mode === "register") {

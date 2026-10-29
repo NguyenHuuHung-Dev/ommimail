@@ -32,7 +32,7 @@ export function VerifyEmailPage({ user }: { user: User }) {
       setError("");
       try {
         if (await refreshVerification(user))
-          navigate("/app/home", { replace: true });
+          navigate("/", { replace: true });
         else if (manual)
           setNotice(
             "Email chưa được xác minh. Hãy mở liên kết trong thư, sau đó kiểm tra lại.",
