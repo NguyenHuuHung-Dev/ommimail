@@ -24,6 +24,7 @@ import {
 import { api } from "./api";
 import { auth } from "./firebase";
 import { sendVerification } from "./email-verification";
+import { readSessionNotice, clearSessionNotice } from "./session-access";
 
 type AuthMode = "login" | "register" | "forgot";
 type SocialProvider = "google" | "facebook" | "microsoft";
@@ -34,6 +35,8 @@ function readableAuthError(error: unknown) {
     "auth/invalid-credential": "Email hoặc mật khẩu không đúng.",
     "auth/email-already-in-use": "Email này đã được sử dụng.",
     "auth/weak-password": "Mật khẩu cần có ít nhất 6 ký tự.",
+    "auth/user-disabled": "Tài khoản đã bị quản trị viên khóa.",
+    "auth/user-token-expired": "Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại.",
     "auth/invalid-email": "Địa chỉ email không hợp lệ.",
     "auth/popup-closed-by-user": "Cửa sổ đăng nhập đã được đóng.",
     "auth/popup-blocked": "Trình duyệt đã chặn cửa sổ đăng nhập.",
@@ -70,7 +73,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
   }[mode];
 
   useEffect(() => {
-    setError(""); setNotice(""); setEmail(""); setPassword("");
+    setError(""); setNotice(readSessionNotice()); setEmail(""); setPassword("");
     setConfirmPassword(""); setFullName(""); setResetSent(false);
   }, [mode]);
 
@@ -95,6 +98,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    clearSessionNotice();
     setBusy(true);
     setError("");
     setNotice("");

@@ -62,6 +62,17 @@ function allowedAdmins() {
       .filter(Boolean),
   );
 }
+export function resolveUserRole(
+  userId: string,
+  email?: string,
+  claims: Record<string, unknown> = {},
+): UserRole {
+  return claims.admin === true ||
+    (email ? allowedAdmins().has(email.toLowerCase()) : false)
+    ? "admin"
+    : (roleOverrides.get(userId) ??
+        (claims.role === "premium" ? "premium" : "basic"));
+}
 export async function authenticate(
   req: Request,
   res: Response,
@@ -70,29 +81,25 @@ export async function authenticate(
   const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
   if (authConfigured) {
     if (!token)
-      return res
-        .status(401)
-        .json({
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "UNAUTHENTICATED",
+          message: "Sign in required",
+          details: {},
+        },
+      });
+    try {
+      const decoded = await getAuth().verifyIdToken(token, true);
+      if (!hasVerifiedEmail(decoded))
+        return res.status(403).json({
           success: false,
           error: {
-            code: "UNAUTHENTICATED",
-            message: "Sign in required",
+            code: "EMAIL_NOT_VERIFIED",
+            message: "Vui lòng xác minh email trước khi sử dụng OmniMail",
             details: {},
           },
         });
-    try {
-      const decoded = await getAuth().verifyIdToken(token);
-      if (!hasVerifiedEmail(decoded))
-        return res
-          .status(403)
-          .json({
-            success: false,
-            error: {
-              code: "EMAIL_NOT_VERIFIED",
-              message: "Vui lòng xác minh email trước khi sử dụng OmniMail",
-              details: {},
-            },
-          });
       const email = decoded.email?.toLowerCase();
       const existing = userDirectory.get(decoded.uid);
       const displayName =
@@ -103,11 +110,7 @@ export async function authenticate(
       target.userId = decoded.uid;
       target.email = email;
       target.displayName = displayName;
-      target.role =
-        decoded.admin === true || (email ? allowedAdmins().has(email) : false)
-          ? "admin"
-          : (roleOverrides.get(decoded.uid) ??
-            (decoded.role === "premium" ? "premium" : "basic"));
+      target.role = resolveUserRole(decoded.uid, email, decoded);
       if (email) {
         const profile = {
           email,
@@ -121,30 +124,42 @@ export async function authenticate(
         );
       }
       return next();
-    } catch {
-      return res
-        .status(401)
-        .json({
-          success: false,
-          error: {
-            code: "INVALID_TOKEN",
-            message: "Session is invalid or expired",
-            details: {},
-          },
-        });
-    }
-  }
-  if (!localAuthEnabled)
-    return res
-      .status(503)
-      .json({
+    } catch (cause) {
+      const code = (cause as { code?: string }).code;
+      const revoked = code === "auth/id-token-revoked";
+      const disabled = code === "auth/user-disabled";
+      const deleted = code === "auth/user-not-found";
+      return res.status(401).json({
         success: false,
         error: {
-          code: "AUTH_NOT_CONFIGURED",
-          message: "Authentication is not configured",
+          code: disabled
+            ? "ACCOUNT_DISABLED"
+            : deleted
+              ? "ACCOUNT_DELETED"
+              : revoked
+                ? "SESSION_REVOKED"
+                : "INVALID_TOKEN",
+          message: disabled
+            ? "Tài khoản đã bị quản trị viên khóa."
+            : deleted
+              ? "Tài khoản không còn tồn tại."
+              : revoked
+                ? "Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại."
+                : "Session is invalid or expired",
           details: {},
         },
       });
+    }
+  }
+  if (!localAuthEnabled)
+    return res.status(503).json({
+      success: false,
+      error: {
+        code: "AUTH_NOT_CONFIGURED",
+        message: "Authentication is not configured",
+        details: {},
+      },
+    });
   const target = req as AuthRequest;
   target.userId = "local-user";
   target.role = "admin";
@@ -160,15 +175,13 @@ export async function authenticate(
 }
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {
   if ((req as AuthRequest).role !== "admin")
-    return res
-      .status(403)
-      .json({
-        success: false,
-        error: {
-          code: "ADMIN_REQUIRED",
-          message: "Administrator permission is required",
-          details: {},
-        },
-      });
+    return res.status(403).json({
+      success: false,
+      error: {
+        code: "ADMIN_REQUIRED",
+        message: "Administrator permission is required",
+        details: {},
+      },
+    });
   return next();
 }

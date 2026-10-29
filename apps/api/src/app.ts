@@ -1,3 +1,5 @@
+import { disconnectMailbox } from "./mailbox-lifecycle.js";
+import { adminOverview, deleteManagedUser, setManagedUserDisabled, setManagedUserRole, UserManagementError } from "./user-management.js";
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
@@ -19,7 +21,7 @@ import { microsoftGraph } from "./microsoft-graph.js";
 import { hiddenMessages } from "./hidden-messages.js";
 import { MailboxAlreadyConnectedError, reserveMailboxConnection } from "./connection-policy.js";
 import { compositeMessageAccountId, mayReadMailbox, mayRevealMailboxAddress } from "./access-control.js";
-import { oauth, removeOAuthCredential } from "./oauth.js";
+import { oauth } from "./oauth.js";
 import { deleteMailbox, deleteMessageShare, persistentStoreEnabled, saveHiddenMessage, saveMailbox, saveMailboxShare, saveMessageShare, saveUpgradeRequest, saveUserProfile, updateMailboxSyncState } from "./firestore-store.js";
 import {
   listMicrosoftInbox,
@@ -156,36 +158,33 @@ app.patch("/api/me", async (q, r) => {
   await saveUserProfile({ userId: identity(q).userId, ...profile });
   return ok(r, { userId: identity(q).userId, ...profile });
 });
-app.get("/api/admin/overview", requireAdmin, (_q, r) =>
-  ok(r, {
-    users: Math.max(1, userDirectory.size),
-    connectedAccounts: accounts.filter((account) => accountOwners.has(account.id)).length,
-    serviceStatus: "healthy",
-    directory: [...new Set([...userDirectory.keys(), ...accountOwners.values()])].map((userId) => ({
-      userId,
-      email: userDirectory.get(userId)?.email ?? "Unknown user",
-      displayName: userDirectory.get(userId)?.displayName,
-      lastSeenAt: userDirectory.get(userId)?.lastSeenAt,
-      role: userDirectory.get(userId)?.role ?? 'basic',
-      upgradeRequestedAt: upgradeRequests.get(userId),
-      accounts: accounts.filter((account) => accountOwners.get(account.id) === userId),
-      sharedAccountIds: accounts.filter((account)=>isMailboxShared(account.id,userId)).map((account)=>account.id),
-    })),
-  }),
-);
-app.patch('/api/admin/users/:userId/role',requireAdmin,async(q,r)=>{
-  const parsed=z.object({role:z.enum(['basic','premium'])}).safeParse(q.body);if(!parsed.success)return fail(r,400,'VALIDATION_ERROR','Role must be basic or premium');
-  const userId=String(q.params.userId);const user=userDirectory.get(userId);if(!user)return fail(r,404,'NOT_FOUND','User not found');
-  roleOverrides.set(userId,parsed.data.role);
-  if(serviceAccountConfigured)await getAuth().setCustomUserClaims(userId,{role:parsed.data.role});
-  user.role=parsed.data.role;
-  void saveUserProfile({userId,...user}).catch(()=>undefined);
-  if(parsed.data.role==='premium'){
-    setUpgradeRequest(userId);
-    void saveUpgradeRequest(userId).catch(()=>undefined);
-  }
-  if(parsed.data.role==='basic')for(const [accountId,users] of mailboxShares){users.delete(userId);void saveMailboxShare(accountId,userId,false).catch(()=>undefined);if(!users.size)mailboxShares.delete(accountId)}
-  return ok(r,{userId,role:parsed.data.role});
+app.get("/api/admin/overview", requireAdmin, async (q, r) => {
+  try { return ok(r, await adminOverview(identity(q).userId)); }
+  catch { return fail(r, 503, "DIRECTORY_UNAVAILABLE", "Chưa tải được danh sách từ Firebase. Hãy thử lại."); }
+});
+const managementFailure = (r: express.Response, error: unknown) => {
+  if (error instanceof UserManagementError) return fail(r, error.status, error.code, error.message);
+  const code = (error as {code?: string}).code;
+  if (code === "auth/user-not-found") return fail(r, 404, "USER_NOT_FOUND", "Tài khoản không còn tồn tại.");
+  return fail(r, 503, "USER_MANAGEMENT_FAILED", "Chưa thể hoàn tất thao tác. Hãy làm mới và thử lại; tài khoản có thể vẫn đang bị khóa.");
+};
+app.patch("/api/admin/users/:userId/role", requireAdmin, async (q, r) => {
+  const parsed = z.object({role: z.enum(["basic", "premium"])}).safeParse(q.body);
+  if (!parsed.success) return fail(r, 400, "VALIDATION_ERROR", "Vai trò cần là Basic hoặc Premium.");
+  try { return ok(r, await setManagedUserRole(identity(q).userId, String(q.params.userId), parsed.data.role)); }
+  catch (error) { return managementFailure(r, error); }
+});
+app.patch("/api/admin/users/:userId/status", requireAdmin, async (q, r) => {
+  const parsed = z.object({disabled: z.boolean()}).safeParse(q.body);
+  if (!parsed.success) return fail(r, 400, "VALIDATION_ERROR", "Trạng thái tài khoản không hợp lệ.");
+  try { return ok(r, await setManagedUserDisabled(identity(q).userId, String(q.params.userId), parsed.data.disabled)); }
+  catch (error) { return managementFailure(r, error); }
+});
+app.delete("/api/admin/users/:userId", requireAdmin, async (q, r) => {
+  const parsed = z.object({confirmation: z.string().trim().min(1).max(254)}).safeParse(q.body);
+  if (!parsed.success) return fail(r, 400, "CONFIRMATION_REQUIRED", "Nhập đúng email của người dùng để xác nhận xóa.");
+  try { return ok(r, await deleteManagedUser(identity(q).userId, String(q.params.userId), parsed.data.confirmation)); }
+  catch (error) { return managementFailure(r, error); }
 });
 app.get('/api/upgrade-requests/me',(q,r)=>ok(r,{requestedAt:upgradeRequests.get(identity(q).userId)}));
 app.post('/api/upgrade-requests',async(q,r)=>{
@@ -381,32 +380,6 @@ app.patch("/api/mail-accounts/:id/settings", (q, r) => {
     ? ok(r, { ...a, settings: q.body })
     : fail(r, 404, "NOT_FOUND", "Account not found");
 });
-async function disconnectMailbox(accountId: string) {
-  const index = accounts.findIndex((account) => account.id === accountId);
-  if (index < 0) return false;
-  const account = accounts[index];
-  if (account.id.startsWith("gmail-imap:"))
-    gmailAppPasswords.remove(account.id.slice("gmail-imap:".length));
-  else if (account.id.startsWith("microsoft-token:"))
-    microsoftTokens.remove(account.id.slice("microsoft-token:".length));
-  else if (account.id.startsWith("mailtm:")) {
-    try {
-      await mailTm.remove(account.id.replace(/^mailtm:/, ""));
-    } catch {
-      // The local connection should still be removable if the provider expired it.
-    }
-  } else {
-    if (account.provider === "microsoft") microsoftGraph.clear(account.id);
-    else gmail.clear(account.id);
-    removeOAuthCredential(account.id);
-  }
-  accounts.splice(index, 1);
-  accountOwners.delete(accountId);
-  mailboxShares.delete(accountId);
-  clearMailboxSyncState(accountId);
-  await deleteMailbox(accountId);
-  return true;
-}
 app.post("/api/mail-accounts/delete-batch", async (q, r) => {
   const parsed = z.object({ ids: z.array(z.string().min(1)).min(1) }).safeParse(q.body);
   if (!parsed.success)

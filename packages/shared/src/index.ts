@@ -16,6 +16,28 @@ export interface PaginatedMessages { items:MailMessage[]; nextCursor?:string; to
 export type MailSyncJobStatus = 'queued' | 'running' | 'completed' | 'failed';
 export interface MailSyncJob { id:string; accountId:string; status:MailSyncJobStatus; requestedAt:string; startedAt?:string; completedAt?:string; messageCount?:number; unreadCount?:number; error?:string }
 export interface ApiError { success:false; error:{ code:string; message:string; details?:Record<string, unknown> } }
+export interface AdminUser {
+  userId: string;
+  email: string;
+  displayName?: string;
+  role: 'basic' | 'premium' | 'admin';
+  disabled: boolean;
+  emailVerified: boolean;
+  createdAt?: string;
+  lastSeenAt?: string;
+  lastSignInAt?: string;
+  providers: string[];
+  upgradeRequestedAt?: string;
+  accounts: MailAccount[];
+  sharedAccountIds: string[];
+}
+export interface AdminOverview {
+  users: number;
+  connectedAccounts: number;
+  serviceStatus: string;
+  currentUserId: string;
+  directory: AdminUser[];
+}
 export interface TempAddress { id:string; address:string; expiresAt:string }
 export interface MailFolder { id:string; name:string; type?:string; unreadCount:number }
 export interface SyncResult { added:number; updated:number; deleted:number; cursor?:string }

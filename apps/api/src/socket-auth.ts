@@ -19,7 +19,7 @@ export async function authenticateSocket(
       : socket.handshake.headers.authorization?.match(/^Bearer (.+)$/)?.[1];
   if (!token) return next(new Error("Authentication required"));
   try {
-    const decoded = await getAuth().verifyIdToken(token);
+    const decoded = await getAuth().verifyIdToken(token, true);
     if (!hasVerifiedEmail(decoded))
       return next(new Error("Email verification required"));
     socket.data.userId = decoded.uid;

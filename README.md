@@ -67,7 +67,7 @@ The original Home screen is the only landing page, with the “Every inbox. One 
 | Authentication | Firebase email/password plus Google, Facebook and Microsoft sign-in |
 | Access control | Basic, Premium and Admin roles with server-side authorization |
 | Mailbox sharing | Owner-controlled read-only sharing and recipient revocation |
-| Administration | User directory, role management, mailbox overview and service status |
+| Administration | Complete Firebase user directory, role management, lock/unlock, confirmed account deletion and mailbox overview |
 | Security | Encrypted credentials, signed OAuth state, ownership checks, rate limits and redacted logs |
 | UX | Responsive layouts, loading/error states, subtle motion and reduced-motion support |
 
@@ -236,6 +236,12 @@ pnpm --filter @omnimail/api admin:grant user@example.com
 ```
 
 The affected user must sign out and sign in again to receive an updated Firebase custom claim.
+
+### Manage users
+
+Open **Người dùng** as an Admin to search, filter and inspect every registered account, including accounts waiting for email verification. Locking an account revokes its sessions and disconnects live updates; unlocking lets the user sign in again. Role changes also end the previous session.
+
+Deletion requires typing the account's email (or UID for an identity without email). It removes the Firebase identity, OmniMail profile, owned mailbox connections and related sharing permissions. Original Gmail and Outlook messages are retained. The current account and Admin identities are protected from these actions. If cleanup fails, the account stays locked and the operation can be retried.
 
 ## Provider configuration
 

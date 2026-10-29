@@ -13,6 +13,8 @@ import "./mailbox-errors.css";
 import "./share-dashboard.css";
 import "./message-sharing.css";
 import "./verification.css";
+import "./workspace-polish.css";
+import "./admin-console.css";
 
 function PrivateSeo() {
   return (

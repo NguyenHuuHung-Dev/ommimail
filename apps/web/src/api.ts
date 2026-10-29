@@ -4,8 +4,10 @@ import type {
   MessageShare,
   MailSyncJob,
   PaginatedMessages,
+  AdminOverview,
 } from "@omnimail/shared";
 import { auth } from "./firebase";
+import { endRevokedSession } from "./session-access";
 export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   await auth.authStateReady();
@@ -18,8 +20,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   });
-  const j = await r.json();
-  if (!r.ok) throw new Error(j.error?.message ?? "Request failed");
+  const j = await r.json().catch(() => { throw new Error("Dịch vụ chưa phản hồi đúng. Vui lòng thử lại sau."); });
+  if (!r.ok) {
+    if (["ACCOUNT_DISABLED", "ACCOUNT_DELETED", "SESSION_REVOKED"].includes(j.error?.code))
+      await endRevokedSession(j.error.code).catch(() => undefined);
+    throw new Error(j.error?.message ?? "Request failed");
+  }
   return j.data;
 }
 export const api = {
@@ -60,13 +66,9 @@ export const api = {
     }),
   me: () => request<{ userId: string; email?: string; displayName?: string; role: "basic" | "premium" | "admin" }>("/api/me"),
   updateMe: (displayName: string) => request<{ userId: string; email: string; displayName: string; role: "basic" | "premium" | "admin" }>("/api/me", { method: "PATCH", body: JSON.stringify({ displayName }) }),
-  admin: () =>
-    request<{
-      users: number;
-      connectedAccounts: number;
-      serviceStatus: string;
-      directory: { userId: string; email: string; displayName?: string; role:"basic"|"premium"|"admin"; lastSeenAt?: string; upgradeRequestedAt?: string; accounts: MailAccount[]; sharedAccountIds:string[] }[];
-    }>("/api/admin/overview"),
+  admin: () => request<AdminOverview>("/api/admin/overview"),
+  setUserDisabled: (userId: string, disabled: boolean) => request<{userId: string; disabled: boolean}>(`/api/admin/users/${encodeURIComponent(userId)}/status`, {method: "PATCH", body: JSON.stringify({disabled})}),
+  deleteUser: (userId: string, confirmation: string) => request<{userId: string; deleted: true; removedMailboxes: number}>(`/api/admin/users/${encodeURIComponent(userId)}`, {method: "DELETE", body: JSON.stringify({confirmation})}),
   setUserRole:(userId:string,role:"basic"|"premium")=>request(`/api/admin/users/${encodeURIComponent(userId)}/role`,{method:"PATCH",body:JSON.stringify({role})}),
   setMailboxShare:(accountId:string,userId:string,allowed:boolean)=>request('/api/admin/mailbox-shares',{method:'PUT',body:JSON.stringify({accountId,userId,allowed})}),
   mailboxShares: () => request<{

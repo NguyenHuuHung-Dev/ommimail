@@ -58,6 +58,26 @@ afterEach(() => {
 });
 
 describe("mailbox sync queue", () => {
+  it("does not recreate mailbox data when an account is deleted during provider synchronization", async () => {
+    let finish!: (messages: MailMessage[]) => void;
+    gmailList.mockImplementationOnce(() => new Promise((resolve) => { finish = resolve; }));
+    accounts.push(account); accountOwners.set(account.id, "owner-1");
+    const ended = new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("sync job timed out")), 2_000);
+      const unsubscribe = onMailboxSyncUpdate((job) => {
+        if (job.accountId !== account.id || job.status !== "failed") return;
+        clearTimeout(timer); unsubscribe(); resolve();
+      });
+    });
+    enqueueMailboxSync(account.id, "owner-1");
+    await Promise.resolve();
+    accountOwners.delete(account.id);
+    clearMailboxSyncState(account.id);
+    finish([latestMessage]);
+    await ended;
+    expect(persistSyncState).not.toHaveBeenCalled();
+    expect(getCachedMailboxMessages(account.id)).toBeUndefined();
+  });
   it("reads the provider and completes with fresh mailbox metadata", async () => {
     gmailList.mockResolvedValueOnce([latestMessage]);
     accounts.push(account);

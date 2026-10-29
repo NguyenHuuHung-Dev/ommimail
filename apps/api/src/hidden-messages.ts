@@ -1,5 +1,6 @@
 const hidden = new Map<string, Set<string>>();
 export const hiddenMessages = {
+  removeUser: (userId: string) => hidden.delete(userId),
   has: (userId: string, id: string) => hidden.get(userId)?.has(id) ?? false,
   add: (userId: string, id: string) => {
     const set = hidden.get(userId) ?? new Set<string>();

@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { auth } = vi.hoisted(() => ({
+const { auth, endRevokedSession } = vi.hoisted(() => ({
+  endRevokedSession: vi.fn().mockResolvedValue(undefined),
   auth: {
     authStateReady: vi.fn().mockResolvedValue(undefined),
     currentUser: null as null | { getIdToken: () => Promise<string> },
   },
 }));
 vi.mock("./firebase", () => ({ auth }));
+vi.mock("./session-access", () => ({ endRevokedSession }));
 import { api } from "./api";
 
 beforeEach(() => {
@@ -21,6 +23,26 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("API session restoration", () => {
+  it("ends a disabled account's existing session with the server reason", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({
+        error: { code: "ACCOUNT_DISABLED", message: "Tài khoản đã bị khóa" },
+      }),
+    } as Response);
+    await expect(api.me()).rejects.toThrow("Tài khoản đã bị khóa");
+    expect(endRevokedSession).toHaveBeenCalledWith("ACCOUNT_DISABLED");
+  });
+  it("does not log users out for a temporary service outage", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      json: async () => {
+        throw new Error("HTML gateway response");
+      },
+    } as unknown as Response);
+    await expect(api.me()).rejects.toThrow("Dịch vụ chưa phản hồi đúng");
+    expect(endRevokedSession).not.toHaveBeenCalled();
+  });
   it("waits for the saved session before requesting private data", async () => {
     let restore!: () => void;
     auth.authStateReady.mockImplementationOnce(

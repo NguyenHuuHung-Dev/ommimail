@@ -34,6 +34,23 @@ async function authenticatedApp() {
 }
 
 describe("verified account access", () => {
+  it.each([
+    ["auth/user-disabled", "ACCOUNT_DISABLED"],
+    ["auth/user-not-found", "ACCOUNT_DELETED"],
+    ["auth/id-token-revoked", "SESSION_REVOKED"],
+  ])(
+    "rejects revoked or disabled sessions (%s)",
+    async (firebaseCode, code) => {
+      verifyIdToken.mockRejectedValue({ code: firebaseCode });
+      const { app } = await authenticatedApp();
+      const response = await request(app)
+        .get("/private")
+        .set("Authorization", "Bearer old-session");
+      expect(response.status).toBe(401);
+      expect(response.body.error.code).toBe(code);
+      expect(verifyIdToken).toHaveBeenCalledWith("old-session", true);
+    },
+  );
   it("rejects requests without a Firebase token", async () => {
     const { app } = await authenticatedApp();
     expect((await request(app).get("/private")).status).toBe(401);

@@ -14,6 +14,8 @@ import type { MailAccount, MailMessage, MailSyncJob, MessageShare } from "@omnim
 import { api, apiBaseUrl } from "./api";
 import { auth } from "./firebase";
 import { useUI } from "./store";
+import { endRevokedSession } from "./session-access";
+import { AdminPage } from "./AdminPage";
 import {
   ArrowLeft,
   AtSign,
@@ -65,7 +67,7 @@ function AppNav({
 }) {
   const items = [
     ...APP_NAV_ITEMS,
-    ...(role === "admin" ? [{ page: "mail-admin", label: "Mail Admin", icon: ShieldCheck }] : role === "basic" ? [{ page: "mail-admin", label: "Upgrade", icon: ShieldCheck }] : []),
+    ...(role === "admin" ? [{ page: "mail-admin", label: "Người dùng", icon: ShieldCheck }] : role === "basic" ? [{ page: "mail-admin", label: "Upgrade", icon: ShieldCheck }] : []),
     { page: "mail-sharing", label: "Sharing", icon: UserRoundCheck },
   ];
   const activePage = page === "mailbox-sharing" ? "mail-sharing" : page;
@@ -140,6 +142,9 @@ export function MailApp() {
         void user.getIdToken().then((token) => callback({ token })).catch(() => callback({}));
       },
       transports: ["websocket", "polling"],
+    });
+    socket.on("account:access-revoked", ({ reason }: { reason: string }) => {
+      void endRevokedSession(reason).catch(() => undefined);
     });
     socket.on("mailbox:sync", (job: MailSyncJob) => {
       void qc.invalidateQueries({ queryKey: ["accounts"] });
@@ -818,9 +823,6 @@ function PageContent({
   const [selectedTemp, setSelectedTemp] = useState<string | null>(null);
   const [selectedTempMessage, setSelectedTempMessage] = useState<string | null>(null);
   const [copiedTemp, setCopiedTemp] = useState(false);
-  const [grantUserId, setGrantUserId] = useState("");
-  const [adminSearch, setAdminSearch] = useState("");
-  const [adminRoleFilter, setAdminRoleFilter] = useState<"all"|"admin"|"premium"|"basic">("all");
   const tempAccounts = accounts.filter((account) => account.provider === "temp");
   const activeTempId = selectedTemp ?? tempAccounts[0]?.id ?? null;
   const activeTempAccount = tempAccounts.find((account) => account.id === activeTempId);
@@ -834,13 +836,6 @@ function PageContent({
     setCopiedTemp(true);
     window.setTimeout(() => setCopiedTemp(false), 1600);
   };
-  const { data: admin, error: adminError } = useQuery({
-    queryKey: ["admin-overview"],
-    queryFn: api.admin,
-    enabled: page === "mail-admin" && role === "admin",
-  });
-  const updateRole=useMutation({mutationFn:({userId,nextRole}:{userId:string;nextRole:"basic"|"premium"})=>api.setUserRole(userId,nextRole),onSuccess:()=>qc.invalidateQueries({queryKey:["admin-overview"]})});
-  const updateShare=useMutation({mutationFn:({accountId,userId,allowed}:{accountId:string;userId:string;allowed:boolean})=>api.setMailboxShare(accountId,userId,allowed),onSuccess:()=>qc.invalidateQueries({queryKey:["admin-overview"]})});
   if (page === "accounts")
     return (
       <MailboxManager
@@ -882,80 +877,7 @@ function PageContent({
   if (page === "mail-admin") {
     if (role === "basic") return <UpgradeRequestPage />;
     if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Truy cập mailbox được chia sẻ</h1><p>Để chống dò địa chỉ, OmniMail không liệt kê mailbox được Admin cấp. Hãy mở Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ mailbox.</p></div></div><section className="shared-mail-grid"><article><ShieldCheck/><div><strong>Private mailbox discovery</strong><small>Quyền xem vẫn được kiểm tra ở API sau khi địa chỉ khớp.</small></div></article></section></main>;
-    return (
-      <main className="page-pane dashboard-page admin-dashboard-page">
-        <div className="page-header">
-          <div>
-            <span className="eyebrow">Restricted area</span>
-            <h1>Mail Admin</h1>
-            <p>Service health and account access controls.</p>
-          </div>
-        </div>
-        {adminError ? (
-          <div className="connect-error">{adminError.message}</div>
-        ) : (
-          <>
-          <div className="admin-command-bar">
-            <div><ShieldCheck /><span><strong>Quản trị hệ thống</strong><small>Vai trò, tài khoản và quyền truy cập mailbox</small></span></div>
-            <button onClick={() => qc.invalidateQueries({ queryKey: ["admin-overview"] })}><RefreshCw /> Làm mới dữ liệu</button>
-          </div>
-          <div className="stats-grid admin-stats-grid">
-            <div>
-              <small>Users</small>
-              <strong>{admin?.users ?? "—"}</strong>
-            </div>
-            <div>
-              <small>Premium</small>
-              <strong>{admin?.directory.filter((user) => user.role === "premium").length ?? "—"}</strong>
-            </div>
-            <div>
-              <small>Basic</small>
-              <strong>{admin?.directory.filter((user) => user.role === "basic").length ?? "—"}</strong>
-            </div>
-            <div>
-              <small>Mailboxes</small>
-              <strong>{admin?.connectedAccounts ?? "—"}</strong>
-            </div>
-          </div>
-          {(updateRole.error || updateShare.error) && (
-            <div className="connect-error">{(updateRole.error ?? updateShare.error)?.message}</div>
-          )}
-          <section className="grant-panel">
-            <header>
-              <div><span className="eyebrow">Cấp quyền mail</span><h2>Cho Premium user xem mailbox</h2></div>
-              <select value={grantUserId} onChange={(event) => setGrantUserId(event.target.value)}>
-                <option value="">Chọn Premium user</option>
-                {(admin?.directory ?? []).filter((user) => user.role === "premium").map((user) => <option key={user.userId} value={user.userId}>{user.displayName ? `${user.displayName} — ${user.email}` : user.email}</option>)}
-              </select>
-            </header>
-            {grantUserId ? (
-              <div className="grant-mail-list">
-                {accounts.length ? accounts.map((account) => {
-                  const target = admin?.directory.find((user) => user.userId === grantUserId);
-                  const checked = target?.sharedAccountIds.includes(account.id) ?? false;
-                  return <label key={account.id}><input type="checkbox" checked={checked} disabled={updateShare.isPending} onChange={(event) => updateShare.mutate({ accountId: account.id, userId: grantUserId, allowed: event.target.checked })} /><ProviderDot p={account.provider} /><span><strong>{account.emailAddress}</strong><small>{checked ? "Đã cấp quyền xem" : "Chưa cấp quyền"}</small></span></label>;
-                }) : <Empty title="Admin chưa kết nối mailbox nào" />}
-              </div>
-            ) : <p className="grant-hint">Chuyển tài khoản sang Premium bên dưới, sau đó chọn user tại đây để cấp từng mailbox.</p>}
-          </section>
-          <section className="admin-directory">
-            <div className="admin-directory-tools">
-              <label><Search /><input value={adminSearch} onChange={(event)=>setAdminSearch(event.target.value)} placeholder="Tìm họ tên, email hoặc user ID" /></label>
-              <div>{(["all","admin","premium","basic"] as const).map((filter)=><button key={filter} className={adminRoleFilter===filter?"active":""} onClick={()=>setAdminRoleFilter(filter)}>{filter === "all" ? "Tất cả" : filter}</button>)}</div>
-            </div>
-            <header><span>Họ tên, email & role</span><span>Trạng thái quyền</span><span>Last active</span></header>
-            {(admin?.directory ?? []).filter((user)=>adminRoleFilter==="all"||user.role===adminRoleFilter).filter((user)=>`${user.displayName ?? ""} ${user.email} ${user.userId}`.toLowerCase().includes(adminSearch.trim().toLowerCase())).map((user) => (
-              <article key={user.userId}>
-                <div><span className={`role-badge ${user.role}`}>{user.role}</span><strong>{user.displayName ?? "Chưa cập nhật họ tên"}</strong><small>{user.email}</small><small>{user.userId}</small>{user.role!=="admin"&&<select value={user.role} disabled={updateRole.isPending} onChange={e=>updateRole.mutate({userId:user.userId,nextRole:e.target.value as "basic"|"premium"})}><option value="basic">Chuyển thành Basic</option><option value="premium">Nâng lên Premium</option></select>}</div>
-                <div className="admin-mailboxes"><strong>{user.role === "premium" ? `${user.sharedAccountIds.length} mailbox` : user.role === "basic" ? "Không có quyền chia sẻ" : "Toàn quyền hệ thống"}</strong><small>{user.upgradeRequestedAt ? `Đang yêu cầu Premium · ${new Date(user.upgradeRequestedAt).toLocaleString()}` : user.role === "premium" ? "Đã được Admin cấp quyền xem" : user.role === "basic" ? "Chưa gửi yêu cầu nâng cấp" : "Administrator"}</small></div>
-                <time>{user.lastSeenAt ? new Date(user.lastSeenAt).toLocaleString() : "—"}</time>
-              </article>
-            ))}
-          </section>
-          </>
-        )}
-      </main>
-    );
+    return <AdminPage />;
   }
   return (
     <main className="page-pane">

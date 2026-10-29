@@ -1,4 +1,6 @@
 import crypto from "node:crypto";
+import { getAuth } from "firebase-admin/auth";
+import { authConfigured } from "./auth.js";
 import type { Request, Response } from "express";
 import { accounts } from "./demo-data.js";
 import { accountOwners } from "./ownership.js";
@@ -166,6 +168,10 @@ export const oauth = {
     try {
       const code = String(req.query.code ?? "");
       const session = take(String(req.query.state ?? ""), "google");
+      if (authConfigured) {
+        const owner = await getAuth().getUser(session.userId);
+        if (owner.disabled || !owner.emailVerified) throw new Error("Tài khoản đã bị khóa hoặc chưa xác minh email.");
+      }
       const tokens = await token("https://oauth2.googleapis.com/token", {
         client_id: process.env.GOOGLE_CLIENT_ID!,
         client_secret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -226,6 +232,10 @@ export const oauth = {
     try {
       const code = String(req.query.code ?? "");
       const session = take(String(req.query.state ?? ""), "microsoft");
+      if (authConfigured) {
+        const owner = await getAuth().getUser(session.userId);
+        if (owner.disabled || !owner.emailVerified) throw new Error("Tài khoản đã bị khóa hoặc chưa xác minh email.");
+      }
       const tenant = microsoftTenant();
       const tokenInput: Record<string, string> = {
         client_id: process.env.MICROSOFT_CLIENT_ID!,

@@ -15,6 +15,7 @@ import { setUpgradeRequest } from "./upgrade-requests.js";
 import { hiddenMessages } from "./hidden-messages.js";
 import { userDirectory } from "./auth.js";
 import { authenticateSocket } from "./socket-auth.js";
+import { onUserAccessChanged } from "./user-access-events.js";
 import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadMessageShares, loadUpgradeRequests, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
 import { onMailboxSyncUpdate, startMailboxSyncScheduler } from "./sync-jobs.js";
 
@@ -41,6 +42,10 @@ const io = new Server(server, {
 });
 io.use(authenticateSocket);
 io.on("connection", (socket) => socket.join(`user:${String(socket.data.userId)}`));
+onUserAccessChanged(({ userId, reason }) => {
+  io.to(`user:${userId}`).emit("account:access-revoked", { reason });
+  io.in(`user:${userId}`).disconnectSockets(true);
+});
 onMailboxSyncUpdate((job) => {
   const viewers = new Set([job.ownerId, ...(mailboxShares.get(job.accountId) ?? [])]);
   for (const userId of viewers) io.to(`user:${userId}`).emit("mailbox:sync", {

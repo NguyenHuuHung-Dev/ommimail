@@ -59,6 +59,8 @@ async function run(job: InternalSyncJob) {
 
   try {
     const latest = await fetchLatestMessages(account);
+    if (accountOwners.get(account.id) !== job.ownerId || !accounts.includes(account))
+      throw new Error("Mailbox was disconnected during synchronization");
     const completedAt = new Date().toISOString();
     const unreadCount = latest.filter((message) => !message.isRead).length;
     messageCache.set(account.id, { messages: latest, syncedAt: Date.now() });
@@ -75,7 +77,8 @@ async function run(job: InternalSyncJob) {
     job.status = "failed";
     job.completedAt = new Date().toISOString();
     job.error = cause instanceof Error ? cause.message : "Mailbox synchronization failed";
-    await updateMailboxSyncState(account).catch(() => undefined);
+    if (accountOwners.get(account.id) === job.ownerId && accounts.includes(account))
+      await updateMailboxSyncState(account).catch(() => undefined);
   } finally {
     notify(job);
     const cleanup = setTimeout(() => jobs.delete(job.id), 6 * 60 * 60_000);
@@ -140,6 +143,7 @@ export function getCachedMailboxMessages(accountId: string, maxAgeMs = 30_000) {
 
 export function clearMailboxSyncState(accountId: string) {
   messageCache.delete(accountId);
+  for (const [id, job] of jobs) if (job.accountId === accountId) jobs.delete(id);
 }
 
 export function onMailboxSyncUpdate(listener: SyncListener) {

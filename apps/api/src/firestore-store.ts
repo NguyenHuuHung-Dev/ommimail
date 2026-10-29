@@ -52,22 +52,35 @@ export async function updateMailboxCredential(accountId: string, credential: Rec
 
 export async function updateMailboxSyncState(account: MailAccount) {
   if (!persistentStoreEnabled || !getApps().length) return;
-  await db().collection("mailAccounts").doc(account.id).set({
+  await db().collection("mailAccounts").doc(account.id).update({
     status: account.status,
     unreadCount: account.unreadCount,
     lastSyncedAt: account.lastSyncedAt ?? null,
     updatedAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
+  });
 }
 
 export async function deleteMailbox(accountId: string) {
   if (!persistentStoreEnabled || !getApps().length) return;
   const reference = db().collection("mailAccounts").doc(accountId);
-  const shares = await reference.collection("shares").get();
-  const batch = db().batch();
-  for (const share of shares.docs) batch.delete(share.ref);
-  batch.delete(reference);
-  await batch.commit();
+  await db().recursiveDelete(reference);
+}
+
+export async function deleteUserData(userId: string) {
+  if (!persistentStoreEnabled || !getApps().length) return;
+  const firestore = db();
+  const [shares, sent, received, owned] = await Promise.all([
+    firestore.collectionGroup("shares").get(),
+    firestore.collection("messageShares").where("owner.userId", "==", userId).get(),
+    firestore.collection("messageShares").where("recipient.userId", "==", userId).get(),
+    firestore.collection("mailAccounts").where("userId", "==", userId).get(),
+  ]);
+  const writer = firestore.bulkWriter();
+  const receivedShares = shares.docs.filter((doc) => doc.id === userId || doc.data().userId === userId);
+  const writes = [...receivedShares, ...sent.docs, ...received.docs].map((doc) => writer.delete(doc.ref));
+  await Promise.all([writer.close(), ...writes]);
+  for (const mailbox of owned.docs) await firestore.recursiveDelete(mailbox.ref);
+  await firestore.recursiveDelete(firestore.collection("users").doc(userId));
 }
 
 export async function loadMailboxes(): Promise<StoredMailbox[]> {
