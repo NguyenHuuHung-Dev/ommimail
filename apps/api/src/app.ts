@@ -3,7 +3,7 @@ import { adminOverview, deleteManagedUser, setManagedUserDisabled, setManagedUse
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
+import { configureRequestLimits } from "./request-limits.js";
 import pinoHttp from "pino-http";
 import crypto from "node:crypto";
 import { getAuth } from "firebase-admin/auth";
@@ -98,8 +98,8 @@ app.use(
     },
   }),
 );
+configureRequestLimits(app);
 app.use(express.json({ limit: "2mb" }));
-app.use(rateLimit({ windowMs: 60_000, limit: 240 }));
 app.use(
   pinoHttp({
     genReqId: () => crypto.randomUUID(),
