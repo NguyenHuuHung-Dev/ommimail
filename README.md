@@ -208,6 +208,20 @@ SYNC_CONCURRENCY=2
 SYNC_INTERVAL_MS=300000
 ```
 
+`TRUST_PROXY_HOPS` controls how many reverse proxies Express trusts when identifying
+the client IP. Direct local/Docker access defaults to `0`; Render defaults to `1`
+when `RENDER=true`, and `render.yaml` explicitly sets `1`. If your deployment adds
+another proxy, verify the forwarding chain before changing this value. Do not use
+`true` or take the leftmost `X-Forwarded-For` entry as an unconditional client IP.
+See [Render's proxy guidance](https://render.com/articles/how-render-handles-ddos-attacks)
+and [Express's trust proxy documentation](https://expressjs.com/en/guide/behind-proxies/).
+
+The API allows 240 requests per minute per client IP (IPv6 addresses are grouped
+by the rate limiter's default subnet). GET/HEAD `/api/health` probes do not consume
+this quota and remain available when a client is throttled. A throttled request
+returns JSON with code `RATE_LIMITED`, HTTP 429 and `Retry-After`. The limiter's
+store is in memory; multiple API instances require a shared store.
+
 Generate a 32-byte encryption key:
 
 ```bash
@@ -301,6 +315,11 @@ pnpm typecheck
 pnpm test
 pnpm lint
 ```
+
+Run `pnpm audit --prod` to check runtime dependencies. Security updates include
+scoped transitive overrides in `pnpm-workspace.yaml` for upstream packages that
+retain older versions. Keep these overrides until the parent packages resolve to
+patched versions, and validate changes with the build, typecheck and test suite.
 
 Firestore and Storage rules can be tested through the Firebase emulators:
 
