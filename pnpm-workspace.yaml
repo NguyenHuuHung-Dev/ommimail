@@ -4,3 +4,12 @@ packages:
 
 overrides:
   html-to-text: 10.0.1
+  # Security fixes for transitive versions retained/pinned by upstream packages.
+  'ip-address@^10.0.0': 10.7.6
+  'socket.io>engine.io': 6.6.11
+  'express>body-parser': 2.4.0
+  'firebase-admin>@fastify/busboy': 3.2.4
+  '@firebase/firestore>@grpc/grpc-js': 1.14.7
+  # google-gax/gaxios carry rimraf 5 as a tooling dependency; rimraf 6 keeps
+  # named CJS/ESM exports and supports our Node 22+ runtime, with patched glob.
+  'rimraf@^5.0.0': 6.1.4
