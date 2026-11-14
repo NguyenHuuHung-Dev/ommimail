@@ -226,7 +226,8 @@ async function createCheckout(user: AuthRequest) {
     const payment = await client.paymentRequests.create({
       orderCode: order.orderCode,
       amount: PREMIUM_MONTHLY_PRICE_VND,
-      description: `OM${order.orderCode}`,
+      // Some PayOS bank connections allow only nine description characters.
+      description: `OM${order.orderCode.toString(36).slice(-7).toUpperCase()}`,
       items: [
         {
           name: "OmniMail Premium - 1 thang",
