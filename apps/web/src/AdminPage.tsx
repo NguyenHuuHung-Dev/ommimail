@@ -7,24 +7,7 @@ import {
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import {
-  AlertCircle,
-  ArrowUpRight,
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  Eye,
-  LoaderCircle,
-  LockKeyhole,
-  RefreshCw,
-  Search,
-  ShieldCheck,
-  Trash2,
-  Unlock,
-  Users,
-  X,
-} from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import type { AdminUser } from "@omnimail/shared";
 import { api } from "./api";
 
@@ -178,9 +161,7 @@ export function AdminPage() {
       <div className="admin-content" inert={dialog ? true : undefined}>
         <header className="admin-page-heading">
           <div>
-            <span className="admin-eyebrow">
-              <ShieldCheck size={14} /> QUẢN TRỊ
-            </span>
+            <span className="admin-eyebrow">QUẢN TRỊ</span>
             <h1>
               Người dùng<span>.</span>
             </h1>
@@ -193,15 +174,14 @@ export function AdminPage() {
             disabled={isFetching}
             onClick={() => void refetch()}
           >
-            <RefreshCw size={15} className={isFetching ? "spin" : ""} /> Làm mới
+            {isFetching ? "Đang tải…" : "Làm mới"}
           </button>
         </header>
         {notice && (
           <div className="admin-success" role="status">
-            <CheckCircle2 size={18} />
             <span>{notice}</span>
             <button aria-label="Ẩn thông báo" onClick={() => setNotice("")}>
-              <X size={16} />
+              ×
             </button>
           </div>
         )}
@@ -211,39 +191,32 @@ export function AdminPage() {
               {
                 key: "all",
                 label: "Tổng người dùng",
-                icon: Users,
                 note: "Toàn bộ tài khoản đăng ký",
               },
               {
                 key: "active",
                 label: "Hoạt động",
-                icon: CheckCircle2,
                 note: "Được phép truy cập ứng dụng",
               },
               {
                 key: "pending",
                 label: "Chờ xác minh",
-                icon: Clock3,
                 note: "Chưa xác minh địa chỉ email",
               },
               {
                 key: "disabled",
                 label: "Đã khóa",
-                icon: LockKeyhole,
                 note: "Đang tạm ngưng truy cập",
               },
             ] as const
-          ).map(({ key, label, icon: Icon, note }) => (
+          ).map(({ key, label, note }) => (
             <button
               key={key}
               className={`admin-metric ${status === key ? "selected" : ""}`}
               onClick={() => selectStatus(key)}
               aria-pressed={status === key}
             >
-              <span>
-                {label}
-                <Icon size={18} />
-              </span>
+              <span>{label}</span>
               <strong>{isPending ? "—" : counts[key]}</strong>
               <small>{note}</small>
             </button>
@@ -268,7 +241,6 @@ export function AdminPage() {
           </div>
           <div className="admin-filters">
             <label className="admin-search">
-              <Search size={17} />
               <input
                 aria-label="Tìm người dùng"
                 value={search}
@@ -286,7 +258,7 @@ export function AdminPage() {
                     setPage(1);
                   }}
                 >
-                  <X size={14} />
+                  ×
                 </button>
               )}
             </label>
@@ -324,7 +296,6 @@ export function AdminPage() {
           </div>
           {error ? (
             <div className="admin-empty" role="alert">
-              <AlertCircle />
               <h3>Chưa tải được danh sách</h3>
               <p>{error.message}</p>
               <button className="admin-button" onClick={() => void refetch()}>
@@ -337,7 +308,6 @@ export function AdminPage() {
             </div>
           ) : !visible.length ? (
             <div className="admin-empty">
-              <Search />
               <h3>Không tìm thấy người dùng</h3>
               <p>Thử tên hoặc email khác, hoặc bỏ bớt bộ lọc.</p>
               <button
@@ -392,7 +362,6 @@ export function AdminPage() {
                       </td>
                       <td>
                         <span className={`admin-role-pill ${user.role}`}>
-                          {user.role === "admin" && <ShieldCheck size={12} />}
                           {roleLabel[user.role]}
                         </span>
                       </td>
@@ -418,11 +387,11 @@ export function AdminPage() {
                             aria-label={`Chi tiết ${user.email || user.userId}`}
                             onClick={() => open(user, "details")}
                           >
-                            <Eye size={16} />
+                            Chi tiết
                           </button>
                           {protectedUser(user) ? (
                             <span className="admin-protected">
-                              <ShieldCheck size={13} /> Được bảo vệ
+                              Được bảo vệ
                             </span>
                           ) : (
                             <>
@@ -432,11 +401,6 @@ export function AdminPage() {
                                   open(user, user.disabled ? "unlock" : "lock")
                                 }
                               >
-                                {user.disabled ? (
-                                  <Unlock size={14} />
-                                ) : (
-                                  <LockKeyhole size={14} />
-                                )}
                                 {user.disabled ? "Mở khóa" : "Khóa"}
                               </button>
                               <button
@@ -445,7 +409,7 @@ export function AdminPage() {
                                 aria-label={`Xóa ${user.email || user.userId}`}
                                 onClick={() => open(user, "delete")}
                               >
-                                <Trash2 size={16} />
+                                Xóa
                               </button>
                             </>
                           )}
@@ -470,7 +434,7 @@ export function AdminPage() {
                 disabled={safePage === 1}
                 onClick={() => setPage(safePage - 1)}
               >
-                <ChevronLeft size={16} />
+                ←
               </button>
               <span>
                 Trang {safePage} / {pageCount}
@@ -480,14 +444,13 @@ export function AdminPage() {
                 disabled={safePage === pageCount}
                 onClick={() => setPage(safePage + 1)}
               >
-                <ChevronRight size={16} />
+                →
               </button>
             </div>
           </footer>
         </section>
         <aside className="admin-sharing-note">
           <span>
-            <ShieldCheck size={20} />
             <span>
               <strong>Quyền xem hộp thư được quản lý riêng</strong>
               <small>
@@ -497,7 +460,7 @@ export function AdminPage() {
             </span>
           </span>
           <Link to="/app/mailbox-sharing">
-            Quản lý chia sẻ <ArrowUpRight size={15} />
+            Quản lý chia sẻ →
           </Link>
         </aside>
       </div>
@@ -524,7 +487,7 @@ export function AdminPage() {
                 disabled={update.isPending}
                 onClick={close}
               >
-                <X size={20} />
+                ×
               </button>
             </header>
             <h2 id="admin-dialog-title">{titles[dialog.action]}</h2>
@@ -644,7 +607,6 @@ export function AdminPage() {
                 {dialog.action === "delete" && (
                   <>
                     <div className="admin-delete-warning">
-                      <AlertCircle size={19} />
                       <p>
                         Thao tác này xóa tài khoản OmniMail, thông tin kết nối
                         và quyền chia sẻ liên quan. Thư gốc trên Gmail hoặc
@@ -694,7 +656,6 @@ export function AdminPage() {
                 )}
                 {update.error && (
                   <div className="admin-error" role="alert">
-                    <AlertCircle size={16} />
                     {update.error.message}
                   </div>
                 )}

@@ -1,8 +1,11 @@
-/* Shared workspace layout. Navigation has its own component and scoped styles. */
+/* Shared workspace layout & editorial minimalism.
+   Navigation (.site-header) has its own component and scoped styles and is untouched. */
+
 #root .workspace-shell,
-#root .workspace-shell * {
-  font-family: Arial, Helvetica, sans-serif !important;
+#root .workspace-shell *:not(.site-header):not(.site-header *) {
+  font-family: "Times New Roman", Times, serif !important;
 }
+
 #root .workspace-shell {
   display: grid !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
@@ -10,45 +13,630 @@
   min-height: 0;
   border: 2px solid #151214 !important;
   border-radius: 0 !important;
-  background: #fff !important;
+  background: #ffffff !important;
   overflow: hidden;
 }
+
 #root .workspace-shell > .site-header {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
   grid-row: 1;
   min-width: 0;
   z-index: 20;
 }
+
 #root .workspace-shell > .page-pane {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
   grid-row: 2;
   min-width: 0;
   min-height: 0;
   margin: 0 !important;
   border-radius: 0 !important;
-  box-shadow: none;
+  box-shadow: none !important;
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  @starting-style {
+    opacity: 0;
+    translate: 0 6px;
+  }
 }
+
 #root .workspace-shell > .inbox-pane,
 #root .workspace-shell > .detail-pane {
   grid-row: 2;
   min-height: 0;
   border-radius: 0 !important;
 }
+
+/* Preserve strict square geometry across workspace panels, rows, inputs, cards, and buttons */
+#root .workspace-shell .search,
+#root .workspace-shell .mailbox-rail-search,
+#root .workspace-shell .message-row,
+#root .workspace-shell .avatar,
+#root .workspace-shell .large-avatar,
+#root .workspace-shell .provider,
+#root .workspace-shell .chips span,
+#root .workspace-shell .subject-row .label,
+#root .workspace-shell .spam-toolbar-button,
+#root .workspace-shell .spam-toolbar-button b,
+#root .workspace-shell .account-sync,
+#root .workspace-shell .account-disconnect,
+#root .workspace-shell .message-more summary,
+#root .workspace-shell .message-more div,
+#root .workspace-shell .message-more button,
+#root .workspace-shell .mailbox-provider-heading,
+#root .workspace-shell .mailbox-account-list button,
+#root .workspace-shell .organized-mailbox,
+#root .workspace-shell .organization-filter select,
+#root .workspace-shell .organization-editor input,
+#root .workspace-shell .organization-editor button,
+#root .workspace-shell .otp-card,
+#root .workspace-shell .otp-card button,
+#root .workspace-shell .attachment,
+#root .workspace-shell .connect-surface,
+#root .workspace-shell .connect-channel,
+#root .workspace-shell .connect-channel button,
+#root .workspace-shell .connect-channel input,
+#root .workspace-shell .connect-channel select,
+#root .workspace-shell .connect-channel textarea,
+#root .workspace-shell .connect-channel details,
+#root .workspace-shell .temp-active-bar,
+#root .workspace-shell .temp-active-bar button,
+#root .workspace-shell .temp-addresses,
+#root .workspace-shell .temp-sidebar-create,
+#root .workspace-shell .temp-sidebar-create input,
+#root .workspace-shell .temp-sidebar-create select,
+#root .workspace-shell .temp-sidebar-create button,
+#root .workspace-shell .temp-address,
+#root .workspace-shell .temp-message-list,
+#root .workspace-shell .temp-message-list button,
+#root .workspace-shell .temp-reader,
+#root .workspace-shell .sharing-mode-tabs,
+#root .workspace-shell .sharing-mode-tabs button,
+#root .workspace-shell .share-stat-grid article,
+#root .workspace-shell .share-batch-builder,
+#root .workspace-shell .share-mailbox-selector,
+#root .workspace-shell .share-mailbox-check-grid label,
+#root .workspace-shell .share-recipient-batch textarea,
+#root .workspace-shell .share-batch-action,
+#root .workspace-shell .share-batch-action button,
+#root .workspace-shell .share-access-dashboard,
+#root .workspace-shell .share-access-table,
+#root .workspace-shell .share-access-table button,
+#root .workspace-shell .share-access-badge,
+#root .workspace-shell .shared-with-me-panel,
+#root .workspace-shell .shared-message-tabs button,
+#root .workspace-shell .shared-message-list,
+#root .workspace-shell .shared-message-list article,
+#root .workspace-shell .shared-message-reader,
+#root .workspace-shell .profile-modal,
+#root .workspace-shell .profile-modal input,
+#root .workspace-shell .profile-modal button,
+#root .workspace-shell .profile-summary > div,
+#root .workspace-shell .profile-mailbox-dashboard,
+#root .workspace-shell .profile-form,
+#root .workspace-shell .message-share-modal,
+#root .workspace-shell .message-share-modal input,
+#root .workspace-shell .message-share-modal button,
+#root .workspace-shell .message-share-preview,
+#root .workspace-shell .admin-user-panel,
+#root .workspace-shell .admin-metrics,
+#root .workspace-shell .admin-metric,
+#root .workspace-shell .admin-button,
+#root .workspace-shell .admin-search,
+#root .workspace-shell .admin-role-filter select,
+#root .workspace-shell .admin-role-pill,
+#root .workspace-shell .admin-status-pill,
+#root .workspace-shell .admin-avatar,
+#root .workspace-shell .admin-row-button,
+#root .workspace-shell .admin-icon-button,
+#root .workspace-shell .admin-user-modal {
+  border-radius: 0 !important;
+}
+
 #root .workspace-shell button {
   text-transform: none;
   letter-spacing: normal;
 }
+
+/* ==========================================================================
+   LEFT RAIL — Connected Inboxes
+   ========================================================================== */
+#root .workspace-shell .mailbox-inbox-layout {
+  grid-template-columns: 256px minmax(0, 1fr) !important;
+  background: #ffffff;
+}
+
+#root .workspace-shell .mailbox-account-rail {
+  padding: 0 !important;
+  border-right: 1px solid #e6d7dd !important;
+  background: #fdfbfc !important;
+}
+
 #root .workspace-shell .mailbox-rail-title {
-  font-size: 11px;
-  color: #806b76;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 16px !important;
+  border-bottom: 1px solid #efe4e8;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase;
+  color: #6e5a63 !important;
 }
+
+#root .workspace-shell .mailbox-rail-search.search {
+  height: 38px !important;
+  margin: 12px 14px 4px !important;
+  padding: 0 12px !important;
+  border: 1px solid #dfd0d6 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transition: border-color 160ms ease;
+}
+
+#root .workspace-shell .mailbox-rail-search.search:focus-within {
+  border-color: #0a0a0a !important;
+}
+
 #root .workspace-shell .mailbox-rail-search input {
-  font-size: 12px;
+  font-size: 13.5px !important;
+  color: #151214 !important;
 }
+
+#root .workspace-shell .mailbox-rail-search input::placeholder {
+  color: #96828b !important;
+}
+
+#root .workspace-shell .mailbox-provider-group {
+  margin: 14px 14px !important;
+}
+
+#root .workspace-shell .mailbox-provider-heading {
+  padding: 6px 4px !important;
+  border-bottom: 1px solid #efe4e8 !important;
+  margin-bottom: 6px;
+  background: transparent !important;
+}
+
+#root .workspace-shell .mailbox-provider-heading strong {
+  font-size: 11px !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase;
+  color: #725d66 !important;
+}
+
+#root .workspace-shell .mailbox-account-list {
+  margin: 0 !important;
+  padding: 0 !important;
+  border-left: 0 !important;
+  gap: 2px !important;
+}
+
+#root .workspace-shell .mailbox-account-list button {
+  padding: 9px 10px !important;
+  border: 0 !important;
+  border-left: 2px solid transparent !important;
+  font-size: 13.5px !important;
+  color: #2b2126 !important;
+  background: transparent;
+}
+
+#root .workspace-shell .mailbox-account-list button:hover {
+  background: #faf3f6 !important;
+}
+
+#root .workspace-shell .mailbox-account-list button.active {
+  background: #f5dfe7 !important;
+  border-left-color: #0a0a0a !important;
+  color: #0a0a0a !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   CENTER COLUMN — Message List & Header
+   ========================================================================== */
+#root .workspace-shell .inbox-pane {
+  border-right: 1px solid #e6d7dd !important;
+  background: #ffffff !important;
+}
+
+#root .workspace-shell .list-head {
+  min-height: 78px !important;
+  padding: 14px 20px !important;
+  border-bottom: 1px solid #e6d7dd !important;
+  background: #ffffff !important;
+}
+
+#root .workspace-shell .mailbox-picker {
+  gap: 3px !important;
+}
+
+#root .workspace-shell .mailbox-picker > span {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase;
+  color: #7a646e !important;
+}
+
+#root .workspace-shell .mailbox-picker label {
+  gap: 8px !important;
+}
+
+#root .workspace-shell .mailbox-picker select {
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .mailbox-picker p {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase;
+  color: #846d77 !important;
+}
+
+#root .workspace-shell .mailbox-head-actions {
+  gap: 6px !important;
+}
+
+#root .workspace-shell .spam-toolbar-button,
+#root .workspace-shell .account-sync,
+#root .workspace-shell .account-disconnect {
+  height: 34px !important;
+  border: 1px solid #dfd0d6 !important;
+  background: #ffffff !important;
+  color: #151214 !important;
+  box-shadow: none !important;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+#root .workspace-shell .spam-toolbar-button {
+  padding: 0 11px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  gap: 7px !important;
+}
+
+#root .workspace-shell .spam-toolbar-button b {
+  min-width: 18px !important;
+  height: 18px !important;
+  padding: 0 5px !important;
+  background: #151214 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+}
+
+#root .workspace-shell .spam-toolbar-button:hover:not(:disabled),
+#root .workspace-shell .account-sync:hover:not(:disabled) {
+  border-color: #0a0a0a !important;
+  background: #faf3f6 !important;
+}
+
+#root .workspace-shell .spam-toolbar-button.open {
+  border-color: #0a0a0a !important;
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+}
+
+#root .workspace-shell .spam-toolbar-button.open b {
+  background: #f2bdcc !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .account-disconnect {
+  width: 34px !important;
+  color: #8c3b55 !important;
+}
+
+#root .workspace-shell .account-disconnect:hover:not(:disabled) {
+  border-color: #8c3b55 !important;
+  background: #fff2f6 !important;
+}
+
+#root .workspace-shell .message-list {
+  padding: 0 !important;
+  background: #ffffff !important;
+}
+
+#root .workspace-shell .message-row {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
+  gap: 12px !important;
+  align-items: start !important;
+  margin: 0 !important;
+  padding: 15px 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #efe5e9 !important;
+  border-left: 3px solid transparent !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+#root .workspace-shell .message-row:hover {
+  background: #fcf6f8 !important;
+  border-left-color: #d9b8c4 !important;
+}
+
+#root .workspace-shell .message-row.unread {
+  background: #fffdfd !important;
+  border-left-color: #0a0a0a !important;
+}
+
+#root .workspace-shell .message-row.selected {
+  background: #f6e1e9 !important;
+  border-left-color: #0a0a0a !important;
+  box-shadow: none !important;
+}
+
+#root .workspace-shell .message-row .avatar {
+  width: 34px !important;
+  height: 34px !important;
+  margin-top: 2px;
+  border: 1px solid #dfd0d6 !important;
+  background: #faf5f7 !important;
+  color: #3a2b31 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+}
+
+#root .workspace-shell .message-row.selected .avatar {
+  border-color: #0a0a0a !important;
+  background: #0a0a0a !important;
+  color: #ffffff !important;
+}
+
+#root .workspace-shell .message-meta {
+  margin-bottom: 2px;
+}
+
+#root .workspace-shell .message-meta strong {
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .message-meta span {
+  font-size: 12px !important;
+  color: #7c6670 !important;
+}
+
+#root .workspace-shell .message-row h3 {
+  margin: 2px 0 3px !important;
+  font-size: 14.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: #151214 !important;
+}
+
+#root .workspace-shell .message-row.unread h3 {
+  font-weight: 700 !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .message-row p {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: #6f5b64 !important;
+}
+
+#root .workspace-shell .chips {
+  margin-top: 6px !important;
+  gap: 6px !important;
+}
+
+#root .workspace-shell .chips span {
+  padding: 2px 7px !important;
+  border: 1px solid #e2d2d8 !important;
+  background: #faf5f7 !important;
+  color: #6b5660 !important;
+  font-size: 10px !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#root .workspace-shell .message-more summary {
+  width: 28px !important;
+  height: 28px !important;
+  border: 1px solid transparent !important;
+  color: #826b75 !important;
+  opacity: 0;
+  transition: opacity 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+
+#root .workspace-shell .message-row:hover .message-more summary,
+#root .workspace-shell .message-row.selected .message-more summary,
+#root .workspace-shell .message-more[open] summary,
+#root .workspace-shell .message-more summary:focus-visible {
+  opacity: 1;
+}
+
+#root .workspace-shell .message-more summary:hover {
+  border-color: #151214 !important;
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+}
+
+/* ==========================================================================
+   RIGHT PANE — Editorial Message Reader
+   ========================================================================== */
+#root .workspace-shell .detail-pane {
+  background: #ffffff !important;
+}
+
+#root .workspace-shell .detail {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  @starting-style {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+#root .workspace-shell .detail-toolbar {
+  height: 48px !important;
+  padding: 0 clamp(24px, 3.6vw, 48px) !important;
+  background: #fdfbfc !important;
+  color: #6e5a63 !important;
+  border-bottom: 1px solid #e6d7dd !important;
+}
+
+#root .workspace-shell .detail-toolbar small {
+  margin-left: auto;
+  padding: 3px 8px;
+  border: 1px solid #dfd0d6;
+  background: #ffffff;
+  color: #6e5a63 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2em !important;
+  text-transform: uppercase;
+}
+
+#root .workspace-shell .detail-scroll {
+  padding: 30px clamp(24px, 3.6vw, 48px) 48px !important;
+  max-width: 960px;
+}
+
+#root .workspace-shell .subject-row {
+  align-items: flex-start !important;
+  gap: 16px !important;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #efe4e8;
+}
+
+#root .workspace-shell .subject-row h2 {
+  font-size: clamp(24px, 2.5vw, 34px) !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .subject-row .label {
+  padding: 4px 10px !important;
+  border: 1px solid #dfd0d6 !important;
+  background: #faf4f6 !important;
+  color: #5e4b53 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase;
+}
+
+#root .workspace-shell .sender {
+  margin-top: 16px !important;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #efe4e8;
+}
+
+#root .workspace-shell .sender .large-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid #151214 !important;
+  background: #faf3f6 !important;
+  color: #0a0a0a !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+#root .workspace-shell .sender strong {
+  font-size: 15.5px !important;
+  color: #0a0a0a !important;
+}
+
+#root .workspace-shell .sender small {
+  font-size: 13px !important;
+  color: #725d66 !important;
+}
+
+#root .workspace-shell .sender time {
+  font-size: 12.5px !important;
+  color: #725d66 !important;
+}
+
+#root .workspace-shell .account-line {
+  margin-top: 12px !important;
+  font-size: 12.5px !important;
+  font-style: italic;
+  color: #78636c !important;
+}
+
+#root .workspace-shell .mail-body {
+  margin-top: 20px !important;
+  padding-top: 18px !important;
+  border-top: 1px solid #efe4e8 !important;
+  font-size: 15.5px !important;
+  line-height: 1.75 !important;
+  color: #151214 !important;
+}
+
+/* ==========================================================================
+   EMPTY STATES & MODALS
+   ========================================================================== */
+#root .workspace-shell .empty {
+  gap: 8px !important;
+  padding: 36px 24px !important;
+  color: #7a646e !important;
+}
+
+#root .workspace-shell .empty h3 {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  font-style: italic;
+  letter-spacing: -0.01em !important;
+  color: #3f3137 !important;
+}
+
+#root .workspace-shell .empty p {
+  max-width: 340px;
+  margin: 0 !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: #7a646e !important;
+}
+
+#root .workspace-shell .profile-modal,
+#root .workspace-shell .message-share-modal,
+#root .workspace-shell .admin-user-modal {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    translate 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  @starting-style {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@media (max-width: 720px) {
+  #root .workspace-shell .message-more summary {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .admin-console *,
-  .admin-console *::before,
-  .admin-console *::after {
+  #root .workspace-shell *,
+  #root .workspace-shell *::before,
+  #root .workspace-shell *::after {
     transition: none !important;
     animation: none !important;
   }

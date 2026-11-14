@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { signOut, type User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { LoaderCircle, Mail, ShieldCheck } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { auth } from "./firebase";
 import {
   refreshVerification,
@@ -115,7 +115,6 @@ export function VerifyEmailPage({ user }: { user: User }) {
     <main className="auth verification-layout">
       <section className="auth-card verification-card">
         <div className="verify-badge">
-          <ShieldCheck size={20} />
           <span>Xác minh email</span>
         </div>
         <h1>Kiểm tra hộp thư của bạn</h1>
@@ -150,11 +149,7 @@ export function VerifyEmailPage({ user }: { user: User }) {
           disabled={Boolean(busy)}
           onClick={() => void check(true)}
         >
-          {busy === "check" ? (
-            <LoaderCircle className="spin" size={16} />
-          ) : (
-            <ShieldCheck size={16} />
-          )}{" "}
+          {busy === "check" && <LoaderCircle className="spin" size={16} />}{" "}
           Tôi đã xác minh email
         </button>
         <button
@@ -162,7 +157,6 @@ export function VerifyEmailPage({ user }: { user: User }) {
           disabled={Boolean(busy) || seconds > 0}
           onClick={() => void resend()}
         >
-          <Mail size={16} />{" "}
           {seconds > 0 ? `Gửi lại sau ${seconds}s` : "Gửi lại email xác minh"}
         </button>
         <button

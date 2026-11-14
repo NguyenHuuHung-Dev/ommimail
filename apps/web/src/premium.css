@@ -77,20 +77,20 @@
   border-block: 1px solid #eddae1;
   list-style: none;
   display: grid;
-  gap: 17px;
+  gap: 15px;
 }
 .premium-plan li {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  line-height: 1.6;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 15px;
+  line-height: 1.55;
 }
-.premium-plan li svg {
-  color: #a25976;
+.premium-plan li::before {
+  content: "—";
+  color: #965b72;
+  font-weight: 700;
   flex: none;
-  width: 17px;
-  height: 17px;
 }
 .premium-membership {
   display: grid;

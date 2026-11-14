@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, Pin, Folder, RefreshCw } from "lucide-react";
 import type { MailAccount, MailboxOrganization } from "@omnimail/shared";
 import { api } from "./api";
 import "./premium-tools.css";
@@ -32,8 +31,7 @@ export function OtpCard({ messageId }: { messageId: string }) {
   return (
     <section className="otp-card" aria-label="Nhận diện OTP">
       <div className="otp-heading">
-        <span>PREMIUM · OTP</span>
-        <small>Nhận diện từ thư đang mở</small>
+        <span>OTP</span>
       </div>
       {otp.isPending ? (
         <p role="status">Đang tìm mã xác minh…</p>
@@ -41,7 +39,7 @@ export function OtpCard({ messageId }: { messageId: string }) {
         <div role="alert">
           <p>Chưa nhận diện được OTP. Bạn vẫn có thể đọc thư bên dưới.</p>
           <button type="button" onClick={() => void otp.refetch()}>
-            <RefreshCw size={14} /> Thử lại
+            Thử lại
           </button>
         </div>
       ) : otp.data?.codes.length ? (
@@ -55,7 +53,6 @@ export function OtpCard({ messageId }: { messageId: string }) {
                 onClick={() => void copy(code)}
               >
                 <strong>{code}</strong>
-                <Copy size={16} />
                 <span>{copied === code ? "Đã sao chép" : "Sao chép"}</span>
               </button>
             ))}
@@ -164,9 +161,7 @@ export function MailboxOrganizationPanel({
   return (
     <div className="mailbox-organization">
       <div className="organization-heading">
-        <Folder size={15} />
-        <span>NHÓM & GHIM</span>
-        <small>PREMIUM</small>
+        <span>Nhóm & ghim</span>
       </div>
       <label className="organization-filter">
         Lọc nhóm
@@ -225,7 +220,7 @@ export function MailboxOrganizationPanel({
                       save.mutate({ ...value, pinned: !value.pinned })
                     }
                   >
-                    <Pin size={15} />
+                    <span aria-hidden="true">{value.pinned ? "●" : "Ghim"}</span>
                   </button>
                 )}
               </div>
@@ -250,10 +245,6 @@ export function MailboxOrganizationPanel({
           onSave={(value) => save.mutate(value)}
         />
       )}
-      <small className="organization-help">
-        Nhóm riêng của bạn, đồng bộ giữa các thiết bị. Để trống tên nhóm để bỏ
-        nhóm.
-      </small>
     </div>
   );
 }

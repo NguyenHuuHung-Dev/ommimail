@@ -1,12 +1,7 @@
 import {
-  ArrowLeft,
-  Check,
   Eye,
   EyeOff,
   LoaderCircle,
-  Mail,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, type FormEvent } from "react";
@@ -144,13 +139,13 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           <strong>OmniMail</strong>
         </div>
         <div className="auth-showcase-copy">
-          <span className="auth-kicker"><Sparkles /> Unified workspace</span>
+          <span className="auth-kicker">Unified workspace</span>
           <h2>Mọi hộp thư.<br /><em>Một nơi quản lý.</em></h2>
           <p>Kết nối Gmail, Outlook và Temp Mail trong một giao diện tập trung, phân quyền rõ ràng.</p>
           <ul>
-            <li><Mail /><span><strong>Unified inbox</strong><small>Đọc mail từ nhiều tài khoản</small></span></li>
-            <li><ShieldCheck /><span><strong>Kiểm soát truy cập</strong><small>Admin, Premium và Basic</small></span></li>
-            <li><Check /><span><strong>Read-only sharing</strong><small>Chia sẻ mailbox an toàn</small></span></li>
+            <li><span><strong>Unified inbox</strong><small>Đọc mail từ nhiều tài khoản</small></span></li>
+            <li><span><strong>Kiểm soát truy cập</strong><small>Admin, Premium và Basic</small></span></li>
+            <li><span><strong>Read-only sharing</strong><small>Chia sẻ mailbox an toàn</small></span></li>
           </ul>
         </div>
         <small>OMNIMAIL · 2026</small>
@@ -159,7 +154,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
       <section className="auth-panel">
         <section className="auth-card">
           <Link className="auth-home-link" to="/">
-            <ArrowLeft size={16} aria-hidden="true" /> Về trang chủ
+            ← Về trang chủ
           </Link>
           <div className="auth-card-topline">
             <div className="brand large">
@@ -179,7 +174,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
 
           {mode === "forgot" && resetSent ? (
             <div className="reset-success">
-              <div className="verify-badge"><Mail size={20} /> <span>Reset link sent</span></div>
+              <div className="verify-badge"><span>Reset link sent</span></div>
               <p className="auth-notice">{notice}</p>
               <button className="secondary-button" type="button" onClick={() => { setResetSent(false); setNotice(""); }}>
                 Gửi lại liên kết
@@ -224,7 +219,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           <div className="auth-links">
             {mode === "login" ? (
               <><Link to="/forgot-password">Forgot password?</Link><Link to="/register">Create account</Link></>
-            ) : <Link to="/login"><ArrowLeft size={14} /> Back to sign in</Link>}
+            ) : <Link to="/login">← Back to sign in</Link>}
           </div>
           {showProviders && (
             <div className="auth-social-footer">

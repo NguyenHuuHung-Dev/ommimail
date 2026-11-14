@@ -1,14 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Check,
-  CreditCard,
-  LoaderCircle,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { PREMIUM_MONTHLY_PRICE_VND } from "@omnimail/shared";
 import { api } from "./api";
 import "./premium.css";
@@ -104,9 +97,7 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
       </header>
       <div className="premium-grid">
         <section className="premium-plan" aria-labelledby="premium-plan-title">
-          <span className="premium-plan-label">
-            <ShieldCheck size={17} /> PREMIUM ACCESS
-          </span>
+          <span className="premium-plan-label">PREMIUM ACCESS</span>
           <h2 id="premium-plan-title">Ít thao tác. Gọn hộp thư.</h2>
           <p className="premium-price">
             {PREMIUM_MONTHLY_PRICE_VND.toLocaleString("vi-VN")}
@@ -116,17 +107,11 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
             Thanh toán từng tháng qua PayOS. Không tự động trừ tiền.
           </p>
           <ul>
-            <li>
-              <Check /> Nhận diện và sao chép OTP trong Gmail, Outlook, Temp Mail
-            </li>
-            <li>
-              <Check /> Nhóm mailbox riêng, ghim địa chỉ thường dùng
-            </li>
-            <li>
-              <Check /> Đồng bộ nhóm/ghim giữa các thiết bị
-            </li>
-            <li><Check /> Xem mailbox được chủ sở hữu chia sẻ</li>
-            <li><Check /> Giữ nguyên mọi tính năng Basic</li>
+            <li>Nhận diện và sao chép OTP trong Gmail, Outlook, Temp Mail</li>
+            <li>Nhóm mailbox riêng, ghim địa chỉ thường dùng</li>
+            <li>Đồng bộ nhóm/ghim giữa các thiết bị</li>
+            <li>Xem mailbox được chủ sở hữu chia sẻ</li>
+            <li>Giữ nguyên mọi tính năng Basic</li>
           </ul>
           <div className="premium-membership" role="status">
             {managed ? (
@@ -179,10 +164,8 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
                     : checkout.mutate()
                 }
               >
-                {checkout.isPending ? (
+                {checkout.isPending && (
                   <LoaderCircle className="spin" size={18} />
-                ) : (
-                  <CreditCard size={18} />
                 )}
                 {checkout.isPending
                   ? "Đang tạo thanh toán…"
@@ -191,7 +174,6 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
                     : active
                       ? "Gia hạn — 2.000₫ / tháng"
                       : "Thanh toán 2.000₫ qua PayOS"}
-                <ArrowUpRight size={18} />
               </button>
               {!billing.isPending && billing.data?.available === false && (
                 <p className="premium-unavailable">
@@ -236,11 +218,7 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
                 disabled={!billing.data?.available || verification.isFetching}
                 onClick={() => void verification.refetch()}
               >
-                <RefreshCw
-                  size={15}
-                  className={verification.isFetching ? "spin" : ""}
-                />{" "}
-                Kiểm tra thanh toán
+                {verification.isFetching ? "Đang kiểm tra…" : "Kiểm tra thanh toán"}
               </button>
             </section>
           )}

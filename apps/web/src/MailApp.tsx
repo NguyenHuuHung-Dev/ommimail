@@ -23,20 +23,9 @@ import { MailboxOrganizationPanel, OtpCard } from "./PremiumTools";
 import {
   ArrowLeft,
   ChevronDown,
-  Copy,
-  FileText,
-  LayoutDashboard,
-  LockKeyhole,
   LoaderCircle,
-  Mail,
   MoreHorizontal,
-  Paperclip,
-  Plus,
   RefreshCw,
-  Search,
-  ShieldCheck,
-  UserRoundCheck,
-  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -261,7 +250,6 @@ export function MailApp() {
               <aside className="mailbox-account-rail">
                 <div className="mailbox-rail-title"><span>Connected inboxes</span></div>
                 <div className="mailbox-rail-search search">
-                  <Search />
                   <input
                     value={ui.search}
                     onChange={(e) => ui.set({ search: e.target.value })}
@@ -310,7 +298,7 @@ export function MailApp() {
               <div className="mailbox-picker">
                 <span>Current mailbox</span>
                 <label>
-                  {currentAccount ? <ProviderDot p={currentAccount.provider} /> : <Mail />}
+                  {currentAccount && <ProviderDot p={currentAccount.provider} />}
                   <select
                     value={ui.selectedAccount ?? ""}
                     onChange={(event) =>
@@ -341,7 +329,6 @@ export function MailApp() {
                     ui.set({ selectedMessage: null });
                   }}
                 >
-                  {mailFolder === "spam" ? <ArrowLeft /> : <Mail />}
                   <span>{mailFolder === "spam" ? "Inbox" : "Spam"}</span>
                   <b>{spamMessages.length}</b>
                 </button>
@@ -369,7 +356,6 @@ export function MailApp() {
                 <Skeleton />
               ) : error ? (
                 <div className="mailbox-provider-error" role="alert">
-                  <Mail />
                   <h3>Couldn’t load this mailbox</h3>
                   <p>{error instanceof Error ? error.message : "The mail provider rejected the request."}</p>
                   <div>
@@ -586,13 +572,11 @@ function ProfileModal({
           {(error || notice) && <div className={error ? "profile-message error" : "profile-message success"}>{error || notice}</div>}
           <section className="profile-mailbox-dashboard">
             <div className="profile-section-title">
-              <LayoutDashboard />
               <span><strong>Dashboard mailbox</strong><small>Tìm, chọn và xóa nhiều kết nối cùng lúc. Email gốc không bị xóa.</small></span>
               <b>{accounts.length}</b>
             </div>
             <div className="profile-mailbox-toolbar">
               <label className="profile-mailbox-search">
-                <Search />
                 <input
                   value={mailboxSearch}
                   onChange={(event) => setMailboxSearch(event.target.value)}
@@ -624,7 +608,6 @@ function ProfileModal({
                 disabled={!selectedAccountIds.size || removeMailboxes.isPending}
                 onClick={() => confirmRemoveMailboxes([...selectedAccountIds])}
               >
-                <Trash2 />
                 {removeMailboxes.isPending ? "Đang xóa…" : `Xóa đã chọn (${selectedAccountIds.size})`}
               </button>
             </div>
@@ -675,12 +658,12 @@ function ProfileModal({
             </div>
           </section>
           <form className="profile-form" onSubmit={(event) => void saveName(event)}>
-            <div className="profile-section-title"><UserRoundCheck /><span><strong>Hồ sơ</strong><small>Tên này được hiển thị trong OmniMail và trang quản trị.</small></span></div>
+            <div className="profile-section-title"><span><strong>Hồ sơ</strong><small>Tên này được hiển thị trong OmniMail và trang quản trị.</small></span></div>
             <label>Họ và tên<input required minLength={2} maxLength={100} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" /></label>
             <button className="primary" disabled={busy !== ""} type="submit">{busy === "profile" ? "Đang lưu…" : "Lưu thông tin"}</button>
           </form>
           <form className="profile-form password-form" onSubmit={(event) => void changePassword(event)}>
-            <div className="profile-section-title"><LockKeyhole /><span><strong>Mật khẩu</strong><small>{passwordAccount ? "Xác nhận mật khẩu hiện tại trước khi đổi." : "Tài khoản mạng xã hội không sử dụng mật khẩu OmniMail."}</small></span></div>
+            <div className="profile-section-title"><span><strong>Mật khẩu</strong><small>{passwordAccount ? "Xác nhận mật khẩu hiện tại trước khi đổi." : "Tài khoản mạng xã hội không sử dụng mật khẩu OmniMail."}</small></span></div>
             {passwordAccount && <>
               <label>Mật khẩu hiện tại<input type="password" required value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} autoComplete="current-password" /></label>
               <div className="profile-password-grid">
@@ -749,7 +732,7 @@ function PageContent({
         {(tempDomainError || createTemp.error) && <div className="connect-error temp-page-error">{(tempDomainError ?? createTemp.error)?.message}</div>}
         {activeTempAccount && <div className="temp-active-bar">
           <div><span>Your temporary email</span><strong>{activeTempAccount.emailAddress}</strong></div>
-          <button className={copiedTemp ? "copied" : ""} onClick={copyTempAddress}><Copy />{copiedTemp ? "Copied" : "Copy"}</button>
+          <button className={copiedTemp ? "copied" : ""} onClick={copyTempAddress}>{copiedTemp ? "Copied" : "Copy"}</button>
           <button onClick={() => void refreshTemp()} disabled={tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} />Refresh</button>
           <button className="danger" onClick={() => { if (window.confirm(`Remove ${activeTempAccount.emailAddress} from OmniMail?`)) removeAccount(activeTempAccount); }}><Trash2 />Delete</button>
         </div>}
@@ -760,11 +743,11 @@ function PageContent({
               <strong>Tạo Temp Mail mới</strong>
               <label><span>Tên địa chỉ</span><input value={tempLocal} onChange={(e) => setTempLocal(e.target.value.replace(/[^a-z0-9._-]/gi, ""))} /></label>
               <label><span>Domain</span><select value={tempDomain || tempDomains[0]?.name || ""} onChange={(e) => setTempDomain(e.target.value)}>{tempDomains.map((domain) => <option key={domain.id} value={domain.name}>@{domain.name}</option>)}</select></label>
-              <button className="primary" disabled={!tempDomains.length || createTemp.isPending} onClick={() => createTemp.mutate()}><Plus />{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
+              <button className="primary" disabled={!tempDomains.length || createTemp.isPending} onClick={() => createTemp.mutate()}>{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
             </div>
             {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>mail.tm · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
           </aside>
-          <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><Mail /><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
+          <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
           <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message" />}</article>
         </section>
       </main>
@@ -817,10 +800,10 @@ function MailboxManager({
           <h1>All mailboxes</h1>
           <p>Search, open, or disconnect accounts without scrolling through the dashboard.</p>
         </div>
-        <button className="primary" onClick={openConnect}><Plus /> Connect account</button>
+        <button className="primary" onClick={openConnect}>Connect account</button>
       </div>
       <div className="mailbox-toolbar">
-        <label><Search /><input value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search by email address" /></label>
+        <label><input value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search by email address" /></label>
         <span>{filtered.length} of {accounts.length} accounts</span>
       </div>
       <section className="mailbox-directory">
@@ -860,8 +843,8 @@ function SharingHubPage({
     <main className="page-pane sharing-hub-page dashboard-page">
       <div className="page-header"><div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1></div></div>
       <div className="sharing-mode-tabs" role="tablist" aria-label="Chọn loại chia sẻ">
-        <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><UserRoundCheck /><strong>Tin nhắn</strong></button>
-        <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><Mail /><strong>Mailbox</strong></button>
+        <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><strong>Tin nhắn</strong></button>
+        <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><strong>Mailbox</strong></button>
       </div>
       <section className="sharing-mode-panel">
         {mode === "message" ? <MessageSharingPage /> : <MailboxSharingPage openConnect={openConnect} />}
@@ -929,7 +912,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
     <div className="mail-sharing-page sharing-hub-content">
       {(sharingError || updateShares.error) && <div className="connect-error">{(sharingError ?? updateShares.error)?.message}</div>}
       {isLoading ? <Skeleton /> : !mailboxes.length ? (
-        <section className="share-empty-state"><Mail /><h2>Bạn chưa có mailbox để chia sẻ</h2><p>Kết nối Gmail, Microsoft hoặc Temp Mail trước, sau đó quay lại trang này để cấp quyền.</p><button className="primary" onClick={openConnect}><Plus /> Kết nối mailbox</button></section>
+        <section className="share-empty-state"><h2>Bạn chưa có mailbox để chia sẻ</h2><p>Kết nối Gmail, Microsoft hoặc Temp Mail trước, sau đó quay lại trang này để cấp quyền.</p><button className="primary" onClick={openConnect}>Kết nối mailbox</button></section>
       ) : <>
         <section className="share-stat-grid">
           <article><small>Mailbox của bạn</small><strong>{mailboxes.length}</strong><span>Sẵn sàng chia sẻ</span></article>
@@ -942,7 +925,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
           <div className="share-builder-heading"><span>01</span><div><strong>Chọn mailbox</strong><small>Có thể chọn toàn bộ kết quả đang hiển thị.</small></div></div>
           <div className="share-mailbox-selector">
             <div className="share-selector-toolbar">
-              <label><Search /><input value={mailboxSearch} onChange={(event) => setMailboxSearch(event.target.value)} placeholder="Tìm địa chỉ mailbox" /></label>
+              <label><input value={mailboxSearch} onChange={(event) => setMailboxSearch(event.target.value)} placeholder="Tìm địa chỉ mailbox" /></label>
               <label className="share-check-all"><input type="checkbox" checked={allVisibleMailboxesSelected} onChange={(event) => setSelectedMailboxIds((current) => {
                 const next = new Set(current);
                 for (const { account } of filteredMailboxes) event.target.checked ? next.add(account.id) : next.delete(account.id);
@@ -977,7 +960,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
 
           <footer className="share-batch-action">
             <div><strong>{selectedMailboxes.length} mailbox × {parsedRecipients.valid.length} người</strong><small>{selectedMailboxes.length * parsedRecipients.valid.length} quyền sẽ được kiểm tra và cập nhật.</small></div>
-            <button type="button" disabled={!selectedMailboxes.length || !parsedRecipients.valid.length || updateShares.isPending} onClick={submitShares}><UserRoundCheck />{updateShares.isPending ? "Đang xử lý…" : "Chia sẻ mailbox"}</button>
+            <button type="button" disabled={!selectedMailboxes.length || !parsedRecipients.valid.length || updateShares.isPending} onClick={submitShares}>{updateShares.isPending ? "Đang xử lý…" : "Chia sẻ mailbox"}</button>
           </footer>
         </section>
 
@@ -988,9 +971,9 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
         </section>}
 
         <section className="share-access-dashboard">
-          <div className="share-access-header"><div><span className="eyebrow">Current access</span><h2>Quyền mailbox đang hoạt động</h2><p>Tìm theo mailbox hoặc người nhận, sau đó thu hồi từng quyền hoặc nhiều quyền.</p></div><button type="button" disabled={!selectedGrants.size || updateShares.isPending} onClick={revokeSelected}><Trash2 /> Thu hồi đã chọn ({selectedGrants.size})</button></div>
+          <div className="share-access-header"><div><span className="eyebrow">Current access</span><h2>Quyền mailbox đang hoạt động</h2><p>Tìm theo mailbox hoặc người nhận, sau đó thu hồi từng quyền hoặc nhiều quyền.</p></div><button type="button" disabled={!selectedGrants.size || updateShares.isPending} onClick={revokeSelected}>Thu hồi đã chọn ({selectedGrants.size})</button></div>
           <div className="share-access-toolbar">
-            <label><Search /><input value={grantSearch} onChange={(event) => setGrantSearch(event.target.value)} placeholder="Tìm mailbox hoặc email người nhận" /></label>
+            <label><input value={grantSearch} onChange={(event) => setGrantSearch(event.target.value)} placeholder="Tìm mailbox hoặc email người nhận" /></label>
             <label><input type="checkbox" checked={allVisibleGrantsSelected} disabled={!filteredGrants.length} onChange={(event) => setSelectedGrants((current) => {
               const next = new Set(current);
               for (const grant of filteredGrants) event.target.checked ? next.add(grant.key) : next.delete(grant.key);
@@ -1009,7 +992,7 @@ function MailboxSharingPage({ openConnect }: { openConnect: () => void }) {
               <div><span className="share-recipient-avatar">{recipient.email.slice(0, 1).toUpperCase()}</span><span><strong>{recipient.email}</strong><small>{recipient.role === "premium" ? "Premium user" : recipient.role}</small></span></div>
               <span className="share-access-badge">Read only</span>
               <button type="button" disabled={updateShares.isPending} onClick={() => updateShares.mutate([{ accountId: account.id, email: recipient.email, allowed: false }])}>Thu hồi</button>
-            </article>) : <div className="share-no-access"><UserRoundCheck /><p>{grants.length ? "Không có quyền nào khớp tìm kiếm." : "Chưa có quyền chia sẻ mailbox nào."}</p></div>}
+            </article>) : <div className="share-no-access"><p>{grants.length ? "Không có quyền nào khớp tìm kiếm." : "Chưa có quyền chia sẻ mailbox nào."}</p></div>}
           </div>
         </section>
       </>}
@@ -1037,10 +1020,9 @@ function MessageShareModal({ message, onClose }: { message: MailMessage; onClose
           <button type="button" onClick={onClose} aria-label="Đóng"><X /></button>
         </header>
         <div className="message-share-preview">
-          <Mail />
           <div><strong>{message.subject || "(Không có tiêu đề)"}</strong><small>Từ {message.from.name ?? message.from.address} · {new Date(message.receivedAt).toLocaleString()}</small></div>
         </div>
-        {share.isSuccess ? <div className="message-share-success" role="status"><ShieldCheck /><div><strong>Đã chia sẻ tin nhắn</strong><small>{share.data.recipient.email} chỉ có thể xem bản thư này trong OmniMail.</small></div></div> : <form onSubmit={submit}>
+        {share.isSuccess ? <div className="message-share-success" role="status"><div><strong>Đã chia sẻ tin nhắn</strong><small>{share.data.recipient.email} chỉ có thể xem bản thư này trong OmniMail.</small></div></div> : <form onSubmit={submit}>
           <label><span>Email người nhận</span><input autoFocus type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nguoinhan@gmail.com" required /><small>Email phải thuộc một tài khoản đã đăng ký OmniMail.</small></label>
           {share.error && <div className="connect-error">{share.error.message}</div>}
           <footer><button type="button" onClick={onClose}>Hủy</button><button className="primary" disabled={share.isPending || !email.trim()}>{share.isPending ? "Đang chia sẻ…" : "Chia sẻ tin nhắn"}</button></footer>
@@ -1090,14 +1072,13 @@ function MessageSharingPage() {
           </article>)}
         </div>
         <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} /></div>
-      </section> : <section className="share-empty-state"><UserRoundCheck /><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
+      </section> : <section className="share-empty-state"><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
     </div>
   );
 }
 
 function MessageRow({
   m,
-  account,
   selected,
   onSelect,
   canShare,
@@ -1120,11 +1101,6 @@ function MessageRow({
       className={`message-row ${!m.isRead ? "unread" : ""} ${selected ? "selected" : ""}`}
       onClick={onSelect}
     >
-      <span
-        className={`star ${m.isStarred ? "on" : ""}`}
-      >
-        <Star />
-      </span>
       <div className="avatar">
         {(m.from.name ?? m.from.address).slice(0, 2).toUpperCase()}
       </div>
@@ -1139,21 +1115,17 @@ function MessageRow({
           </span>
         </div>
         <h3>
-          <ProviderDot p={account?.provider ?? "temp"} />
           {m.subject}
         </h3>
         <p>{m.preview}</p>
-        <div className="chips">
-          {visibleLabels.map((l) => (
-            <span key={l}>{l}</span>
-          ))}
-          {m.hasAttachments && (
-            <span>
-              <Paperclip />
-              Attachment
-            </span>
-          )}
-        </div>
+        {(visibleLabels.length > 0 || m.hasAttachments) && (
+          <div className="chips">
+            {visibleLabels.map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+            {m.hasAttachments && <span>Attachment</span>}
+          </div>
+        )}
       </div>
       {canShare && <details className="message-more" onClick={(event) => event.stopPropagation()}>
         <summary title="Thao tác khác" aria-label={`Thao tác với thư ${m.subject}`}><MoreHorizontal /></summary>
@@ -1161,7 +1133,7 @@ function MessageRow({
           <button type="button" onClick={(event) => {
             event.currentTarget.closest("details")?.removeAttribute("open");
             onShare();
-          }}><UserRoundCheck /> Chia sẻ tin nhắn</button>
+          }}>Chia sẻ tin nhắn</button>
         </div>
       </details>}
     </article>
@@ -1200,9 +1172,6 @@ function MessageDetail({
           <div>
             <strong>{m.from.name}</strong>{" "}
             <small>&lt;{m.from.address}&gt;</small>
-            <button className="to">
-              to me <ChevronDown />
-            </button>
           </div>
           <time>
             {new Date(m.receivedAt).toLocaleString(undefined, {
@@ -1213,19 +1182,17 @@ function MessageDetail({
             })}
           </time>
         </div>
-        <div className="account-line">
-          <ProviderDot p={account?.provider ?? "temp"} />
-          via {account?.emailAddress}
-        </div>
+        {account?.emailAddress && (
+          <div className="account-line">
+            via {account.emailAddress}
+          </div>
+        )}
         {detectOtp && <OtpCard key={m.id} messageId={m.id} />}
         <div className="mail-body">
           <MessageBody m={m} />
         </div>
         {m.attachments?.map((a) => (
           <div className="attachment" key={a.id}>
-            <div>
-              <FileText />
-            </div>
             <span>
               <strong>{a.filename}</strong>
               <small>{(a.size / 1e6).toFixed(1)} MB</small>
@@ -1256,7 +1223,7 @@ function MailHtmlFrame({ html }: { html: string }) {
     <style>
       * { box-sizing: border-box; max-width: 100%; }
       html, body { margin: 0; padding: 0; min-width: 0; width: 100%; overflow-x: hidden; background: transparent; }
-      body { padding: 8px 0; color: #18212b; font: 14px/1.6 Arial, sans-serif; overflow-wrap: anywhere; word-break: break-word; }
+      body { padding: 8px 0; color: #0a0a0a; font: 15px/1.68 "Times New Roman", Times, serif; overflow-wrap: anywhere; word-break: break-word; }
       table { max-width: 100% !important; width: 100% !important; table-layout: fixed !important; }
       tbody, tr, td, th { max-width: 100% !important; }
       td, th { overflow-wrap: anywhere !important; word-break: break-word !important; }
@@ -1395,7 +1362,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
             <details className="gmail-guide" open>
               <summary>Hướng dẫn lấy App Password 16 ký tự</summary>
               <div className="gmail-guide-content">
-                <div className="guide-note"><ShieldCheck /><p><strong>App Password là gì?</strong><span>Đây là mật khẩu phụ Google tạo riêng cho OmniMail, không phải mật khẩu Gmail hay mã OTP. Bạn có thể thu hồi riêng bất kỳ lúc nào.</span></p></div>
+                <div className="guide-note"><p><strong>App Password là gì?</strong><span>Đây là mật khẩu phụ Google tạo riêng cho OmniMail, không phải mật khẩu Gmail hay mã OTP. Bạn có thể thu hồi riêng bất kỳ lúc nào.</span></p></div>
                 <ol>
                   <li><b>Đăng nhập đúng Gmail</b><span>Mở tài khoản Google của chính địa chỉ bạn sắp nhập bên dưới.</span></li>
                   <li><b>Bật Xác minh 2 bước</b><span>Vào Google Account → Security → 2-Step Verification và hoàn tất kích hoạt nếu chưa bật.</span></li>
@@ -1582,12 +1549,11 @@ function Skeleton() {
     </>
   );
 }
-function Empty({ title, description = "Everything you need will appear here." }: { title: string; description?: string }) {
+function Empty({ title, description = "" }: { title: string; description?: string }) {
   return (
     <div className="empty">
-      <Mail />
       <h3>{title}</h3>
-      <p>{description}</p>
+      {description && <p>{description}</p>}
     </div>
   );
 }

@@ -1,11 +1,7 @@
 import {
-  ArrowRight,
   Facebook,
   Github,
   Instagram,
-  Inbox,
-  ShieldCheck,
-  AtSign,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader, type SiteHeaderProps } from "./SiteHeader";
@@ -127,38 +123,35 @@ export function HomeLanding({
           <div className="landing-feature-grid">
             <article>
               <span className="landing-feature-number">01 / CONNECT</span>
-              <Inbox />
               <h3>Gmail & Outlook</h3>
               <p>
                 Kết nối các hộp thư bạn đang sử dụng. Chuyển giữa tài khoản, đọc
                 và tìm thư trong cùng một giao diện.
               </p>
               <Link to="/app/connect">
-                Kết nối hộp thư <ArrowRight size={16} />
+                Kết nối hộp thư →
               </Link>
             </article>
             <article>
               <span className="landing-feature-number">02 / TEMPORARY</span>
-              <AtSign />
               <h3>Một địa chỉ tạm thời</h3>
               <p>
                 Tạo Temp Mail cho những nhu cầu ngắn hạn. Nhận thư và theo dõi
                 nội dung ngay trong OmniMail.
               </p>
               <Link to="/app/temp-mail">
-                Khám phá Temp Mail <ArrowRight size={16} />
+                Khám phá Temp Mail →
               </Link>
             </article>
             <article>
               <span className="landing-feature-number">03 / SHARE</span>
-              <ShieldCheck />
               <h3>Chia sẻ có kiểm soát</h3>
               <p>
                 Cấp quyền xem hộp thư hoặc chia sẻ một tin nhắn. Theo dõi quyền
                 truy cập và thu hồi khi không còn cần thiết.
               </p>
               <Link to="/app/mail-sharing">
-                Tìm hiểu chia sẻ <ArrowRight size={16} />
+                Tìm hiểu chia sẻ →
               </Link>
             </article>
           </div>
@@ -177,8 +170,8 @@ export function HomeLanding({
                 ? "Mở Mailboxes"
                 : pending
                   ? "Tiếp tục xác minh"
-                  : "Tạo tài khoản miễn phí"}
-              <ArrowRight size={18} />
+                  : "Tạo tài khoản miễn phí"}{" "}
+              →
             </Link>
           </div>
           <ol>
@@ -258,8 +251,8 @@ export function HomeLanding({
                 ? "Vào hộp thư"
                 : pending
                   ? "Xác minh email"
-                  : "Bắt đầu với OmniMail"}
-              <ArrowRight size={18} />
+                  : "Bắt đầu với OmniMail"}{" "}
+              →
             </Link>
             {!member && !pending && (
               <Link className="landing-signin" to="/login">
