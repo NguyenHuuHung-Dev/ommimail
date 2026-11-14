@@ -9,24 +9,52 @@ import type {
 import { auth } from "./firebase";
 import { endRevokedSession } from "./session-access";
 export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  await auth.authStateReady();
-  const token = await auth.currentUser?.getIdToken();
-  const r = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init?.headers,
-    },
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  options: { public?: boolean; timeoutMs?: number } = {},
+): Promise<T> {
+  // Bound the entire startup request, including Firebase and response parsing.
+  // Render can take over 50 seconds to wake a free instance.
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_resolve, reject) => {
+    if (options.timeoutMs === undefined) return;
+    timer = setTimeout(() => {
+      const error = new Error("Dịch vụ mail chưa phản hồi sau 60 giây. Vui lòng bấm Thử lại.");
+      reject(error);
+      controller.abort(error);
+    }, options.timeoutMs);
   });
-  const j = await r.json().catch(() => { throw new Error("Dịch vụ chưa phản hồi đúng. Vui lòng thử lại sau."); });
-  if (!r.ok) {
-    if (["ACCOUNT_DISABLED", "ACCOUNT_DELETED", "SESSION_REVOKED"].includes(j.error?.code))
-      await endRevokedSession(j.error.code).catch(() => undefined);
-    throw new Error(j.error?.message ?? "Request failed");
+  const execute = async () => {
+    if (!options.public) await auth.authStateReady();
+    controller.signal.throwIfAborted();
+    const token = options.public ? undefined : await auth.currentUser?.getIdToken();
+    controller.signal.throwIfAborted();
+    const r = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...init?.headers,
+      },
+    });
+    const j = await r.json().catch(() => { throw new Error("Dịch vụ chưa phản hồi đúng. Vui lòng thử lại sau."); });
+    // A late response must not change session state after its deadline.
+    controller.signal.throwIfAborted();
+    if (!r.ok) {
+      if (["ACCOUNT_DISABLED", "ACCOUNT_DELETED", "SESSION_REVOKED"].includes(j.error?.code))
+        await endRevokedSession(j.error.code).catch(() => undefined);
+      throw new Error(j.error?.message ?? "Request failed");
+    }
+    return j.data as T;
+  };
+  try {
+    return await Promise.race([execute(), deadline]);
+  } finally {
+    clearTimeout(timer);
   }
-  return j.data;
 }
 export const api = {
   health: () =>
@@ -36,14 +64,14 @@ export const api = {
       persistentMailboxStorage: boolean;
       synchronization: { mode: "in-process"; concurrency: number; intervalMs: number };
       providers: { googleOAuth: boolean; microsoftOAuth: boolean; tempMail: boolean };
-    }>("/api/health"),
+    }>("/api/health", undefined, { public: true, timeoutMs: 60_000 }),
   registrationPolicy: (email: string) =>
     request<{ allowed: true }>("/api/auth/registration-policy", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
   accounts: (search = "") =>
-    request<MailAccount[]>(`/api/mail-accounts${search ? `?q=${encodeURIComponent(search)}` : ""}`),
+    request<MailAccount[]>(`/api/mail-accounts${search ? `?q=${encodeURIComponent(search)}` : ""}`, undefined, { timeoutMs: 60_000 }),
   messages: (q = "") => request<PaginatedMessages>(`/api/messages${q}`),
   message: (id: string) =>
     request<MailMessage>(`/api/messages/${encodeURIComponent(id)}`),
@@ -64,7 +92,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(p),
     }),
-  me: () => request<{ userId: string; email?: string; displayName?: string; role: "basic" | "premium" | "admin" }>("/api/me"),
+  me: () => request<{ userId: string; email?: string; displayName?: string; role: "basic" | "premium" | "admin" }>("/api/me", undefined, { timeoutMs: 60_000 }),
   updateMe: (displayName: string) => request<{ userId: string; email: string; displayName: string; role: "basic" | "premium" | "admin" }>("/api/me", { method: "PATCH", body: JSON.stringify({ displayName }) }),
   admin: () => request<AdminOverview>("/api/admin/overview"),
   setUserDisabled: (userId: string, disabled: boolean) => request<{userId: string; disabled: boolean}>(`/api/admin/users/${encodeURIComponent(userId)}/status`, {method: "PATCH", body: JSON.stringify({disabled})}),

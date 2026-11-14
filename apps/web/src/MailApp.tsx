@@ -81,6 +81,9 @@ export function MailApp() {
   const [shareTarget, setShareTarget] = useState<MailMessage | null>(null);
   const [mailFolder, setMailFolder] = useState<"main" | "spam">("main");
   useEffect(() => {
+    // Saved sessions bypass the login page, so wake Render here too. This
+    // public GET can reach it without waiting for an authenticated preflight.
+    void api.health().catch(() => undefined);
     const socket = io(apiBaseUrl, {
       auth(callback) {
         // Socket.IO asks again on reconnect; avoid reusing an expired ID token.
@@ -105,6 +108,7 @@ export function MailApp() {
   const { data: accounts = [], isPending: accountsPending, error: accountsError, refetch: refetchAccounts } = useQuery({
     queryKey: ["accounts"],
     queryFn: () => api.accounts(),
+    retry: false,
   });
   const mailboxSearch = ui.search.trim();
   const { data: searchedAccounts = [] } = useQuery({
@@ -153,7 +157,7 @@ export function MailApp() {
       }
     }
   }, [location.pathname, location.search, accounts, navigate, setUI, ui.selectedAccount, ui.selectedMessage]);
-  const { data: me, isPending: mePending, error: meError, refetch: refetchMe } = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const { data: me, isPending: mePending, error: meError, refetch: refetchMe } = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false });
   const servicePending = accountsPending || mePending;
   const serviceError = Boolean(accountsError || meError);
   const retryService = () => { void refetchAccounts(); void refetchMe(); };

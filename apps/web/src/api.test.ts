@@ -20,7 +20,10 @@ beforeEach(() => {
     vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: {} }) }),
   );
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe("API session restoration", () => {
   it("ends a disabled account's existing session with the server reason", async () => {
@@ -73,8 +76,51 @@ describe("API session restoration", () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/health"),
       expect.objectContaining({
-        headers: { "Content-Type": "application/json" },
+        headers: {},
       }),
     );
+  });
+
+  it("warms the public API without waiting for Firebase or refreshing a token", async () => {
+    auth.authStateReady.mockReturnValue(new Promise(() => {}));
+    auth.currentUser = { getIdToken: vi.fn().mockReturnValue(new Promise(() => {})) };
+    await api.health();
+    expect(auth.authStateReady).not.toHaveBeenCalled();
+    expect(auth.currentUser.getIdToken).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/api/health"),
+      expect.objectContaining({ headers: {} }));
+  });
+
+  it("stops waiting for an unresponsive API and aborts the network request", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetch).mockReturnValueOnce(new Promise(() => {}));
+    const response = expect(api.me()).rejects.toThrow("chưa phản hồi sau 60 giây");
+    await vi.advanceTimersByTimeAsync(60_000);
+    await response;
+    const init = vi.mocked(fetch).mock.calls[0][1];
+    expect(init?.signal?.aborted).toBe(true);
+    expect(endRevokedSession).not.toHaveBeenCalled();
+  });
+
+  it("times out stalled authentication without sending a late request", async () => {
+    vi.useFakeTimers();
+    let restore!: () => void;
+    auth.authStateReady.mockReturnValueOnce(new Promise<void>((resolve) => { restore = resolve; }));
+    const response = expect(api.me()).rejects.toThrow("chưa phản hồi sau 60 giây");
+    await vi.advanceTimersByTimeAsync(60_000);
+    await response;
+    restore();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("bounds a stalled response body and clears the deadline after success", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, json: () => new Promise(() => {}) } as unknown as Response);
+    const response = expect(api.me()).rejects.toThrow("chưa phản hồi sau 60 giây");
+    await vi.advanceTimersByTimeAsync(60_000);
+    await response;
+    await api.me();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
