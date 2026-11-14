@@ -1,0 +1,228 @@
+.otp-card {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #eac8d3;
+  border-radius: 12px;
+  background: #fff7fa;
+  color: #34242b;
+  white-space: normal;
+}
+.otp-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.otp-heading > span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #943e60;
+}
+.otp-heading > small {
+  font-size: 11px;
+  color: #78656c;
+}
+.otp-card p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.otp-card button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dbaec0;
+  background: white;
+  color: #672841;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.otp-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.otp-codes strong {
+  font: 700 23px/1.3 monospace;
+  letter-spacing: 0.12em;
+  user-select: text;
+}
+.otp-codes span {
+  font-size: 11px;
+}
+.mailbox-organization {
+  padding: 12px;
+  color: #34242b;
+  min-width: 0;
+}
+.organization-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.organization-heading small {
+  margin-left: auto;
+  font-size: 9px;
+  color: #943e60;
+}
+.organization-filter {
+  display: grid;
+  gap: 6px;
+  font-size: 11px;
+  margin: 14px 0;
+}
+.organization-filter select,
+.organization-editor input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dfcfd5;
+  border-radius: 6px;
+  background: white;
+  padding: 9px;
+  color: #34242b;
+  font: inherit;
+}
+.organized-group {
+  margin: 14px 0;
+}
+.organized-group h3 {
+  font-size: 11px;
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+  color: #836574;
+}
+.organized-mailbox {
+  display: flex;
+  align-items: center;
+  border-radius: 7px;
+  min-width: 0;
+}
+.organized-mailbox.active {
+  background: #f6dce6;
+}
+.organized-mailbox:hover {
+  background: #fdf0f5;
+}
+.organized-mailbox button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+.organized-mailbox .organized-open {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 7px;
+  text-align: left;
+  display: grid;
+  gap: 3px;
+}
+.organized-open span {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.organized-open small {
+  font-size: 10px;
+  color: #906077;
+  overflow-wrap: anywhere;
+}
+.organized-pin {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+.organized-pin[aria-pressed="true"] {
+  color: #a03f66;
+  background: #f9e0e9;
+}
+.organized-pin:disabled {
+  opacity: 0.4;
+  cursor: wait;
+}
+.organization-editor {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid #ead8df;
+  padding-top: 14px;
+  font-size: 11px;
+}
+.organization-editor > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #826c74;
+}
+.organization-editor button {
+  border: 1px solid #dcb2c2;
+  background: #fbe8ef;
+  color: #71304b;
+  padding: 9px;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+.organization-editor button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.organization-help {
+  display: block;
+  margin-top: 12px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #826c74;
+}
+.mailbox-organization p {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mailbox-organization [role="alert"] {
+  color: #a22f4b;
+}
+.otp-card .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.organization-heading {
+  flex-wrap: wrap;
+}
+.shell.dark .mailbox-organization {
+  color: #f8e6ed;
+}
+.shell.dark .organized-mailbox.active,
+.shell.dark .organized-mailbox:hover {
+  background: #593b49;
+}
+.shell.dark .organized-group h3,
+.shell.dark .organization-help,
+.shell.dark .organization-editor > small {
+  color: #e3b7c8;
+}
+@media (max-width: 700px) {
+  .otp-codes button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .otp-codes {
+    display: grid;
+  }
+  .mailbox-organization {
+    padding: 10px;
+  }
+}

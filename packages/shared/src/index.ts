@@ -1,4 +1,5 @@
 export type Provider = 'gmail' | 'microsoft' | 'imap' | 'temp';
+export interface MailboxOrganization { accountId: string; group: string; pinned: boolean }
 export const PREMIUM_MONTHLY_PRICE_VND = 2000;
 export type PremiumPaymentStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED';
 export interface PremiumPayment {

@@ -57,6 +57,9 @@ async function request<T>(
   }
 }
 export const api = {
+  mailboxOrganization: () => request<import("@omnimail/shared").MailboxOrganization[]>("/api/mailbox-organization", undefined, { timeoutMs: 60_000 }),
+  saveMailboxOrganization: (value: import("@omnimail/shared").MailboxOrganization) => request<import("@omnimail/shared").MailboxOrganization>("/api/mailbox-organization", { method: "PUT", body: JSON.stringify(value) }, { timeoutMs: 60_000 }),
+  messageOtp: (id: string) => request<{ codes: string[]; receivedAt: string }>(`/api/messages/${encodeURIComponent(id)}/otp`, undefined, { timeoutMs: 60_000 }),
   health: () =>
     request<{
       status: string;

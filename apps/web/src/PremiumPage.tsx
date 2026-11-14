@@ -98,8 +98,8 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
           {active || managed ? "Gói Premium của bạn" : "Nâng cấp lên Premium"}
         </h1>
         <p>
-          Nhận quyền xem các mailbox được Admin chia sẻ, trong cùng không gian
-          OmniMail quen thuộc.
+          Lấy mã OTP nhanh hơn, sắp xếp mailbox theo cách của bạn và cộng tác
+          trong cùng không gian OmniMail.
         </p>
       </header>
       <div className="premium-grid">
@@ -107,7 +107,7 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
           <span className="premium-plan-label">
             <ShieldCheck size={17} /> PREMIUM ACCESS
           </span>
-          <h2 id="premium-plan-title">Thêm quyền cộng tác.</h2>
+          <h2 id="premium-plan-title">Ít thao tác. Gọn hộp thư.</h2>
           <p className="premium-price">
             {PREMIUM_MONTHLY_PRICE_VND.toLocaleString("vi-VN")}
             <span>₫ / tháng</span>
@@ -117,14 +117,16 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
           </p>
           <ul>
             <li>
-              <Check /> Giữ nguyên mailbox cá nhân và Temp Mail
+              <Check /> Nhận diện và sao chép OTP trong Gmail, Outlook, Temp Mail
             </li>
             <li>
-              <Check /> Xem mailbox được Admin cấp quyền
+              <Check /> Nhóm mailbox riêng, ghim địa chỉ thường dùng
             </li>
             <li>
-              <Check /> Đọc và tìm thư trong mailbox được chia sẻ
+              <Check /> Đồng bộ nhóm/ghim giữa các thiết bị
             </li>
+            <li><Check /> Xem mailbox được chủ sở hữu chia sẻ</li>
+            <li><Check /> Giữ nguyên mọi tính năng Basic</li>
           </ul>
           <div className="premium-membership" role="status">
             {managed ? (

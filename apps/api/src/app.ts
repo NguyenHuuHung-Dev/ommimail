@@ -39,6 +39,8 @@ import {
 } from "./auth.js";
 import { normalizeRegistrationEmail } from "./auth-policy.js";
 import { payosWebhook, premiumBillingRouter } from "./billing.js";
+import { organizationRouter } from "./mailbox-organization.js";
+import { extractOtp } from "./otp.js";
 import {
   clearMailboxSyncState,
   enqueueMailboxSync,
@@ -135,6 +137,7 @@ app.post("/api/auth/registration-policy", (q, r) => {
 app.post("/api/billing/payos/webhook", payosWebhook);
 app.use(authenticate);
 app.use("/api/billing/premium", premiumBillingRouter);
+app.use("/api/mailbox-organization", organizationRouter);
 const ok = (res: express.Response, data: unknown) =>
   res.json({ success: true, data });
 const fail = (
@@ -645,6 +648,17 @@ async function loadMessageDetail(q: express.Request, messageId: string) {
   return message;
 }
 
+app.get("/api/messages/:id/otp", async (q, r) => {
+  r.set("Cache-Control", "no-store");
+  if (!["premium", "admin"].includes(identity(q).role)) return fail(r, 403, "PREMIUM_REQUIRED", "Nhận diện OTP dành cho Premium.");
+  try {
+    const message = await loadMessageDetail(q, q.params.id);
+    return ok(r, { codes: extractOtp(message), receivedAt: message.receivedAt });
+  } catch (cause) {
+    if (cause instanceof MessageOperationError) return fail(r, cause.status, cause.code, cause.message);
+    return fail(r, 503, "OTP_UNAVAILABLE", "Chưa đọc được OTP. Bạn vẫn có thể xem thư bên dưới.");
+  }
+});
 app.get("/api/messages/:id", async (q, r) => {
   try {
     return ok(r, await loadMessageDetail(q, q.params.id));

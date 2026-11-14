@@ -19,6 +19,7 @@ import { AdminPage } from "./AdminPage";
 import { SiteHeader } from "./SiteHeader";
 import { HomeLanding } from "./HomeLanding";
 import { PremiumPage } from "./PremiumPage";
+import { MailboxOrganizationPanel, OtpCard } from "./PremiumTools";
 import {
   ArrowLeft,
   ChevronDown,
@@ -158,7 +159,7 @@ export function MailApp() {
       }
     }
   }, [location.pathname, location.search, accounts, navigate, setUI, ui.selectedAccount, ui.selectedMessage]);
-  const { data: me, isPending: mePending, error: meError, refetch: refetchMe } = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false });
+  const { data: me, isPending: mePending, error: meError, refetch: refetchMe } = useQuery({ queryKey: ["me"], queryFn: api.me, retry: false, refetchInterval: 30_000 });
   const servicePending = accountsPending || mePending;
   const serviceError = Boolean(accountsError || meError);
   const retryService = () => { void refetchAccounts(); void refetchMe(); };
@@ -268,7 +269,7 @@ export function MailApp() {
                     aria-label="Search mailbox by email address"
                   />
                 </div>
-                {providerGroups.map((group) => {
+                {me && me.role !== "basic" ? <MailboxOrganizationPanel accounts={inboxAccounts} selectedId={selectedInboxAccount} userId={me.userId} onSelect={(id) => ui.set({ selectedAccount: id, selectedMessage: null })} /> : providerGroups.map((group) => {
                   const providerName = group.provider === "gmail" ? "Google / Gmail" : "Microsoft / Outlook";
                   return (
                     <section className="mailbox-provider-group" key={group.provider}>
@@ -408,6 +409,7 @@ export function MailApp() {
             {selected ? (
               <MessageDetail
                 m={selected}
+                detectOtp
                 account={visibleAccounts.find((a) => a.id === selected.accountId)}
                 onClose={() => ui.set({ selectedMessage: null })}
               />
@@ -423,6 +425,7 @@ export function MailApp() {
           page={page}
           accounts={accounts}
           role={me?.role ?? "basic"}
+          userId={me?.userId ?? ""}
           openConnect={() => navigate("/app/connect")}
           navigateMailbox={(id) => {
             ui.set({ selectedAccount: id, selectedMessage: null });
@@ -696,6 +699,7 @@ function PageContent({
   page,
   accounts,
   role,
+  userId,
   openConnect,
   navigateMailbox,
   removeAccount,
@@ -704,6 +708,7 @@ function PageContent({
   page: string;
   accounts: MailAccount[];
   role: "basic" | "premium" | "admin";
+  userId: string;
   openConnect: () => void;
   navigateMailbox: (id: string) => void;
   removeAccount: (account: MailAccount) => void;
@@ -757,10 +762,10 @@ function PageContent({
               <label><span>Domain</span><select value={tempDomain || tempDomains[0]?.name || ""} onChange={(e) => setTempDomain(e.target.value)}>{tempDomains.map((domain) => <option key={domain.id} value={domain.name}>@{domain.name}</option>)}</select></label>
               <button className="primary" disabled={!tempDomains.length || createTemp.isPending} onClick={() => createTemp.mutate()}><Plus />{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
             </div>
-            {tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>mail.tm · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
+            {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>mail.tm · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
           </aside>
           <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><Mail /><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
-          <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message" />}</article>
+          <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message" />}</article>
         </section>
       </main>
     );
@@ -1166,10 +1171,12 @@ function MessageDetail({
   m,
   account,
   onClose,
+  detectOtp = false,
 }: {
   m: MailMessage;
   account?: MailAccount;
   onClose: () => void;
+  detectOtp?: boolean;
 }) {
   const folderLabel = m.folderIds.includes("spam") ? "Spam" : m.folderIds.includes("promotions") ? "Promotions" : "Inbox";
   return (
@@ -1210,6 +1217,7 @@ function MessageDetail({
           <ProviderDot p={account?.provider ?? "temp"} />
           via {account?.emailAddress}
         </div>
+        {detectOtp && <OtpCard key={m.id} messageId={m.id} />}
         <div className="mail-body">
           <MessageBody m={m} />
         </div>
