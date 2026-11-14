@@ -1,6 +1,6 @@
-import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Seo } from "./Seo";
+import { SiteHeader } from "./SiteHeader";
 
 export function SecurityPage() {
   return (
@@ -86,21 +86,7 @@ function PublicInfoPage({
         description={description}
         path={path}
       />
-      <header className="public-nav">
-        <Link className="public-brand" to="/">
-          <img src="/logo.jpg" width="40" height="42" alt="Logo OmniMail" />
-          <strong>OmniMail</strong>
-          <span>.</span>
-        </Link>
-        <div className="public-nav-actions">
-          <Link className="public-login" to="/login">
-            Đăng nhập
-          </Link>
-          <Link className="public-button small" to="/register">
-            Dùng thử <ArrowRight />
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
       <main className="info-main">
         <Link className="info-back" to="/">
           ← Về trang chủ

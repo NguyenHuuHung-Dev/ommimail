@@ -1898,7 +1898,7 @@
 .api-status {
   position: fixed;
   z-index: 120;
-  top: max(12px, env(safe-area-inset-top));
+  bottom: max(12px, env(safe-area-inset-bottom));
   left: 50%;
   display: flex;
   align-items: center;
@@ -1924,5 +1924,5 @@
   cursor: pointer;
 }
 @media (max-width: 600px) {
-  .api-status { top: max(8px, env(safe-area-inset-top)); width: max-content; max-width: calc(100vw - 28px); }
+  .api-status { bottom: max(8px, env(safe-area-inset-bottom)); width: max-content; max-width: calc(100vw - 28px); }
 }

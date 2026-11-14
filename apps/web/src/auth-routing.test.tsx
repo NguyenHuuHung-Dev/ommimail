@@ -224,10 +224,10 @@ describe("session restoration and landing routes", () => {
       expect(container.querySelector(".landing-content")).not.toBeNull();
       expect(container.textContent).toContain("Every inbox.");
       expect(
-        container.querySelector('.home-header a[href="/login"]'),
+        container.querySelector('.site-header a[href="/login"]'),
       ).not.toBeNull();
       expect(
-        container.querySelector('.home-header a[href="/register"]'),
+        container.querySelector('.site-header a[href="/register"]'),
       ).not.toBeNull();
       expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
       expect(firebase.sendEmailVerification).not.toHaveBeenCalled();
@@ -240,7 +240,7 @@ describe("session restoration and landing routes", () => {
     await act(async () =>
       container
         .querySelector<HTMLAnchorElement>(
-          '.home-header .navitem[href="/app/mailboxes"]',
+          '.site-header .site-nav-link[href="/app/mailboxes"]',
         )!
         .click(),
     );

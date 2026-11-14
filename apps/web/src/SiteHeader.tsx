@@ -45,7 +45,7 @@ export function SiteHeader({
         : []),
     { to: "/app/mail-sharing", label: "Sharing", icon: UserRoundCheck },
   ];
-  const navigationLinks = (home = false) =>
+  const navigationLinks = () =>
     items.map(({ to, label, icon: Icon }) => {
       const active =
         pathname === to ||
@@ -54,16 +54,12 @@ export function SiteHeader({
         <Link
           key={to}
           to={to}
-          className={
-            home
-              ? `navitem${active ? " active" : ""}`
-              : `site-nav-link${active ? " is-active" : ""}`
-          }
+          className={`site-nav-link${active ? " is-active" : ""}`}
           aria-current={active ? "page" : undefined}
         >
           <Icon size={16} aria-hidden="true" />
           <span>{label}</span>
-          {!home && to === "/app/mailboxes" && unreadCount > 0 && (
+          {to === "/app/mailboxes" && unreadCount > 0 && (
             <b
               className="site-unread"
               aria-label={`${unreadCount} thư chưa đọc`}
@@ -74,73 +70,17 @@ export function SiteHeader({
         </Link>
       );
     });
-  if (variant === "home")
-    return (
-      <header className="poster-nav home-header">
-        <Link
-          className="poster-brand"
-          to="/"
-          onClick={() => window.scrollTo({ top: 0 })}
-          aria-label="OmniMail — Trang chủ"
-        >
-          <img src="/logo.jpg" alt="OmniMail logo" />
-          <strong>OmniMail</strong>
-          <span>.</span>
-        </Link>
-        <nav aria-label="Primary navigation">{navigationLinks(true)}</nav>
-        <div className="home-header-actions">
-          {!ready ? (
-            <span className="home-session-loading" role="status">
-              Đang kết nối…
-            </span>
-          ) : mode === "guest" ? (
-            <>
-              <Link className="home-signin-link" to="/login">
-                Đăng nhập
-              </Link>
-              <Link className="home-register-link" to="/register">
-                Đăng ký <span aria-hidden="true">↗</span>
-              </Link>
-            </>
-          ) : (
-            <>
-              {mode === "unverified" && (
-                <Link className="home-register-link" to="/verify-email">
-                  Xác minh email
-                </Link>
-              )}
-              <button
-                className="poster-icon"
-                type="button"
-                onClick={onLogout}
-                aria-label="Đăng xuất"
-                title="Đăng xuất"
-              >
-                <LogOut size={17} />
-              </button>
-              {mode === "member" && (
-                <button
-                  className="poster-account"
-                  type="button"
-                  onClick={onOpenProfile}
-                  title="Quản lý hồ sơ"
-                  aria-label="Quản lý hồ sơ"
-                >
-                  {profileInitials}
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </header>
-    );
   return (
-    <header className="site-header">
-      <Link className="site-brand" to="/" aria-label="OmniMail — Trang chủ">
-        <img src="/logo.jpg" width="36" height="36" alt="" />
-        <span>
-          OmniMail<span className="site-brand-dot">.</span>
-        </span>
+    <header className={`site-header site-header--${variant}`}>
+      <Link
+        className="site-brand"
+        to="/"
+        onClick={() => window.scrollTo({ top: 0 })}
+        aria-label="OmniMail — Trang chủ"
+      >
+        <img src="/logo.jpg" width="28" height="28" alt="" />
+        <strong>OmniMail</strong>
+        <span className="site-brand-dot">.</span>
       </Link>
       <nav className="site-navigation" aria-label="Primary navigation">
         {navigationLinks()}
@@ -165,7 +105,17 @@ export function SiteHeader({
               <Link className="site-register" to="/verify-email">
                 Xác minh email
               </Link>
-            ) : (
+            ) : null}
+            <button
+              className="site-signout"
+              type="button"
+              onClick={onLogout}
+              aria-label="Đăng xuất"
+              title="Đăng xuất"
+            >
+              <LogOut size={17} />
+            </button>
+            {mode === "member" && (
               <button
                 className="site-profile"
                 type="button"
@@ -176,15 +126,6 @@ export function SiteHeader({
                 {profileInitials}
               </button>
             )}
-            <button
-              className="site-signout"
-              type="button"
-              onClick={onLogout}
-              aria-label="Đăng xuất"
-              title="Đăng xuất"
-            >
-              <LogOut size={17} />
-            </button>
           </>
         )}
       </div>

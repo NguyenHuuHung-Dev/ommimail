@@ -8,61 +8,6 @@
   border-left-width: 0;
   border-right-width: 0;
 }
-.home-header .poster-brand,
-.home-header .navitem {
-  text-decoration: none;
-}
-.home-header .poster-brand {
-  color: #0a0a0a;
-}
-.home-header .home-header-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-}
-.home-header .navitem.active > span {
-  background: #f2bdcc;
-}
-.home-header .home-signin-link,
-.home-header .home-register-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  min-height: 42px;
-  padding: 0 15px;
-  border: 1px solid #0a0a0a;
-  color: #0a0a0a;
-  background: #fff;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  white-space: nowrap;
-}
-.home-header .home-signin-link {
-  padding-inline: 0;
-  border-color: transparent;
-}
-.home-header .home-register-link {
-  background: #f9e2e9;
-  border-color: #d6a8b5;
-}
-.home-header .home-signin-link:hover {
-  text-decoration: underline;
-  text-underline-offset: 5px;
-}
-.home-header .home-register-link:hover {
-  border-color: #0a0a0a;
-}
-.home-session-loading {
-  min-width: 120px;
-  color: #8a6a77;
-  font-size: 11px;
-  text-align: right;
-}
-
 /* Landing-page content starts below the unchanged first screen. */
 .landing-content {
   color: #0a0a0a;
@@ -319,9 +264,7 @@
   font-size: 10px;
 }
 .landing-content a:focus-visible,
-.landing-content summary:focus-visible,
-.home-header a:focus-visible,
-.home-header button:focus-visible {
+.landing-content summary:focus-visible {
   outline: 2px solid #b66182;
   outline-offset: 5px;
 }
@@ -329,36 +272,6 @@
 @media (max-width: 1100px) {
   #root .poster-home.original-home {
     grid-template-rows: auto minmax(0, 1fr) !important;
-  }
-  #root .original-home .home-header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    gap: 0 16px;
-    height: auto;
-    padding: 12px 28px 0;
-  }
-  .home-header .poster-brand,
-  .home-header .home-header-actions {
-    min-height: 52px;
-  }
-  .home-header .home-header-actions {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  #root .home-header nav {
-    display: flex;
-    grid-column: 1/-1;
-    grid-row: 2;
-    justify-content: center;
-    min-width: 0;
-    gap: 28px;
-    height: 44px;
-    padding: 0;
-    overflow-x: auto;
-  }
-  .home-header .navitem {
-    flex: none;
   }
   .landing-features,
   .landing-how,
@@ -381,43 +294,6 @@
   }
 }
 @media (max-width: 700px) {
-  #root .original-home .home-header {
-    padding: 8px 18px 0;
-    gap: 0 8px;
-  }
-  #root .home-header .poster-brand {
-    gap: 0;
-    font-size: 23px;
-  }
-  .home-header .home-header-actions {
-    gap: 8px;
-  }
-  #root .home-header .poster-icon {
-    display: grid;
-    place-items: center;
-  }
-  .home-header .home-signin-link,
-  .home-header .home-register-link {
-    min-height: 36px;
-    padding-inline: 9px;
-    gap: 5px;
-    font-size: 10px;
-  }
-  .home-header .home-signin-link {
-    padding-inline: 0;
-  }
-  #root .home-header nav {
-    justify-content: flex-start;
-    gap: 18px;
-    height: 42px;
-    scrollbar-width: none;
-  }
-  #root .home-header nav .navitem {
-    font-size: 9px;
-  }
-  #root .home-header nav .navitem span {
-    display: inline !important;
-  }
   .landing-features,
   .landing-how,
   .landing-faq {
