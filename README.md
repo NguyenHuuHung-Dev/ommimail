@@ -329,6 +329,24 @@ pnpm test:rules
 
 ## Deployment
 
+### CI/CD — GitHub Actions
+
+The [CI and deploy workflow](.github/workflows/deploy.yml) runs tests, typechecks
+and builds for pull requests and pushes to `main`. Successful `main` builds are
+deployed to Firebase Hosting, then checked against the public domain. The deploy
+job publishes the exact web artifact produced by the checks job.
+
+Deployment uses Google Workload Identity Federation, restricted to this
+repository's `main` branch and this workflow. The dedicated
+`github-hosting-deploy` service account has Hosting deployment and CLI API
+permissions; no service-account key is stored in GitHub. The browser's Firebase
+configuration lives in repository variables named `VITE_FIREBASE_*`; the public
+API origin remains in `apps/web/.env.production`.
+
+To redeploy, run **Actions → CI and deploy → Run workflow** on `main`.
+To roll back, revert the relevant commit and push to `main` so the previous
+version passes checks and deploys through the same workflow.
+
 ### Web — Firebase Hosting
 
 ```bash

@@ -6,3 +6,4 @@ coverage
 *.log
 *.tsbuildinfo
 .firebase
+gha-creds-*.json
