@@ -131,6 +131,9 @@ export const api = {
   }),
   myUpgradeRequest: () => request<{ requestedAt?: string }>("/api/upgrade-requests/me"),
   requestUpgrade: () => request<{ requestedAt: string; status: "pending" }>("/api/upgrade-requests", { method: "POST" }),
+  premiumBilling: () => request<import("@omnimail/shared").PremiumBilling>("/api/billing/premium", undefined, { timeoutMs: 60_000 }),
+  createPremiumCheckout: () => request<import("@omnimail/shared").PremiumPayment>("/api/billing/premium/checkout", { method: "POST" }, { timeoutMs: 60_000 }),
+  checkPremiumPayment: (orderCode: number) => request<import("@omnimail/shared").PremiumPayment>(`/api/billing/premium/orders/${orderCode}/check`, { method: "POST" }, { timeoutMs: 60_000 }),
   oauthStart: (provider: "google" | "microsoft") =>
     request<{ url: string }>(`/api/oauth/${provider}/start`),
   connectMicrosoftToken: (input: {

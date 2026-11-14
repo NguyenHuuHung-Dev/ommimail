@@ -1,4 +1,22 @@
 export type Provider = 'gmail' | 'microsoft' | 'imap' | 'temp';
+export const PREMIUM_MONTHLY_PRICE_VND = 2000;
+export type PremiumPaymentStatus = 'PENDING' | 'PAID' | 'CANCELLED' | 'EXPIRED';
+export interface PremiumPayment {
+  orderCode: number;
+  amount: number;
+  status: PremiumPaymentStatus;
+  expiresAt: string;
+  checkoutUrl?: string;
+  premiumExpiresAt?: string;
+}
+export interface PremiumBilling {
+  available: boolean;
+  price: number;
+  currency: 'VND';
+  managed: boolean;
+  premiumExpiresAt?: string;
+  order?: PremiumPayment;
+}
 // Deliberately bound to the existing owner identity. Matching an email address
 // alone, an admin allowlist, or a newly created account never grants this exception.
 export const OWNER_VERIFICATION_EXCEPTION = {

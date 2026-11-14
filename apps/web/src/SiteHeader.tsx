@@ -42,7 +42,9 @@ export function SiteHeader({
       ? [{ to: "/app/mail-admin", label: "Người dùng", icon: ShieldCheck }]
       : mode === "member" && role === "basic"
         ? [{ to: "/app/mail-admin", label: "Upgrade", icon: ShieldCheck }]
-        : []),
+        : mode === "member" && role === "premium"
+          ? [{ to: "/app/mail-admin", label: "Premium", icon: ShieldCheck }]
+          : []),
     { to: "/app/mail-sharing", label: "Sharing", icon: UserRoundCheck },
   ];
   const navigationLinks = () =>

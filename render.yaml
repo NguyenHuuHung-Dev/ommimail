@@ -33,5 +33,11 @@ services:
         value: https://omnimail.io.vn,https://ommimail.web.app
       - key: OAUTH_STATE_SECRET
         sync: false
+      - key: PAYOS_CLIENT_ID
+        sync: false
+      - key: PAYOS_API_KEY
+        sync: false
+      - key: PAYOS_CHECKSUM_KEY
+        sync: false
       - key: MICROSOFT_TENANT_ID
         value: common

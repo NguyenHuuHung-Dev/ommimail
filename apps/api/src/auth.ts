@@ -8,6 +8,7 @@ import {
 import { getAuth } from "firebase-admin/auth";
 import { saveUserProfile } from "./firestore-store.js";
 import { satisfiesEmailVerification } from "./auth-policy.js";
+import { hasPaidPremium } from "./premium-access.js";
 
 export type UserRole = "admin" | "premium" | "basic";
 export type AuthRequest = Request & {
@@ -67,11 +68,9 @@ export function resolveUserRole(
   email?: string,
   claims: Record<string, unknown> = {},
 ): UserRole {
-  return claims.admin === true ||
-    (email ? allowedAdmins().has(email.toLowerCase()) : false)
-    ? "admin"
-    : (roleOverrides.get(userId) ??
-        (claims.role === "premium" ? "premium" : "basic"));
+  if (claims.admin === true || (email ? allowedAdmins().has(email.toLowerCase()) : false)) return "admin";
+  const manualRole = roleOverrides.get(userId) ?? (claims.role === "premium" ? "premium" : "basic");
+  return manualRole === "premium" || hasPaidPremium(userId) ? "premium" : "basic";
 }
 export async function authenticate(
   req: Request,

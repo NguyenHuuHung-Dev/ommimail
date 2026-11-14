@@ -329,6 +329,12 @@ pnpm test:rules
 
 ## Deployment
 
+Monthly Premium checkout costs **2,000 VND** through PayOS. See
+[PayOS configuration](docs/payos-premium.md) for the three server-side channel
+credentials, webhook registration and payment verification. Checkout stays
+disabled until the API is configured; the existing Admin upgrade request remains
+available. Payments grant one calendar month and do not enable automatic debits.
+
 ### CI/CD — GitHub Actions
 
 The [CI and deploy workflow](.github/workflows/deploy.yml) runs tests, typechecks

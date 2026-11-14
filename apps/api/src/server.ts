@@ -18,6 +18,8 @@ import { authenticateSocket } from "./socket-auth.js";
 import { onUserAccessChanged } from "./user-access-events.js";
 import { loadHiddenMessageIds, loadMailboxes, loadMailboxShares, loadMessageShares, loadUpgradeRequests, loadUserProfiles, persistentStoreEnabled } from "./firestore-store.js";
 import { onMailboxSyncUpdate, startMailboxSyncScheduler } from "./sync-jobs.js";
+import { billingStore } from "./billing-store.js";
+import { premiumExpirations, hasPaidPremium } from "./premium-access.js";
 
 const port = Number(process.env.PORT ?? 4000);
 const server = createServer(app);
@@ -48,20 +50,24 @@ onUserAccessChanged(({ userId, reason }) => {
 });
 onMailboxSyncUpdate((job) => {
   const viewers = new Set([job.ownerId, ...(mailboxShares.get(job.accountId) ?? [])]);
-  for (const userId of viewers) io.to(`user:${userId}`).emit("mailbox:sync", {
-    id: job.id,
-    accountId: job.accountId,
-    status: job.status,
-    requestedAt: job.requestedAt,
-    startedAt: job.startedAt,
-    completedAt: job.completedAt,
-    messageCount: job.messageCount,
-    unreadCount: job.unreadCount,
-    error: job.error,
-  });
+  for (const userId of viewers) {
+    if (userId !== job.ownerId && premiumExpirations.has(userId) && !hasPaidPremium(userId)) continue;
+    io.to(`user:${userId}`).emit("mailbox:sync", {
+      id: job.id,
+      accountId: job.accountId,
+      status: job.status,
+      requestedAt: job.requestedAt,
+      startedAt: job.startedAt,
+      completedAt: job.completedAt,
+      messageCount: job.messageCount,
+      unreadCount: job.unreadCount,
+      error: job.error,
+    });
+  }
 });
 async function restorePersistentState() {
   if (!persistentStoreEnabled) return;
+  await billingStore.restore();
   const [mailboxes, shares, users, hidden, savedMessageShares, savedUpgradeRequests] = await Promise.all([
     loadMailboxes(),
     loadMailboxShares(),

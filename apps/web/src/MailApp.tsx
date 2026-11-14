@@ -18,6 +18,7 @@ import { endRevokedSession } from "./session-access";
 import { AdminPage } from "./AdminPage";
 import { SiteHeader } from "./SiteHeader";
 import { HomeLanding } from "./HomeLanding";
+import { PremiumPage } from "./PremiumPage";
 import {
   ArrowLeft,
   ChevronDown,
@@ -766,8 +767,7 @@ function PageContent({
   if (page === "mail-sharing" || page === "mailbox-sharing")
     return <SharingHubPage openConnect={openConnect} initialMode={page === "mailbox-sharing" ? "mailbox" : "message"} />;
   if (page === "mail-admin") {
-    if (role === "basic") return <UpgradeRequestPage />;
-    if(role === "premium") return <main className="page-pane dashboard-page"><div className="page-header"><div><span className="eyebrow">Premium access</span><h1>Truy cập mailbox được chia sẻ</h1><p>Để chống dò địa chỉ, OmniMail không liệt kê mailbox được Admin cấp. Hãy mở Mailboxes và nhập đúng ít nhất 5 ký tự đầu của địa chỉ mailbox.</p></div></div><section className="shared-mail-grid"><article><ShieldCheck/><div><strong>Private mailbox discovery</strong><small>Quyền xem vẫn được kiểm tra ở API sau khi địa chỉ khớp.</small></div></article></section></main>;
+    if (role === "basic" || role === "premium") return <PremiumPage role={role} />;
     return <AdminPage />;
   }
   return (
@@ -1087,32 +1087,6 @@ function MessageSharingPage() {
         <div className="shared-message-reader"><MessageDetail m={selected.message} account={accountFor(selected)} onClose={() => setSelectedId(undefined)} /></div>
       </section> : <section className="share-empty-state"><UserRoundCheck /><h2>{tab === "received" ? "Chưa có thư được chia sẻ" : "Bạn chưa chia sẻ thư nào"}</h2><p>{tab === "received" ? "Các tin nhắn người dùng OmniMail gửi riêng cho bạn sẽ xuất hiện tại đây." : "Mở Mailboxes, bấm dấu ba chấm trên một thư và nhập email người nhận."}</p></section>}
     </div>
-  );
-}
-
-function UpgradeRequestPage() {
-  const qc = useQueryClient();
-  const { data, isLoading, error } = useQuery({ queryKey: ["upgrade-request"], queryFn: api.myUpgradeRequest });
-  const request = useMutation({
-    mutationFn: api.requestUpgrade,
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ["upgrade-request"] }),
-  });
-  const requestedAt = request.data?.requestedAt ?? data?.requestedAt;
-  return (
-    <main className="page-pane upgrade-page dashboard-page">
-      <div className="page-header"><div><span className="eyebrow">Tài khoản Basic</span><h1>Yêu cầu Admin nâng cấp</h1><p>OmniMail không thu tiền trực tiếp tại đây. Admin của hệ thống sẽ xem xét và chuyển tài khoản của bạn sang Premium.</p></div></div>
-      <section className="upgrade-request-grid">
-        <article className="upgrade-request-card">
-          <span>PREMIUM ACCESS</span><h2>Mở rộng quyền cộng tác</h2>
-          <ul><li>Giữ toàn bộ mailbox cá nhân và Temp Mail hiện có</li><li>Nhận quyền xem mailbox do Admin cấp</li><li>Quyền truy cập luôn ở chế độ chỉ đọc và có thể bị thu hồi</li></ul>
-          {error && <div className="connect-error">{error.message}</div>}
-          {request.error && <div className="connect-error">{request.error.message}</div>}
-          <button type="button" disabled={isLoading || request.isPending || Boolean(requestedAt)} onClick={() => request.mutate()}>{request.isPending ? "Đang gửi yêu cầu…" : requestedAt ? "Đã gửi yêu cầu" : "Yêu cầu Admin nâng cấp"}</button>
-          {requestedAt && <small className="upgrade-request-time">Đã gửi lúc {new Date(requestedAt).toLocaleString()}. Bạn có thể tiếp tục dùng OmniMail trong khi chờ Admin xử lý.</small>}
-        </article>
-        <article className="upgrade-process-card"><span>QUY TRÌNH</span><ol><li><b>1</b><div><strong>Gửi yêu cầu</strong><small>Admin nhận được trạng thái yêu cầu ngay trong trang quản trị.</small></div></li><li><b>2</b><div><strong>Admin xem xét</strong><small>Việc nâng cấp do Admin của tổ chức quyết định, không yêu cầu thanh toán online.</small></div></li><li><b>3</b><div><strong>Kích hoạt Premium</strong><small>Đăng nhập lại hoặc làm mới trang sau khi Admin duyệt.</small></div></li></ol></article>
-      </section>
-    </main>
   );
 }
 

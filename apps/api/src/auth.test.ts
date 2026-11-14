@@ -147,6 +147,25 @@ describe("verified account access", () => {
     expect(response.body.error.code).toBe("INVALID_TOKEN");
   });
 
+  it("enforces paid Premium expiry even with a previously cached Premium profile", async () => {
+    const { app, userDirectory } = await authenticatedApp();
+    const { premiumExpirations } = await import("./premium-access.js");
+    verifyIdToken.mockResolvedValue({ uid: "paid-buyer", email: "buyer@example.com", email_verified: true, role: "basic" });
+    premiumExpirations.set("paid-buyer", new Date(Date.now() + 60_000).toISOString());
+    expect((await request(app).get("/private").set("Authorization", "Bearer paid")).body.role).toBe("premium");
+    expect(userDirectory.get("paid-buyer")?.role).toBe("premium");
+    premiumExpirations.set("paid-buyer", new Date(Date.now() - 1000).toISOString());
+    expect((await request(app).get("/private").set("Authorization", "Bearer paid")).body.role).toBe("basic");
+  });
+
+  it("keeps manually granted Premium independent of paid expiration", async () => {
+    const { app } = await authenticatedApp();
+    const { premiumExpirations } = await import("./premium-access.js");
+    premiumExpirations.set("manual-premium", "2020-01-01T00:00:00.000Z");
+    verifyIdToken.mockResolvedValue({ uid: "manual-premium", email: "buyer@example.com", email_verified: true, role: "premium" });
+    expect((await request(app).get("/private").set("Authorization", "Bearer manual")).body.role).toBe("premium");
+  });
+
   it("does not silently grant local admin access in production when Firebase is missing", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("FIREBASE_PROJECT_ID", "");

@@ -20,6 +20,7 @@ import {
 } from "./firestore-store.js";
 import { disconnectMailbox } from "./mailbox-lifecycle.js";
 import { notifyUserAccessChanged } from "./user-access-events.js";
+import { billingStore } from "./billing-store.js";
 
 export class UserManagementError extends Error {
   constructor(
@@ -163,6 +164,7 @@ export function setManagedUserRole(
   role: "basic" | "premium",
 ) {
   return manage(actorId, userId, async (user) => {
+    await billingStore.revoke(userId);
     await getAuth().setCustomUserClaims(userId, { ...user.customClaims, role });
     roleOverrides.set(userId, role);
     const profile = {
@@ -220,6 +222,7 @@ export function deleteManagedUser(
       .filter(([, ownerId]) => ownerId === userId)
       .map(([id]) => id);
     for (const accountId of ownedIds) await disconnectMailbox(accountId);
+    await billingStore.revoke(userId);
     await deleteUserData(userId);
     await getAuth().deleteUser(userId);
     for (const [accountId, viewers] of mailboxShares) {

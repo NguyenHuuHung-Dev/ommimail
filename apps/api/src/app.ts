@@ -38,6 +38,7 @@ import {
   type AuthRequest,
 } from "./auth.js";
 import { normalizeRegistrationEmail } from "./auth-policy.js";
+import { payosWebhook, premiumBillingRouter } from "./billing.js";
 import {
   clearMailboxSyncState,
   enqueueMailboxSync,
@@ -131,7 +132,9 @@ app.post("/api/auth/registration-policy", (q, r) => {
   const email = normalizeRegistrationEmail(parsed.data.email);
   return ok(r, { allowed: true, email });
 });
+app.post("/api/billing/payos/webhook", payosWebhook);
 app.use(authenticate);
+app.use("/api/billing/premium", premiumBillingRouter);
 const ok = (res: express.Response, data: unknown) =>
   res.json({ success: true, data });
 const fail = (
