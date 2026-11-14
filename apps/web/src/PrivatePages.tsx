@@ -18,6 +18,7 @@ import "./message-sharing.css";
 import "./verification.css";
 import "./workspace-polish.css";
 import "./admin-console.css";
+import "./profile-modal.css";
 
 export function HomeRoute() {
   const { user, canAccess, loading } = useAuthSession();
