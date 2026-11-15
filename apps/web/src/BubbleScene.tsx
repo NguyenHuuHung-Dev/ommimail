@@ -75,7 +75,6 @@ export function BubbleScene() {
             ))}
           </span>
         )}
-        <span className="bubble-hint">Di chuột để chạm · Bấm để đổi hình</span>
       </button>
       <span className="bubble-live" role="status" aria-live="polite">
         {labels[shape]}

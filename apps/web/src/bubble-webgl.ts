@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import {
   bubbleRadius,
+  heartRadius,
   bubbleTargets,
   type BubbleShape,
 } from "./bubble-geometry";
@@ -121,6 +122,8 @@ export function createBubbleWorld(
     balls.forEach((ball, i) => {
       const target = targets[i];
       ball.target.set(target.x * scale, target.y * scale, target.z * scale);
+      const colorIndex = currentShape === "heart" ? Math.floor(i / 2) : i;
+      ball.material.color.setHex(colors[colorIndex % colors.length]);
     });
   }
   function render(time: number) {
@@ -139,7 +142,7 @@ export function createBubbleWorld(
     }
     balls.forEach((ball, i) => {
       const desiredRadius =
-        ball.radius * scale * (currentShape === "heart" ? 0.65 : 1);
+        (currentShape === "heart" ? heartRadius(i) : ball.radius) * scale;
       ball.visualRadius = reduced.matches
         ? desiredRadius
         : THREE.MathUtils.lerp(ball.visualRadius, desiredRadius, 0.12 * dt);
@@ -175,12 +178,14 @@ export function createBubbleWorld(
               (1 - distance / range) * 0.035 * scale * dt,
             );
         }
-        ball.velocity.multiplyScalar(Math.pow(0.91, dt));
+        ball.velocity.multiplyScalar(
+          Math.pow(currentShape === "heart" ? 0.72 : 0.91, dt),
+        );
         ball.position.addScaledVector(ball.velocity, dt);
       }
     });
     // The supplied reference uses mass-weighted separation and impulses.
-    for (let pass = 0; pass < 4; pass++)
+    for (let pass = 0; pass < (currentShape === "heart" ? 0 : 4); pass++)
       for (let i = 0; i < balls.length; i++)
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i],
@@ -190,8 +195,7 @@ export function createBubbleWorld(
             minimum = a.visualRadius + b.visualRadius;
           if (distance >= minimum || distance < 0.0001) continue;
           diff.multiplyScalar(1 / distance);
-          const correction =
-              (minimum - distance) * (currentShape === "heart" ? 0.025 : 0.4),
+          const correction = (minimum - distance) * 0.4,
             total = a.mass + b.mass;
           a.position.addScaledVector(diff, (-correction * b.mass) / total);
           b.position.addScaledVector(diff, (correction * a.mass) / total);

@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("./bubble-webgl", () => ({ createBubbleWorld: mocks.create }));
 import { BubbleScene } from "./BubbleScene";
 import { HomeLanding } from "./HomeLanding";
-import { bubbleRadius, bubbleTargets } from "./bubble-geometry";
+import { bubbleRadius, heartRadius, bubbleTargets } from "./bubble-geometry";
 let root: Root, container: HTMLDivElement;
 let intersection: (entries: { isIntersecting: boolean }[]) => void;
 const disconnect = vi.fn();
@@ -57,6 +57,7 @@ it("loads the 3D renderer and toggles cloud and heart without decorative hearts"
   await render();
   expect(mocks.create).toHaveBeenCalledOnce();
   expect(container.querySelector(".floating-heart")).toBeNull();
+  expect(container.textContent).not.toContain("Di chuột để chạm");
   const button = container.querySelector("button")!;
   for (const [shape, name] of [
     ["heart", "Trái tim"],
@@ -92,6 +93,12 @@ it("keeps mailbox search separate from the interactive decoration", async () => 
       .dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   });
   expect(onSearch).toHaveBeenCalledWith("work@example.com");
+  expect(
+    container.querySelectorAll(".bubble-hero .poster-socials a"),
+  ).toHaveLength(3);
+  expect(
+    container.querySelectorAll(".bubble-hero .poster-side-label"),
+  ).toHaveLength(2);
   await act(async () =>
     container.querySelector<HTMLButtonElement>(".bubble-scene")!.click(),
   );
@@ -134,3 +141,21 @@ it("provides a filled heart silhouette with front and rear layers", () => {
     Math.max(...points.map((p) => p.z)) - Math.min(...points.map((p) => p.z)),
   ).toBeGreaterThan(1);
 });
+
+it.each([48, 80])(
+  "keeps the %i-sphere heart balanced at both viewport sizes",
+  (count) => {
+    const points = bubbleTargets("heart", count);
+    for (let i = 0; i < count; i += 2) {
+      expect(points[i].x).toBeCloseTo(-points[i + 1].x);
+      expect(points[i].y).toBeCloseTo(points[i + 1].y);
+      expect(points[i].z).toBeCloseTo(points[i + 1].z);
+      expect(heartRadius(i)).toBe(heartRadius(i + 1));
+    }
+    const top = points.filter((p) => p.y > 1.5);
+    expect(top.every((p) => Math.abs(p.x) >= 0.75)).toBe(true);
+    const tip = points.filter((p) => p.y < -2);
+    expect(tip).toHaveLength(2);
+    expect(tip.every((p) => Math.abs(p.x) <= 0.25)).toBe(true);
+  },
+);

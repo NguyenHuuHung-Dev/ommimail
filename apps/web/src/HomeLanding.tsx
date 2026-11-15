@@ -56,6 +56,36 @@ export function HomeLanding({
               </button>
             </form>
           </section>
+          <span className="poster-side-label">READ · REFRESH · REPEAT</span>
+          <span className="poster-side-label poster-side-label--right">
+            READ · REFRESH · REPEAT
+          </span>
+          <div className="poster-socials">
+            <a
+              href="https://www.facebook.com/zingne1302"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook của Hữu Hưng"
+            >
+              <Facebook />
+            </a>
+            <a
+              href="https://www.instagram.com/huuhungstart/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram của Hữu Hưng"
+            >
+              <Instagram />
+            </a>
+            <a
+              href="https://github.com/NguyenHuuHung-Dev"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+            >
+              <Github />
+            </a>
+          </div>
         </main>
       </div>
 
@@ -220,32 +250,6 @@ export function HomeLanding({
             <Link to="/security">Bảo mật</Link>
             <Link to="/privacy">Quyền riêng tư</Link>
           </nav>
-          <div className="landing-socials">
-            <a
-              href="https://www.facebook.com/zingne1302"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook của Hữu Hưng"
-            >
-              <Facebook />
-            </a>
-            <a
-              href="https://www.instagram.com/huuhungstart/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram của Hữu Hưng"
-            >
-              <Instagram />
-            </a>
-            <a
-              href="https://github.com/NguyenHuuHung-Dev"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-            >
-              <Github />
-            </a>
-          </div>
           <small>© 2026 OmniMail</small>
         </footer>
       </div>

@@ -102,16 +102,6 @@
   outline: 2px solid #a65a7d;
   outline-offset: 6px;
 }
-.bubble-hint {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 3px;
-  color: #000;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  opacity: 1;
-}
 .bubble-live {
   position: absolute;
   width: 1px;
@@ -198,27 +188,57 @@
   font-size: 22px;
   font-weight: 400;
 }
-.landing-socials {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+#root .bubble-home .poster-side-label {
+  position: absolute;
+  left: 22px;
+  top: 42%;
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  color: #000;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  pointer-events: none;
 }
-.landing-socials a {
+#root .bubble-home .poster-side-label--right {
+  left: auto;
+  top: auto;
+  right: 26px;
+  bottom: 24px;
+  rotate: 0deg;
+}
+#root .bubble-home .poster-socials {
+  position: absolute;
+  right: 24px;
+  top: 39%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#root .bubble-home .poster-socials a {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #e3d0da;
-  color: #8b6677;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #d7b9c8;
+  color: #000;
+  background: transparent;
 }
-.landing-socials svg {
-  width: 13px;
-  height: 13px;
+#root .bubble-home .poster-socials a:hover {
+  background: #fff8fc;
+}
+#root .bubble-home .poster-socials svg {
+  width: 14px;
+  height: 14px;
 }
 #root .home-landing .landing-features {
   padding-top: 64px;
 }
 @media (max-width: 700px) {
+  #root .bubble-home .poster-socials,
+  #root .bubble-home .poster-side-label {
+    display: none;
+  }
   #root .home-landing .bubble-home {
     min-height: 0;
   }
