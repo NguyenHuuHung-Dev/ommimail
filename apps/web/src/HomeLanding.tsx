@@ -1,11 +1,9 @@
-import {
-  Facebook,
-  Github,
-  Instagram,
-} from "lucide-react";
+import { Facebook, Github, Instagram } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader, type SiteHeaderProps } from "./SiteHeader";
+import { BubbleScene } from "./BubbleScene";
 import "./home-landing.css";
+import "./bubble-hero.css";
 
 export function HomeLanding({
   onSearchMail,
@@ -21,23 +19,20 @@ export function HomeLanding({
       : "/register";
   return (
     <div className="home-landing">
-      <div className="poster-home original-home">
+      <div className="poster-home original-home bubble-home">
         <SiteHeader {...header} variant="home" />
-        <main className="poster-stage" aria-labelledby="home-title">
-          <section className="poster-copy">
-            <div className="poster-copy-label">
-              <strong>Live mail</strong>
-              <i />
-              <span>Unified inbox</span>
-            </div>
+        <main className="bubble-hero" aria-labelledby="home-title">
+          <span className="bubble-word" aria-hidden="true">
+            CONNECT
+          </span>
+          <BubbleScene />
+          <section className="bubble-copy">
             <h1 id="home-title">
-              <span>Every inbox.</span>
-              <br />
-              <em>One signal.</em>
+              <span>Every inbox.</span> <em>One signal.</em>
             </h1>
             <p>Gmail, Outlook and temporary mail in one focused workspace.</p>
             <form
-              className="poster-mail-search"
+              className="bubble-mail-search"
               onSubmit={(event) => {
                 event.preventDefault();
                 const input =
@@ -61,18 +56,6 @@ export function HomeLanding({
               </button>
             </form>
           </section>
-          <figure
-            className="poster-product"
-            aria-label="OmniMail unified inbox"
-          >
-            <img
-              src="/homepage-760.png"
-              width="760"
-              height="1187"
-              alt="OmniMail character"
-              fetchPriority="high"
-            />
-          </figure>
           <span className="poster-side-label">READ · REFRESH · REPEAT</span>
           <div className="poster-socials">
             <a
@@ -128,9 +111,7 @@ export function HomeLanding({
                 Kết nối các hộp thư bạn đang sử dụng. Chuyển giữa tài khoản, đọc
                 và tìm thư trong cùng một giao diện.
               </p>
-              <Link to="/app/connect">
-                Kết nối hộp thư →
-              </Link>
+              <Link to="/app/connect">Kết nối hộp thư →</Link>
             </article>
             <article>
               <span className="landing-feature-number">02 / TEMPORARY</span>
@@ -139,9 +120,7 @@ export function HomeLanding({
                 Tạo Temp Mail cho những nhu cầu ngắn hạn. Nhận thư và theo dõi
                 nội dung ngay trong OmniMail.
               </p>
-              <Link to="/app/temp-mail">
-                Khám phá Temp Mail →
-              </Link>
+              <Link to="/app/temp-mail">Khám phá Temp Mail →</Link>
             </article>
             <article>
               <span className="landing-feature-number">03 / SHARE</span>
@@ -150,9 +129,7 @@ export function HomeLanding({
                 Cấp quyền xem hộp thư hoặc chia sẻ một tin nhắn. Theo dõi quyền
                 truy cập và thu hồi khi không còn cần thiết.
               </p>
-              <Link to="/app/mail-sharing">
-                Tìm hiểu chia sẻ →
-              </Link>
+              <Link to="/app/mail-sharing">Tìm hiểu chia sẻ →</Link>
             </article>
           </div>
         </section>

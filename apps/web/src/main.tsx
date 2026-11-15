@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { AuthSession } from "./AuthSession";
 import "./public-home.css";
+import "./surface-depth.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={new QueryClient()}>

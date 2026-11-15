@@ -20,6 +20,7 @@ import "./workspace-polish.css";
 import "./admin-console.css";
 import "./profile-modal.css";
 import "./mailboxes-layout.css";
+import "./surface-depth.css";
 
 export function HomeRoute() {
   const { user, canAccess, loading } = useAuthSession();

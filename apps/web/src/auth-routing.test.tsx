@@ -152,6 +152,8 @@ async function submitForm() {
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   vi.clearAllMocks();
+  // Routing tests do not need a canvas renderer (covered by BubbleScene tests).
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
   sessionStorage.clear();
   firebase.auth.currentUser = null;
   container = document.createElement("div");
@@ -163,6 +165,7 @@ afterEach(async () => {
   await act(async () => root.unmount());
   client?.clear();
   container.remove();
+  vi.restoreAllMocks();
 });
 
 describe("session restoration and landing routes", () => {
@@ -248,10 +251,10 @@ describe("session restoration and landing routes", () => {
     expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
   });
 
-  it("keeps the original mailbox search on the public hero and asks visitors to sign in before opening mail", async () => {
+  it("keeps mailbox search on the interactive public hero and asks visitors to sign in before opening mail", async () => {
     await render("/");
     await restored(null);
-    expect(container.textContent).toContain("Live mail");
+    expect(container.querySelector(".bubble-scene")).not.toBeNull();
     expect(container.textContent).toContain(
       "Gmail, Outlook and temporary mail in one focused workspace.",
     );

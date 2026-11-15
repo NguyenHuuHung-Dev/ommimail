@@ -1,0 +1,74 @@
+/* Consistent elevation: a fine lit edge, a near shadow and soft ambient shade. */
+:root {
+  --surface-depth:
+    0 2px 4px rgb(78 37 56 / 4%), 0 14px 35px -18px rgb(105 48 75 / 27%);
+  --surface-raised:
+    0 4px 9px rgb(78 37 56 / 6%), 0 22px 42px -20px rgb(105 48 75 / 34%);
+}
+#root .home-landing .landing-feature-grid {
+  gap: 22px;
+  border: 0;
+}
+#root .home-landing .landing-feature-grid article {
+  border: 1px solid #ead5df;
+  background: linear-gradient(145deg, #fff, #fff9fc);
+  box-shadow: var(--surface-depth);
+  transition:
+    translate 180ms ease,
+    box-shadow 180ms ease;
+}
+#root
+  .workspace-shell
+  :is(
+    .premium-plan,
+    .premium-details section,
+    .connect-channel,
+    .share-stat-grid article,
+    .share-batch-builder,
+    .share-access-dashboard,
+    .shared-with-me-panel,
+    .profile-form,
+    .profile-mailbox-dashboard,
+    .profile-summary,
+    .admin-metric,
+    .admin-user-panel,
+    .temp-workspace,
+    .shared-message-reader,
+    .shared-message-list,
+    .share-mailbox-selector
+  ),
+#root .auth-layout .auth-card,
+#root .auth .verification-card,
+#root
+  .profile-modal
+  :is(.profile-form, .profile-mailbox-dashboard, .profile-summary) {
+  box-shadow: var(--surface-depth) !important;
+  border-color: #e1cbd5;
+}
+#root .profile-modal,
+#root .workspace-shell .admin-user-modal,
+#root .workspace-shell .message-share-modal {
+  box-shadow:
+    0 4px 14px #32192515,
+    0 30px 85px #32192540 !important;
+}
+#root .workspace-shell .otp-card {
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 7px 20px -10px #a44d7840 !important;
+}
+@media (hover: hover) {
+  #root .home-landing .landing-feature-grid article:hover {
+    translate: 0 -5px;
+    box-shadow: var(--surface-raised);
+  }
+  #root .workspace-shell .admin-metric:hover {
+    box-shadow: var(--surface-raised) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .home-landing .landing-feature-grid article {
+    transition: none;
+    translate: none;
+  }
+}
