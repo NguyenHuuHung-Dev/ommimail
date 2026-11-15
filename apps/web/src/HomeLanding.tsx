@@ -27,10 +27,14 @@ export function HomeLanding({
           </span>
           <BubbleScene />
           <section className="bubble-copy">
+            <span className="bubble-kicker">MỌI HỘP THƯ · MỘT KHÔNG GIAN</span>
             <h1 id="home-title">
               <span>Every inbox.</span> <em>One signal.</em>
             </h1>
-            <p>Gmail, Outlook and temporary mail in one focused workspace.</p>
+            <p>
+              Gom Gmail, Outlook và email tạm vào một nơi. Đọc thư, lấy mã OTP
+              và chia sẻ dễ dàng hơn.
+            </p>
             <form
               className="bubble-mail-search"
               onSubmit={(event) => {
@@ -47,7 +51,7 @@ export function HomeLanding({
               <input
                 name="mailQuery"
                 inputMode="email"
-                placeholder="Enter mailbox email address"
+                placeholder="Nhập địa chỉ mailbox của bạn"
                 aria-label="Search mailbox by email address"
               />
               <button className="poster-copy-action" type="submit">
@@ -55,34 +59,20 @@ export function HomeLanding({
                 <b aria-hidden="true">→</b>
               </button>
             </form>
+            <p className="bubble-search-note">
+              {member
+                ? "Mở mailbox bạn đã kết nối với OmniMail."
+                : "Đăng nhập để kết nối và quản lý hộp thư của bạn."}
+            </p>
+            <div
+              className="bubble-providers"
+              aria-label="Các loại hộp thư được hỗ trợ"
+            >
+              <span>Gmail</span>
+              <span>Outlook</span>
+              <span>Temp Mail</span>
+            </div>
           </section>
-          <span className="poster-side-label">READ · REFRESH · REPEAT</span>
-          <div className="poster-socials">
-            <a
-              href="https://www.facebook.com/zingne1302"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook của Hữu Hưng"
-            >
-              <Facebook />
-            </a>
-            <a
-              href="https://www.instagram.com/huuhungstart/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Instagram của Hữu Hưng"
-            >
-              <Instagram />
-            </a>
-            <a
-              href="https://github.com/NguyenHuuHung-Dev"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="GitHub"
-            >
-              <Github />
-            </a>
-          </div>
         </main>
       </div>
 
@@ -247,6 +237,32 @@ export function HomeLanding({
             <Link to="/security">Bảo mật</Link>
             <Link to="/privacy">Quyền riêng tư</Link>
           </nav>
+          <div className="landing-socials">
+            <a
+              href="https://www.facebook.com/zingne1302"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Facebook của Hữu Hưng"
+            >
+              <Facebook />
+            </a>
+            <a
+              href="https://www.instagram.com/huuhungstart/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram của Hữu Hưng"
+            >
+              <Instagram />
+            </a>
+            <a
+              href="https://github.com/NguyenHuuHung-Dev"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+            >
+              <Github />
+            </a>
+          </div>
           <small>© 2026 OmniMail</small>
         </footer>
       </div>

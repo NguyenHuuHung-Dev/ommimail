@@ -81,8 +81,6 @@ export function BubbleScene() {
       <span className="bubble-live" role="status" aria-live="polite">
         {labels[shape]}
       </span>
-      <span className="floating-envelope envelope-one" aria-hidden="true" />
-      <span className="floating-envelope envelope-two" aria-hidden="true" />
     </div>
   );
 }

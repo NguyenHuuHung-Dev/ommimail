@@ -260,7 +260,7 @@ describe("session restoration and landing routes", () => {
     await restored(null);
     expect(container.querySelector(".bubble-scene")).not.toBeNull();
     expect(container.textContent).toContain(
-      "Gmail, Outlook and temporary mail in one focused workspace.",
+      "Gom Gmail, Outlook và email tạm vào một nơi. Đọc thư, lấy mã OTP và chia sẻ dễ dàng hơn.",
     );
     expect(
       container.querySelector(
