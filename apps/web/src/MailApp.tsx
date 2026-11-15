@@ -20,12 +20,15 @@ import { SiteHeader } from "./SiteHeader";
 import { HomeLanding } from "./HomeLanding";
 import { PremiumPage } from "./PremiumPage";
 import { MailboxOrganizationPanel, OtpCard } from "./PremiumTools";
+import { MailboxToolbar } from "./MailboxToolbar";
 import {
   ArrowLeft,
   ChevronDown,
   LoaderCircle,
   MoreHorizontal,
+  Plus,
   RefreshCw,
+  SlidersHorizontal,
   Trash2,
   X,
 } from "lucide-react";
@@ -71,6 +74,14 @@ export function MailApp() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [shareTarget, setShareTarget] = useState<MailMessage | null>(null);
   const [mailFolder, setMailFolder] = useState<"main" | "spam">("main");
+  const [mailboxSearchOpen, setMailboxSearchOpen] = useState(Boolean(ui.search));
+  const mailboxSearchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (page === "mailboxes" && ui.search) setMailboxSearchOpen(true);
+  }, [page, ui.search]);
+  useEffect(() => {
+    if (mailboxSearchOpen) mailboxSearchRef.current?.focus();
+  }, [mailboxSearchOpen, page]);
   useEffect(() => {
     // Saved sessions bypass the login page, so wake Render here too. This
     // public GET can reach it without waiting for an authenticated preflight.
@@ -232,7 +243,7 @@ export function MailApp() {
       </>
     );
   return (
-    <div className="shell workspace-shell">
+    <div className={`shell workspace-shell${page === "mailboxes" ? " mailboxes-page" : ""}`}>
       <ApiStatus pending={servicePending} error={serviceError} onRetry={retryService} />
       <SiteHeader
           mode="member"
@@ -248,14 +259,19 @@ export function MailApp() {
           <section className="inbox-pane">
             <div className="mailbox-inbox-layout">
               <aside className="mailbox-account-rail">
-                <div className="mailbox-rail-title"><span>Connected inboxes</span></div>
-                <div className="mailbox-rail-search search">
+                <div className="mailbox-rail-toolbar">
+                  <button type="button" className="mailbox-connect-button" onClick={() => navigate("/app/connect")}><Plus /><span>Thêm mailbox</span></button>
+                  <button type="button" className="mailbox-settings-button" aria-label="Quản lý tài khoản" title="Quản lý tài khoản" onClick={() => setProfileOpen(true)}><SlidersHorizontal /></button>
+                </div>
+                <div className="mailbox-rail-search search" id="mailbox-address-search" hidden={!mailboxSearchOpen}>
                   <input
+                    ref={mailboxSearchRef}
                     value={ui.search}
                     onChange={(e) => ui.set({ search: e.target.value })}
                     placeholder="Search by email address"
                     aria-label="Search mailbox by email address"
                   />
+                  <button type="button" aria-label="Đóng tìm mailbox" onClick={() => { setMailboxSearchOpen(false); ui.set({ search: "" }); }}><X /></button>
                 </div>
                 {me && me.role !== "basic" ? <MailboxOrganizationPanel accounts={inboxAccounts} selectedId={selectedInboxAccount} userId={me.userId} onSelect={(id) => ui.set({ selectedAccount: id, selectedMessage: null })} /> : providerGroups.map((group) => {
                   const providerName = group.provider === "gmail" ? "Google / Gmail" : "Microsoft / Outlook";
@@ -294,63 +310,24 @@ export function MailApp() {
                 )}
               </aside>
               <section className="mailbox-message-column">
-              <div className="list-head">
-              <div className="mailbox-picker">
-                <span>Current mailbox</span>
-                <label>
-                  {currentAccount && <ProviderDot p={currentAccount.provider} />}
-                  <select
-                    value={ui.selectedAccount ?? ""}
-                    onChange={(event) =>
-                      ui.set({ selectedAccount: event.target.value || null, selectedMessage: null })
-                    }
-                  >
-                    <option value="">Choose a mailbox</option>
-                    {inboxAccounts.map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.provider === "gmail" ? "Gmail" : "Microsoft"} — {account.emailAddress}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown />
-                </label>
-                <p>
-                  {messages.length} {messages.length === 1 ? "mail" : "mails"}
-                </p>
-              </div>
-              <div className="mailbox-head-actions">
-                <button
-                  className={`spam-toolbar-button ${mailFolder === "spam" ? "open" : ""}`}
-                  type="button"
-                  disabled={!currentAccount}
-                  title={mailFolder === "spam" ? "Quay lại hộp thư chính" : "Mở thư Spam / Junk"}
-                  onClick={() => {
-                    setMailFolder(mailFolder === "spam" ? "main" : "spam");
-                    ui.set({ selectedMessage: null });
-                  }}
-                >
-                  <span>{mailFolder === "spam" ? "Inbox" : "Spam"}</span>
-                  <b>{spamMessages.length}</b>
-                </button>
-                <button
-                  className="account-sync"
-                  disabled={!currentAccount || currentAccount.access === "shared" || syncAccount.isPending}
-                  title={currentAccount?.access === "shared" ? "Shared mailboxes are synchronized by their owner" : "Sync latest messages"}
-                  onClick={() => currentAccount && syncAccount.mutate(currentAccount.id)}
-                >
-                  <RefreshCw className={syncAccount.isPending ? "spin" : ""} />
-                </button>
-                <button
-                  className="account-disconnect"
-                  disabled={!currentAccount || currentAccount.access === "shared" || currentAccount.id === "microsoft-live" || removeAccount.isPending}
-                  title="Disconnect current mailbox"
-                  onClick={() => {
-                    if (currentAccount && window.confirm(`Disconnect ${currentAccount.emailAddress} from OmniMail? Emails in the original mailbox will not be deleted.`))
-                      removeAccount.mutate(currentAccount.id);
-                  }}
-                ><Trash2 /></button>
-              </div>
-              </div>
+              <MailboxToolbar
+                accounts={inboxAccounts}
+                account={currentAccount}
+                folder={mailFolder}
+                spamCount={spamMessages.length}
+                messageCount={messages.length}
+                syncing={syncAccount.isPending}
+                removing={removeAccount.isPending}
+                searchOpen={mailboxSearchOpen}
+                onSelect={(id) => ui.set({ selectedAccount: id || null, selectedMessage: null })}
+                onSearch={() => { setMailboxSearchOpen(true); mailboxSearchRef.current?.focus(); }}
+                onToggleSpam={() => { setMailFolder(mailFolder === "spam" ? "main" : "spam"); ui.set({ selectedMessage: null }); }}
+                onRefresh={() => currentAccount && syncAccount.mutate(currentAccount.id)}
+                onDisconnect={() => {
+                  if (currentAccount && window.confirm(`Disconnect ${currentAccount.emailAddress} from OmniMail? Emails in the original mailbox will not be deleted.`))
+                    removeAccount.mutate(currentAccount.id);
+                }}
+              />
               <div className="message-list">
               {isLoading ? (
                 <Skeleton />
@@ -1154,7 +1131,7 @@ function MessageDetail({
   return (
     <div className="detail">
       <div className="detail-toolbar">
-        <button className="mobile-menu" onClick={onClose}>
+        <button className="mobile-menu" aria-label="Quay lại danh sách thư" onClick={onClose}>
           <ArrowLeft />
         </button>
         <span />

@@ -1,0 +1,310 @@
+/* Mailbox reference layout: account rail, list, then a spacious reader. */
+#root .workspace-shell.mailboxes-page {
+  grid-template-columns: minmax(660px, 52%) minmax(0, 48%) !important;
+}
+#root .mailboxes-page .mailbox-inbox-layout {
+  grid-template-columns: clamp(210px, 17vw, 360px) minmax(0, 1fr) !important;
+}
+#root .mailboxes-page > .inbox-pane,
+#root .mailboxes-page > .detail-pane {
+  margin: 0 !important;
+  height: 100% !important;
+}
+#root .mailboxes-page .mailbox-account-rail {
+  padding: 0 !important;
+}
+#root .mailboxes-page .mailbox-rail-toolbar {
+  min-height: 98px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 15px;
+  border-bottom: 1px solid #dcc5ce;
+}
+#root .mailboxes-page .mailbox-rail-toolbar button {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid #d5b6c3;
+  border-radius: 0;
+  color: #251b25;
+}
+#root .mailboxes-page .mailbox-connect-button {
+  flex: 1;
+  min-width: 0;
+  background: #f4dbe5;
+  font-size: 16px;
+  white-space: nowrap;
+  gap: 6px;
+  font-weight: 600;
+}
+#root .mailboxes-page .mailbox-settings-button {
+  flex: 0 0 40px;
+  background: #fff;
+}
+#root .mailboxes-page .mailbox-rail-toolbar svg {
+  width: 20px;
+  height: 20px;
+}
+#root .mailboxes-page .mailbox-rail-search[hidden] {
+  display: none !important;
+}
+#root .mailboxes-page .mailbox-rail-search button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: #725a66;
+}
+#root .mailboxes-page .mailbox-list-header {
+  flex: none;
+  background: #fff;
+}
+#root .mailboxes-page .list-head {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  height: 98px;
+  min-height: 98px !important;
+  padding: 20px !important;
+  margin: 0;
+  border-bottom: 1px solid #cdaab9 !important;
+}
+#root .mailboxes-page .mailbox-picker {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+#root .mailboxes-page .mailbox-picker select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  color: #352730 !important;
+  appearance: none;
+  text-overflow: ellipsis;
+  font-size: clamp(19px, 1.5vw, 29px) !important;
+  font-weight: 400 !important;
+}
+#root .mailboxes-page .mailbox-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 7px !important;
+}
+#root .mailboxes-page .mailbox-head-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border: 1px solid #d7c1cb !important;
+  border-radius: 0;
+  background: #fff !important;
+  color: #251b2b !important;
+}
+#root .mailboxes-page .mailbox-head-actions svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 1.6;
+}
+#root .mailboxes-page .mailbox-head-actions .mailbox-search-button {
+  background: #f8e5ed !important;
+}
+#root .mailboxes-page .mailbox-head-actions .spam-toolbar-button {
+  width: auto !important;
+  min-width: 88px;
+  gap: 8px !important;
+  padding: 0 12px !important;
+  font-size: 16px !important;
+}
+#root .mailboxes-page .spam-toolbar-button b {
+  display: grid;
+  place-items: center;
+  min-width: 20px !important;
+  height: 21px !important;
+  padding: 0 4px !important;
+  background: #191322 !important;
+  color: #fff !important;
+  font-size: 12px !important;
+}
+#root .mailboxes-page .spam-toolbar-button span {
+  display: inline !important;
+}
+#root .mailboxes-page .mailbox-head-actions .account-disconnect {
+  background: #f5c6ce !important;
+  border-color: #dba3af !important;
+  color: #a42f50 !important;
+}
+#root .mailboxes-page .mailbox-head-actions button:hover:not(:disabled) {
+  border-color: #855769 !important;
+  background: #f6e1e9 !important;
+}
+#root .mailboxes-page .mailbox-head-actions .spam-toolbar-button.open {
+  background: #251b2b !important;
+  color: #fff !important;
+}
+#root .mailboxes-page .mailbox-head-actions button:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+#root .mailboxes-page .mailbox-message-count {
+  margin: 0;
+  padding: 13px 20px;
+  border-bottom: 1px solid #e6d7dd;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #806777;
+}
+#root .mailboxes-page .mailbox-provider-group {
+  margin: 18px 15px !important;
+}
+#root .mailboxes-page .mailbox-account-list button {
+  font-size: 15px !important;
+  padding: 12px 9px !important;
+}
+#root .mailboxes-page .message-row {
+  padding: 17px 20px !important;
+  grid-template-columns: 38px minmax(0, 1fr) auto !important;
+}
+#root .mailboxes-page .message-row .avatar {
+  width: 38px !important;
+  height: 42px !important;
+}
+#root .mailboxes-page .message-meta strong,
+#root .mailboxes-page .message-main h3 {
+  font-size: 16px !important;
+}
+#root .mailboxes-page .detail-pane > .empty {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(135deg, #fff 65%, #fff4f8);
+}
+#root .mailboxes-page .detail-pane > .empty::before {
+  content: "INBOX";
+  position: absolute;
+  z-index: -1;
+  right: -35px;
+  bottom: -20px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: clamp(120px, 16vw, 260px);
+  line-height: 0.9;
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  color: #f6dce7 !important;
+  opacity: 0.75;
+}
+#root .mailboxes-page .detail-pane > .empty h3 {
+  font-size: 22px !important;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+#root .mailboxes-page .detail-pane > .empty::after {
+  content: "READ · REFRESH · REPEAT";
+  position: absolute;
+  left: 26px;
+  bottom: 20px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #8d7180;
+}
+@media (max-width: 1100px) {
+  #root .workspace-shell.mailboxes-page {
+    grid-template-columns: minmax(600px, 64%) minmax(0, 36%) !important;
+  }
+  #root .mailboxes-page .mailbox-inbox-layout {
+    grid-template-columns: 200px minmax(0, 1fr) !important;
+  }
+  #root .mailboxes-page .list-head {
+    gap: 10px;
+    padding: 18px 14px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions {
+    gap: 5px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions button {
+    width: 34px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions .spam-toolbar-button {
+    min-width: 76px;
+    padding: 0 9px !important;
+  }
+}
+@media (max-width: 900px) {
+  #root .workspace-shell.mailboxes-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  #root .mailboxes-page > .detail-pane {
+    display: none;
+  }
+  #root .mailboxes-page:has(.message-row.selected) > .inbox-pane {
+    display: none !important;
+  }
+  #root .mailboxes-page:has(.message-row.selected) > .detail-pane {
+    display: block !important;
+    grid-column: 1;
+  }
+  #root .mailboxes-page .detail-toolbar .mobile-menu {
+    display: inline-flex !important;
+  }
+}
+@media (max-width: 650px) {
+  #root .mailboxes-page .mailbox-inbox-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  #root .mailboxes-page .mailbox-account-rail {
+    max-height: 210px;
+  }
+  #root .mailboxes-page .mailbox-rail-toolbar {
+    min-height: 62px;
+    padding: 10px 14px;
+  }
+  #root .mailboxes-page .mailbox-connect-button {
+    flex: 0 1 200px;
+  }
+  #root .mailboxes-page .list-head {
+    height: 78px;
+    min-height: 78px !important;
+    gap: 8px;
+    padding: 12px !important;
+  }
+  #root .mailboxes-page .mailbox-picker select {
+    font-size: 16px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions button {
+    width: 30px !important;
+    height: 36px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions svg {
+    width: 19px;
+    height: 19px;
+  }
+  #root .mailboxes-page .mailbox-head-actions .spam-toolbar-button {
+    min-width: 68px;
+    gap: 5px !important;
+    padding: 0 7px !important;
+    font-size: 14px !important;
+  }
+  #root .mailboxes-page .mailbox-head-actions {
+    gap: 4px !important;
+  }
+  #root .mailboxes-page .mailbox-message-count {
+    padding: 10px 12px;
+  }
+}

@@ -19,6 +19,7 @@ import "./verification.css";
 import "./workspace-polish.css";
 import "./admin-console.css";
 import "./profile-modal.css";
+import "./mailboxes-layout.css";
 
 export function HomeRoute() {
   const { user, canAccess, loading } = useAuthSession();
