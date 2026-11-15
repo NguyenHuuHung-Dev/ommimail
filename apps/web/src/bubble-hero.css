@@ -40,8 +40,9 @@
   top: 17%;
   left: 50%;
   transform: translateX(-50%);
-  color: #edc4d5;
-  opacity: 0.5;
+  color: #fff;
+  opacity: 0.92;
+  text-shadow: 0 4px 25px #e2aac126;
   font:
     400 clamp(100px, 22vw, 360px)/1 "Times New Roman",
     serif;
@@ -74,6 +75,26 @@
   height: 100%;
   pointer-events: none;
 }
+.bubble-fallback {
+  position: absolute;
+  inset: 15% 18%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 4px;
+}
+.bubble-fallback i {
+  width: 21%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #fff9fb, #efb5cf 68%, #d99ab8);
+  box-shadow: 0 8px 16px #a9617b1a;
+}
+.bubble-fallback i:nth-child(3n) {
+  background: radial-gradient(circle at 30% 25%, #fff, #f5dbe6 70%, #e7bdcf);
+  scale: 0.8;
+}
 .bubble-scene:focus-visible {
   outline: 2px solid #a65a7d;
   outline-offset: 6px;
@@ -95,39 +116,11 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
-.floating-heart,
 .floating-envelope {
   position: absolute;
   pointer-events: none;
   filter: drop-shadow(3px 9px 8px #a5617e30);
   animation: bubble-drift 7s ease-in-out infinite alternate;
-}
-.floating-heart {
-  font-size: 65px;
-  line-height: 1;
-  color: #e7b0c6;
-  text-shadow:
-    -3px -4px 5px #fff9,
-    3px 4px 5px #b76d9555;
-}
-.heart-one {
-  top: 5%;
-  right: 4%;
-  transform: rotate(18deg);
-}
-.heart-two {
-  bottom: 0;
-  left: 3%;
-  font-size: 74px;
-  filter: blur(1.3px) drop-shadow(3px 9px 8px #a5617e30);
-  animation-delay: -2s;
-}
-.heart-three {
-  top: -4%;
-  right: 35%;
-  font-size: 45px;
-  color: #d8bfcb;
-  animation-delay: -4s;
 }
 .floating-envelope {
   width: 54px;
@@ -321,21 +314,12 @@
   #root .bubble-home .poster-socials {
     display: none;
   }
-  .floating-heart {
-    font-size: 42px;
-  }
-  .heart-two {
-    font-size: 48px;
-    left: 6%;
-    bottom: 6%;
-  }
   .floating-envelope {
     width: 35px;
     height: 26px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .floating-heart,
   .floating-envelope {
     animation: none;
   }

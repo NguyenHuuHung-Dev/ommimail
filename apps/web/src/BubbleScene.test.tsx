@@ -3,59 +3,29 @@ import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({
+  create: vi.fn(),
+  setShape: vi.fn(),
+  setPointer: vi.fn(),
+  setVisible: vi.fn(),
+  dispose: vi.fn(),
+}));
+vi.mock("./bubble-webgl", () => ({ createBubbleWorld: mocks.create }));
 import { BubbleScene } from "./BubbleScene";
 import { HomeLanding } from "./HomeLanding";
-
-let root: Root,
-  container: HTMLDivElement,
-  reduced = false,
-  frameId = 0;
+import { bubbleRadius, bubbleTargets } from "./bubble-geometry";
+let root: Root, container: HTMLDivElement;
 let intersection: (entries: { isIntersecting: boolean }[]) => void;
-const frames = new Map<number, FrameRequestCallback>();
-const arc = vi.fn();
 const disconnect = vi.fn();
-const context = new Proxy(
-  { arc, createRadialGradient: () => ({ addColorStop: vi.fn() }) },
-  {
-    get: (target, key) =>
-      key in target ? target[key as keyof typeof target] : vi.fn(),
-    set: () => true,
-  },
-);
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-  reduced = false;
-  frames.clear();
-  vi.clearAllMocks();
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
-    context as unknown as CanvasRenderingContext2D,
-  );
-  vi.spyOn(
-    HTMLCanvasElement.prototype,
-    "getBoundingClientRect",
-  ).mockReturnValue({ width: 800, height: 360 } as DOMRect);
-  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
-    frames.set(++frameId, callback);
-    return frameId;
+  vi.resetAllMocks();
+  mocks.create.mockReturnValue({
+    setShape: mocks.setShape,
+    setPointer: mocks.setPointer,
+    setVisible: mocks.setVisible,
+    dispose: mocks.dispose,
   });
-  vi.stubGlobal("cancelAnimationFrame", (id: number) => frames.delete(id));
-  vi.stubGlobal("matchMedia", (query: string) => ({
-    get matches() {
-      return query.includes("reduced-motion") && reduced;
-    },
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-  }));
-  vi.stubGlobal(
-    "ResizeObserver",
-    class {
-      constructor(private callback: () => void) {}
-      observe() {
-        this.callback();
-      }
-      disconnect = disconnect;
-    },
-  );
   vi.stubGlobal(
     "IntersectionObserver",
     class {
@@ -75,51 +45,39 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   container.remove();
-  vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 async function render(node: ReactNode = <BubbleScene />) {
   await act(async () => root.render(node));
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
 }
-function tick(time = 1000) {
-  const callbacks = [...frames.values()];
-  frames.clear();
-  callbacks.forEach((callback) => callback(time));
-}
-
-it("cycles through all formations and paints them without a perpetual loop in reduced motion", async () => {
-  reduced = true;
+it("loads the 3D renderer and cycles through formations without hearts", async () => {
   await render();
-  tick();
-  const cloud = arc.mock.calls.map((args) => args.slice(0, 3));
-  expect(frames.size).toBe(0);
+  expect(mocks.create).toHaveBeenCalledOnce();
+  expect(container.querySelector(".floating-heart")).toBeNull();
   const button = container.querySelector("button")!;
-  for (const name of ["Trái tim", "Quỹ đạo", "Bông hoa", "Đám mây"]) {
-    arc.mockClear();
+  for (const [shape, name] of [
+    ["orbit", "Quỹ đạo"],
+    ["flower", "Bông hoa"],
+    ["cloud", "Đám mây"],
+  ]) {
     await act(async () => button.click());
-    tick();
     expect(button.getAttribute("aria-label")).toContain(name);
-    expect(container.querySelector('[role="status"]')?.textContent).toBe(name);
-    expect(arc).toHaveBeenCalled();
-    expect(frames.size).toBe(0);
-    if (name === "Trái tim")
-      expect(arc.mock.calls.map((args) => args.slice(0, 3))).not.toEqual(cloud);
+    expect(mocks.setShape).toHaveBeenLastCalledWith(shape);
   }
 });
-
-it("pauses offscreen and cancels animation and observers on unmount", async () => {
+it("pauses offscreen and disposes GPU resources when leaving Home", async () => {
   await render();
-  tick();
-  expect(frames.size).toBe(1);
   intersection([{ isIntersecting: false }]);
-  expect(frames.size).toBe(0);
+  expect(mocks.setVisible).toHaveBeenLastCalledWith(false);
   intersection([{ isIntersecting: true }]);
-  expect(frames.size).toBe(1);
+  expect(mocks.setVisible).toHaveBeenLastCalledWith(true);
   await render(null);
-  expect(frames.size).toBe(0);
-  expect(disconnect).toHaveBeenCalledTimes(2);
+  expect(mocks.dispose).toHaveBeenCalledOnce();
+  expect(disconnect).toHaveBeenCalledOnce();
 });
-
 it("keeps mailbox search separate from the interactive decoration", async () => {
   const onSearch = vi.fn();
   await render(
@@ -127,9 +85,8 @@ it("keeps mailbox search separate from the interactive decoration", async () => 
       <HomeLanding mode="member" onSearchMail={onSearch} />
     </MemoryRouter>,
   );
-  const input =
-    container.querySelector<HTMLInputElement>('[name="mailQuery"]')!;
-  input.value = "work@example.com";
+  container.querySelector<HTMLInputElement>('[name="mailQuery"]')!.value =
+    "work@example.com";
   await act(async () => {
     container
       .querySelector("form")!
@@ -141,17 +98,30 @@ it("keeps mailbox search separate from the interactive decoration", async () => 
   );
   expect(onSearch).toHaveBeenCalledTimes(1);
 });
-
-it("leaves navigation and search usable if canvas rendering is unavailable", async () => {
-  vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(null);
+it("retains a decorative fallback and working search if WebGL cannot initialize", async () => {
+  mocks.create.mockImplementation(() => {
+    throw new Error("No WebGL");
+  });
   await render(
     <MemoryRouter>
       <HomeLanding mode="guest" />
     </MemoryRouter>,
   );
-  expect(container.querySelector('input[name="mailQuery"]')).not.toBeNull();
-  expect(container.querySelectorAll(".site-nav-link").length).toBeGreaterThan(
-    0,
-  );
-  expect(frames.size).toBe(0);
+  expect(container.querySelectorAll(".bubble-fallback i")).toHaveLength(8);
+  expect(container.querySelector('[name="mailQuery"]')).not.toBeNull();
 });
+it.each([28, 44])(
+  "packs all %i sphere targets without deep intersections",
+  (count) => {
+    const points = bubbleTargets("cloud", count);
+    expect(points).toHaveLength(count);
+    points.forEach((point, i) => {
+      expect(Number.isFinite(point.x + point.y + point.z)).toBe(true);
+      points.slice(0, i).forEach((other, j) => {
+        expect(
+          Math.hypot(point.x - other.x, point.y - other.y),
+        ).toBeGreaterThanOrEqual((bubbleRadius(i) + bubbleRadius(j)) * 0.94);
+      });
+    });
+  },
+);

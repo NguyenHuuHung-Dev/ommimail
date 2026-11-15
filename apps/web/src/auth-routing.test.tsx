@@ -40,6 +40,11 @@ vi.mock("./api", () => ({
     registrationPolicy: vi.fn().mockResolvedValue({ allowed: true }),
   },
 }));
+vi.mock("./BubbleScene", () => ({
+  BubbleScene: () => (
+    <button className="bubble-scene" aria-label="Đổi hình bong bóng" />
+  ),
+}));
 vi.mock("./MailApp", () => ({
   MailApp: () => <div data-testid="workspace">Authenticated workspace</div>,
 }));
@@ -152,8 +157,7 @@ async function submitForm() {
 beforeEach(() => {
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   vi.clearAllMocks();
-  // Routing tests do not need a canvas renderer (covered by BubbleScene tests).
-  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+
   sessionStorage.clear();
   firebase.auth.currentUser = null;
   container = document.createElement("div");
