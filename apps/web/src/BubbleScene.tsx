@@ -3,8 +3,7 @@ import { bubbleShapes, type BubbleShape } from "./bubble-geometry";
 import type { BubbleWorld } from "./bubble-webgl";
 const labels: Record<BubbleShape, string> = {
   cloud: "Đám mây",
-  orbit: "Quỹ đạo",
-  flower: "Bông hoa",
+  heart: "Trái tim",
 };
 export function BubbleScene() {
   const canvasRef = useRef<HTMLCanvasElement>(null),

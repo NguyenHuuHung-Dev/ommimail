@@ -70,6 +70,7 @@ export function createBubbleWorld(
     mobile ? 20 : 24,
   );
   const colors = [0xff7bb3, 0xee4b94, 0xffa5cf, 0xf96ba7, 0xffffff, 0xffc1dc];
+  let currentShape = shape;
   let targets = bubbleTargets(shape, mobile ? 48 : 80);
   let scale = 1,
     width = 1,
@@ -102,8 +103,9 @@ export function createBubbleWorld(
       mesh,
       material,
       radius: bubbleRadius(i),
+      visualRadius: bubbleRadius(i),
       mass: Math.pow(bubbleRadius(i), 3),
-      position: new THREE.Vector3(point.x, -point.y, point.z * 0.4),
+      position: new THREE.Vector3(point.x, point.y, point.z),
       velocity: new THREE.Vector3(),
       target: new THREE.Vector3(),
     };
@@ -115,21 +117,10 @@ export function createBubbleWorld(
     diff = new THREE.Vector3(),
     relative = new THREE.Vector3();
   function assignTargets() {
-    const extentX = Math.max(
-      ...targets.map((point, i) => Math.abs(point.x) + balls[i].radius),
-    );
-    const extentY = Math.max(
-      ...targets.map((point, i) => Math.abs(point.y) + balls[i].radius),
-    );
-    scale = Math.min(width / (extentX * 2.35), height / (extentY * 2.35));
+    scale = Math.min(1, width / 10, height / 5.5);
     balls.forEach((ball, i) => {
       const target = targets[i];
-      ball.target.set(
-        target.x * scale,
-        -target.y * scale,
-        target.z * scale * 0.42,
-      );
-      ball.mesh.scale.setScalar(ball.radius * scale);
+      ball.target.set(target.x * scale, target.y * scale, target.z * scale);
     });
   }
   function render(time: number) {
@@ -147,18 +138,37 @@ export function createBubbleWorld(
       ray.ray.intersectPlane(plane, mouse);
     }
     balls.forEach((ball, i) => {
+      const desiredRadius =
+        ball.radius * scale * (currentShape === "heart" ? 0.65 : 1);
+      ball.visualRadius = reduced.matches
+        ? desiredRadius
+        : THREE.MathUtils.lerp(ball.visualRadius, desiredRadius, 0.12 * dt);
+      ball.mesh.scale.setScalar(ball.visualRadius);
       if (reduced.matches) ball.position.copy(ball.target);
       else {
-        if (time > burstUntil)
-          ball.velocity.addScaledVector(
-            diff.subVectors(ball.target, ball.position),
-            0.009 * dt,
-          );
-        ball.velocity.y += Math.sin(time * 0.0008 + i * 1.7) * 0.00022 * dt;
+        if (time > burstUntil) {
+          if (currentShape === "heart")
+            ball.velocity.addScaledVector(
+              diff.subVectors(ball.target, ball.position),
+              0.07 * dt,
+            );
+          else {
+            // The reference's anisotropic center attraction forms a natural
+            // volume; no sphere is pinned to a flat per-sphere destination.
+            ball.velocity.x -= ball.position.x * 0.0035 * 0.38 * dt;
+            ball.velocity.y -= ball.position.y * 0.0035 * 1.85 * dt;
+            ball.velocity.z -= ball.position.z * 0.0035 * 1.8 * dt;
+          }
+        }
+        ball.velocity.x +=
+          Math.sin(time * 0.0004 + i * 1.5) * 0.0004 * ball.radius * dt;
+        ball.velocity.y +=
+          Math.cos(time * 0.0005 + i * 1.2) * 0.0004 * ball.radius * dt;
+        ball.velocity.z += Math.sin(time * 0.00035 + i) * 0.0001 * dt;
         if (active) {
           diff.subVectors(ball.position, mouse);
           const distance = diff.length(),
-            range = scale * 0.8;
+            range = scale * 2.1;
           if (distance < range && distance > 0.001)
             ball.velocity.addScaledVector(
               diff.normalize(),
@@ -170,17 +180,18 @@ export function createBubbleWorld(
       }
     });
     // The supplied reference uses mass-weighted separation and impulses.
-    for (let pass = 0; pass < 3; pass++)
+    for (let pass = 0; pass < 4; pass++)
       for (let i = 0; i < balls.length; i++)
         for (let j = i + 1; j < balls.length; j++) {
           const a = balls[i],
             b = balls[j];
           diff.subVectors(b.position, a.position);
           const distance = diff.length(),
-            minimum = (a.radius + b.radius) * scale;
+            minimum = a.visualRadius + b.visualRadius;
           if (distance >= minimum || distance < 0.0001) continue;
           diff.multiplyScalar(1 / distance);
-          const correction = (minimum - distance) * 0.5,
+          const correction =
+              (minimum - distance) * (currentShape === "heart" ? 0.025 : 0.4),
             total = a.mass + b.mass;
           a.position.addScaledVector(diff, (-correction * b.mass) / total);
           b.position.addScaledVector(diff, (correction * a.mass) / total);
@@ -194,15 +205,19 @@ export function createBubbleWorld(
     balls.forEach((ball) => {
       ball.position.x = THREE.MathUtils.clamp(
         ball.position.x,
-        -width / 2,
-        width / 2,
+        -width / 2 + ball.visualRadius,
+        width / 2 - ball.visualRadius,
       );
       ball.position.y = THREE.MathUtils.clamp(
         ball.position.y,
-        -height / 2 + 0.3,
-        height / 2 - 0.3,
+        -height / 2 + ball.visualRadius,
+        height / 2 - ball.visualRadius,
       );
-      ball.position.z = THREE.MathUtils.clamp(ball.position.z, -0.9, 0.9);
+      ball.position.z = THREE.MathUtils.clamp(
+        ball.position.z,
+        -2 * scale,
+        2 * scale,
+      );
       ball.mesh.position.copy(ball.position);
     });
     renderer.render(scene, camera);
@@ -225,7 +240,10 @@ export function createBubbleWorld(
     width = height * camera.aspect;
     const oldScale = scale;
     assignTargets();
-    balls.forEach((ball) => ball.position.multiplyScalar(scale / oldScale));
+    balls.forEach((ball) => {
+      ball.position.multiplyScalar(scale / oldScale);
+      ball.visualRadius *= scale / oldScale;
+    });
     wake();
   }
   const observer = new ResizeObserver(resize);
@@ -240,14 +258,15 @@ export function createBubbleWorld(
   resize();
   return {
     setShape(next) {
+      currentShape = next;
       targets = bubbleTargets(next, balls.length);
       assignTargets();
       burstUntil = performance.now() + 260;
       balls.forEach((ball, i) =>
         ball.velocity.set(
-          Math.cos(i * 2.399) * 0.15,
-          Math.sin(i * 2.399) * 0.15,
-          Math.sin(i) * 0.05,
+          Math.cos(i * 2.399) * 0.24,
+          Math.sin(i * 2.399) * 0.24,
+          Math.sin(i) * 0.12,
         ),
       );
       pointer.set(99, 99);

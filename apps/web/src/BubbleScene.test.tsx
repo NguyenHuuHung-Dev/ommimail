@@ -53,14 +53,13 @@ async function render(node: ReactNode = <BubbleScene />) {
     await vi.dynamicImportSettled();
   });
 }
-it("loads the 3D renderer and cycles through formations without hearts", async () => {
+it("loads the 3D renderer and toggles cloud and heart without decorative hearts", async () => {
   await render();
   expect(mocks.create).toHaveBeenCalledOnce();
   expect(container.querySelector(".floating-heart")).toBeNull();
   const button = container.querySelector("button")!;
   for (const [shape, name] of [
-    ["orbit", "Quỹ đạo"],
-    ["flower", "Bông hoa"],
+    ["heart", "Trái tim"],
     ["cloud", "Đám mây"],
   ]) {
     await act(async () => button.click());
@@ -111,17 +110,27 @@ it("retains a decorative fallback and working search if WebGL cannot initialize"
   expect(container.querySelector('[name="mailQuery"]')).not.toBeNull();
 });
 it.each([48, 80])(
-  "packs all %i sphere targets without deep intersections",
+  "starts %i spheres as a true 3D volume with larger radii",
   (count) => {
     const points = bubbleTargets("cloud", count);
     expect(points).toHaveLength(count);
-    points.forEach((point, i) => {
-      expect(Number.isFinite(point.x + point.y + point.z)).toBe(true);
-      points.slice(0, i).forEach((other, j) => {
-        expect(
-          Math.hypot(point.x - other.x, point.y - other.y),
-        ).toBeGreaterThanOrEqual((bubbleRadius(i) + bubbleRadius(j)) * 0.94);
-      });
-    });
+    expect(
+      Math.max(...points.map((p) => p.z)) - Math.min(...points.map((p) => p.z)),
+    ).toBeGreaterThan(2.5);
+    expect(points.filter((p) => p.z > 0.5).length).toBeGreaterThan(5);
+    expect(points.filter((p) => p.z < -0.5).length).toBeGreaterThan(5);
+    const radii = points.map((_, i) => bubbleRadius(i));
+    expect(Math.max(...radii)).toBeGreaterThan(0.8);
+    expect(Math.min(...radii)).toBeGreaterThanOrEqual(0.27);
   },
 );
+it("provides a filled heart silhouette with front and rear layers", () => {
+  const points = bubbleTargets("heart", 80);
+  expect(points).toHaveLength(80);
+  expect(points.filter((p) => p.x < -0.7 && p.y > 1).length).toBeGreaterThan(0);
+  expect(points.filter((p) => p.x > 0.7 && p.y > 1).length).toBeGreaterThan(0);
+  expect(Math.min(...points.map((p) => p.y))).toBeLessThan(-1.5);
+  expect(
+    Math.max(...points.map((p) => p.z)) - Math.min(...points.map((p) => p.z)),
+  ).toBeGreaterThan(1);
+});

@@ -16,7 +16,9 @@ includes geometry, materials, environment, shadow maps and the WebGL renderer.
 
 The pink palette, white CONNECT lettering, scoped canvas and existing mailbox
 search belong to OmniMail. The reference's full-screen loader, scroll hijacking,
-theme drawer and heart formation are not part of this integration. Clicking
-cycles cloud → orbit → flower. Motion pauses offscreen/in a hidden tab; reduced
+theme drawer are not part of this integration. Clicking scatters the spheres
+and toggles a gravity-formed 3D cluster ↔ a filled, layered heart. Individual
+sphere radii use the reference's 0.27–0.87 world-unit range. The cluster is
+formed by center attraction and volumetric collisions, not a 2D packing grid. Motion pauses offscreen/in a hidden tab; reduced
 motion renders static formations. A CSS illustration keeps the hero usable when
 WebGL is unavailable.

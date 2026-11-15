@@ -55,8 +55,8 @@
 }
 .bubble-art {
   position: relative;
-  width: min(920px, 100%);
-  height: clamp(320px, 30vw, 420px);
+  width: min(1080px, 100%);
+  height: clamp(360px, 36vw, 500px);
   flex: none;
 }
 .bubble-scene {
@@ -231,7 +231,7 @@
   }
   .bubble-art {
     width: calc(100% + 24px);
-    height: 280px;
+    height: 320px;
   }
   .bubble-word {
     top: 17%;

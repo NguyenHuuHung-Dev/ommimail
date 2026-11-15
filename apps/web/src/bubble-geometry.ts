@@ -1,54 +1,57 @@
-export const bubbleShapes = ["cloud", "orbit", "flower"] as const;
+export const bubbleShapes = ["cloud", "heart"] as const;
 export type BubbleShape = (typeof bubbleShapes)[number];
 export type BubblePoint = { x: number; y: number; z: number };
+const fraction = (value: number) => value - Math.floor(value);
+
+// The original reference uses 0.27–0.87 world-unit radii. Retain that scale
+// instead of shrinking every sphere to fit a two-dimensional packing grid.
 export function bubbleRadius(index: number) {
-  return (
-    [0.34, 0.29, 0.25, 0.31][index] ?? 0.12 + (((index * 31) % 97) / 97) * 0.115
-  );
+  // Independent hashes prevent large radii correlating with the spiral angle
+  // and making one lobe of the heart consistently heavier than the other.
+  const sample = fraction(Math.sin((index + 1) * 127.1) * 43758.5453);
+  const variation = fraction(Math.sin((index + 1) * 311.7) * 73129.232);
+  return sample < 0.3
+    ? 0.27 + variation * 0.12
+    : sample < 0.8
+      ? 0.42 + variation * 0.18
+      : 0.66 + variation * 0.21;
 }
 
-// Stable geometry keeps resizing and hydration from shuffling the composition.
 export function bubbleTargets(
   shape: BubbleShape,
   count: number,
 ): BubblePoint[] {
-  const points: BubblePoint[] = [];
-  for (let i = 0; i < count; i++) {
-    const t = i * Math.PI * (3 - Math.sqrt(5));
-    const r = Math.sqrt((i + 0.5) / count);
-    const z = Math.sin(i * 2.399) * 0.65;
-    if (shape === "orbit") {
-      points.push({
-        x: 1.42 * Math.cos(t),
-        y: 0.7 * Math.sin(t),
-        z: Math.sin(t) * 0.8 + Math.cos(i * 3) * 0.22,
-      });
-    } else if (shape === "flower") {
-      const petal = r * (0.85 + 0.3 * Math.cos(5 * t));
-      points.push({ x: petal * Math.cos(t), y: petal * Math.sin(t), z });
-    } else {
-      // Place the largest spheres first, then pack the smaller ones around them.
-      // Controlled spacing prevents the old pile of intersecting circles.
-      for (let step = 0; step < 12000; step++) {
-        const angle = step * 2.39996 + i * 0.73;
-        const distance = Math.sqrt(step) * 0.027;
-        const point = {
-          x: Math.cos(angle) * distance * 1.65,
-          y: Math.sin(angle) * distance * 0.82,
-          z,
-        };
-        if (
-          points.every(
-            (other, j) =>
-              Math.hypot(point.x - other.x, point.y - other.y) >=
-              (bubbleRadius(i) + bubbleRadius(j)) * 0.94,
-          )
-        ) {
-          points.push(point);
-          break;
-        }
-      }
+  return Array.from({ length: count }, (_, i) => {
+    const angle = i * Math.PI * (3 - Math.sqrt(5));
+    if (shape === "heart") {
+      const fill = Math.sqrt((i + 0.5) / count);
+      const x = Math.pow(Math.sin(angle), 3) * 3.0 * fill;
+      const y =
+        ((13 * Math.cos(angle) -
+          5 * Math.cos(2 * angle) -
+          2 * Math.cos(3 * angle) -
+          Math.cos(4 * angle)) /
+          18) *
+          2.6 *
+          fill +
+        0.25;
+      // Keep the cleft clear even when the largest spheres sit near the top.
+      const top = 0.55 + 1.45 * Math.min(Math.abs(x) / 1.5, 1);
+      return {
+        x,
+        y: Math.min(y, top - bubbleRadius(i) * 0.65),
+        z: Math.sin(i * 1.71) * 0.75,
+      };
     }
-  }
-  return points;
+    // A filled ellipsoid with several layers along Z; these are only starting
+    // positions. The live cluster is formed by gravity and 3D sphere collisions.
+    const latitude = 1 - (2 * (i + 0.5)) / count;
+    const ring = Math.sqrt(1 - latitude * latitude);
+    const volume = Math.cbrt(0.25 + 0.75 * fraction((i + 1) * 0.754877666));
+    return {
+      x: Math.cos(angle) * ring * 3.1 * volume,
+      y: latitude * 1.5 * volume,
+      z: Math.sin(angle) * ring * 1.9 * volume,
+    };
+  });
 }
