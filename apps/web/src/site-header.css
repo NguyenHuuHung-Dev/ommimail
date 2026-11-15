@@ -6,7 +6,7 @@
   min-width: 0;
   min-height: 88px;
   padding: 0 clamp(28px, 4vw, 76px);
-  background: #fff;
+  background: transparent;
   color: #0a0a0a;
   box-sizing: border-box;
   isolation: isolate;

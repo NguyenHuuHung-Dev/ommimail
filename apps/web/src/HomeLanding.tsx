@@ -27,14 +27,10 @@ export function HomeLanding({
           </span>
           <BubbleScene />
           <section className="bubble-copy">
-            <span className="bubble-kicker">MỌI HỘP THƯ · MỘT KHÔNG GIAN</span>
             <h1 id="home-title">
               <span>Every inbox.</span> <em>One signal.</em>
             </h1>
-            <p>
-              Gom Gmail, Outlook và email tạm vào một nơi. Đọc thư, lấy mã OTP
-              và chia sẻ dễ dàng hơn.
-            </p>
+            <p>Gmail, Outlook and temporary mail in one focused workspace.</p>
             <form
               className="bubble-mail-search"
               onSubmit={(event) => {
@@ -51,7 +47,7 @@ export function HomeLanding({
               <input
                 name="mailQuery"
                 inputMode="email"
-                placeholder="Nhập địa chỉ mailbox của bạn"
+                placeholder="Enter mailbox email address"
                 aria-label="Search mailbox by email address"
               />
               <button className="poster-copy-action" type="submit">
@@ -59,19 +55,6 @@ export function HomeLanding({
                 <b aria-hidden="true">→</b>
               </button>
             </form>
-            <p className="bubble-search-note">
-              {member
-                ? "Mở mailbox bạn đã kết nối với OmniMail."
-                : "Đăng nhập để kết nối và quản lý hộp thư của bạn."}
-            </p>
-            <div
-              className="bubble-providers"
-              aria-label="Các loại hộp thư được hỗ trợ"
-            >
-              <span>Gmail</span>
-              <span>Outlook</span>
-              <span>Temp Mail</span>
-            </div>
           </section>
         </main>
       </div>

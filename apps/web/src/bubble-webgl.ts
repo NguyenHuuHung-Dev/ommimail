@@ -42,7 +42,7 @@ export function createBubbleWorld(
   scene.environment = environment.texture;
   generator.dispose();
   room.dispose();
-  scene.add(new THREE.HemisphereLight(0xffffff, 0xe8b8cf, 1.2));
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xff9bc5, 1.2));
   const key = new THREE.DirectionalLight(0xffffff, 1.6);
   key.position.set(-4, 6, 7);
   key.castShadow = true;
@@ -58,7 +58,7 @@ export function createBubbleWorld(
   key.shadow.bias = -0.0005;
   key.shadow.radius = 4;
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xffeef6, 1.3);
+  const rim = new THREE.DirectionalLight(0xffffff, 1.3);
   rim.position.set(5, 2, -3);
   scene.add(rim);
   const fill = new THREE.DirectionalLight(0xffffff, 0.5);
@@ -69,8 +69,8 @@ export function createBubbleWorld(
     mobile ? 24 : 32,
     mobile ? 20 : 24,
   );
-  const colors = [0xffc0d7, 0xe989b3, 0xf6b0c8, 0xffbdb4, 0xfff3f7, 0xe3e9ed];
-  let targets = bubbleTargets(shape, mobile ? 28 : 44);
+  const colors = [0xff7bb3, 0xee4b94, 0xffa5cf, 0xf96ba7, 0xffffff, 0xffc1dc];
+  let targets = bubbleTargets(shape, mobile ? 48 : 80);
   let scale = 1,
     width = 1,
     height = 1,
@@ -91,7 +91,7 @@ export function createBubbleWorld(
       thickness: glass ? 0.4 : 0,
       ior: 1.45,
       envMapIntensity: glass ? 0.8 : 0.6,
-      attenuationColor: new THREE.Color(0xffe8f2),
+      attenuationColor: new THREE.Color(0xffc1dc),
       attenuationDistance: 1.8,
     });
     const mesh = new THREE.Mesh(geometry, material);
@@ -115,6 +115,13 @@ export function createBubbleWorld(
     diff = new THREE.Vector3(),
     relative = new THREE.Vector3();
   function assignTargets() {
+    const extentX = Math.max(
+      ...targets.map((point, i) => Math.abs(point.x) + balls[i].radius),
+    );
+    const extentY = Math.max(
+      ...targets.map((point, i) => Math.abs(point.y) + balls[i].radius),
+    );
+    scale = Math.min(width / (extentX * 2.35), height / (extentY * 2.35));
     balls.forEach((ball, i) => {
       const target = targets[i];
       ball.target.set(
@@ -217,7 +224,6 @@ export function createBubbleWorld(
       camera.position.z;
     width = height * camera.aspect;
     const oldScale = scale;
-    scale = Math.min(width / 4.3, height / 2.9);
     assignTargets();
     balls.forEach((ball) => ball.position.multiplyScalar(scale / oldScale));
     wake();

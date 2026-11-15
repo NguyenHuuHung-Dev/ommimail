@@ -110,7 +110,7 @@ it("retains a decorative fallback and working search if WebGL cannot initialize"
   expect(container.querySelectorAll(".bubble-fallback i")).toHaveLength(8);
   expect(container.querySelector('[name="mailQuery"]')).not.toBeNull();
 });
-it.each([28, 44])(
+it.each([48, 80])(
   "packs all %i sphere targets without deep intersections",
   (count) => {
     const points = bubbleTargets("cloud", count);
