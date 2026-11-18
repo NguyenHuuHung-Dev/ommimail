@@ -28,6 +28,11 @@ async function render(path: string, props: SiteHeaderProps = {}) {
 describe("shared website navigation", () => {
   it("offers real login and registration links to visitors and highlights Home", async () => {
     await render("/");
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[aria-label="Menu tài khoản"]')!
+        .click(),
+    );
     expect(container.querySelector(".site-login")?.getAttribute("href")).toBe(
       "/login",
     );
@@ -65,16 +70,32 @@ describe("shared website navigation", () => {
     await render("/app/temp-mail", {
       mode: "member",
       role: "premium",
-      profileInitials: "LA",
+      profileName: "Lê Anh",
       onOpenProfile,
       onLogout,
     });
     expect(container.querySelector('[aria-current="page"]')?.textContent).toBe(
       "Temp Mail",
     );
+    expect(
+      container.querySelector(".site-account-identity")?.textContent,
+    ).toContain("Lê Anh");
+    expect(container.querySelector(".site-avatar")).toBeNull();
+    expect(container.querySelector('[aria-label="Đăng xuất"]')).toBeNull();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[aria-label="Menu tài khoản"]')!
+        .click(),
+    );
     await act(async () =>
       container
         .querySelector<HTMLButtonElement>('[aria-label="Quản lý hồ sơ"]')!
+        .click(),
+    );
+    expect(container.querySelector(".site-account-menu")).toBeNull();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[aria-label="Menu tài khoản"]')!
         .click(),
     );
     await act(async () =>
@@ -84,5 +105,30 @@ describe("shared website navigation", () => {
     );
     expect(onOpenProfile).toHaveBeenCalledOnce();
     expect(onLogout).toHaveBeenCalledOnce();
+  });
+  it("closes the account menu on Escape and outside clicks, restoring focus on Escape", async () => {
+    await render("/", {
+      mode: "member",
+      profileName: "Lê Anh",
+      role: "premium",
+    });
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[aria-label="Menu tài khoản"]',
+    )!;
+    await act(async () => trigger.click());
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    await act(async () =>
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+      ),
+    );
+    expect(container.querySelector(".site-account-menu")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+    await act(async () => trigger.click());
+    await act(async () =>
+      document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })),
+    );
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(container.querySelector(".site-account-menu")).toBeNull();
   });
 });

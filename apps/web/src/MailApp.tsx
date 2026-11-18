@@ -220,6 +220,7 @@ export function MailApp() {
     qc.clear();
     navigate("/", { replace: true });
   };
+  const profileName = me?.displayName?.trim() || auth.currentUser?.displayName?.trim() || me?.email?.split("@")[0] || auth.currentUser?.email?.split("@")[0] || "Tài khoản";
   if (page === "home")
     return (
       <>
@@ -228,7 +229,7 @@ export function MailApp() {
           mode="member"
           ready={!mePending}
           onOpenProfile={() => setProfileOpen(true)}
-          profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
+          profileName={profileName}
           onSearchMail={(value) => {
             setUI({
               selectedMessage: null,
@@ -250,7 +251,7 @@ export function MailApp() {
           ready={!mePending}
           role={me?.role ?? "basic"}
           unreadCount={allMessages.filter((m) => !m.isRead).length}
-          profileInitials={initials(me?.displayName ?? me?.email ?? auth.currentUser?.email ?? undefined)}
+          profileName={profileName}
           onOpenProfile={() => setProfileOpen(true)}
           onLogout={logout}
       />

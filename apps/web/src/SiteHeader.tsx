@@ -1,12 +1,16 @@
 import {
   AtSign,
+  ArrowUpRight,
   Inbox,
   LayoutDashboard,
+  LogIn,
   LogOut,
   Plus,
   ShieldCheck,
   UserRoundCheck,
+  UserRound,
 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./site-header.css";
 
@@ -16,7 +20,7 @@ export type SiteHeaderProps = {
   mode?: "guest" | "member" | "unverified";
   ready?: boolean;
   role?: NavigationRole;
-  profileInitials?: string;
+  profileName?: string;
   unreadCount?: number;
   onOpenProfile?: () => void;
   onLogout?: () => void;
@@ -27,12 +31,35 @@ export function SiteHeader({
   mode = "guest",
   ready = true,
   role,
-  profileInitials = "OM",
+  profileName = "Tài khoản",
   unreadCount = 0,
   onOpenProfile,
   onLogout,
 }: SiteHeaderProps) {
   const { pathname } = useLocation();
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const accountMenuId = useId();
+  useEffect(() => setAccountOpen(false), [pathname, mode, ready]);
+  useEffect(() => {
+    if (!accountOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (!accountRef.current?.contains(event.target as Node))
+        setAccountOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setAccountOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [accountOpen]);
   const items = [
     { to: "/", label: "Home", icon: LayoutDashboard },
     { to: "/app/mailboxes", label: "Mailboxes", icon: Inbox },
@@ -92,43 +119,114 @@ export function SiteHeader({
           <span className="site-session-loading" role="status">
             Đang kết nối…
           </span>
-        ) : mode === "guest" ? (
-          <>
-            <Link className="site-login" to="/login">
-              Đăng nhập
-            </Link>
-            <Link className="site-register" to="/register">
-              Đăng ký <span aria-hidden="true">↗</span>
-            </Link>
-          </>
         ) : (
-          <>
-            {mode === "unverified" ? (
-              <Link className="site-register" to="/verify-email">
-                Xác minh email
-              </Link>
-            ) : null}
-            <button
-              className="site-signout"
-              type="button"
-              onClick={onLogout}
-              aria-label="Đăng xuất"
-              title="Đăng xuất"
-            >
-              <LogOut size={17} />
-            </button>
-            {mode === "member" && (
-              <button
-                className="site-profile"
-                type="button"
-                onClick={onOpenProfile}
-                title="Quản lý hồ sơ"
-                aria-label="Quản lý hồ sơ"
-              >
-                {profileInitials}
-              </button>
+          <div
+            className="site-account-controls"
+            ref={accountRef}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget))
+                setAccountOpen(false);
+            }}
+          >
+            {mode !== "guest" && (
+              <div className="site-account-identity">
+                <strong title={profileName}>{profileName}</strong>
+                <small>
+                  {mode === "unverified"
+                    ? "Chưa xác minh"
+                    : role === "admin"
+                      ? "Quản trị viên"
+                      : role === "premium"
+                        ? "Premium"
+                        : "Basic"}
+                </small>
+              </div>
             )}
-          </>
+            <button
+              className="site-account-trigger"
+              ref={triggerRef}
+              type="button"
+              aria-label="Menu tài khoản"
+              aria-expanded={accountOpen}
+              aria-controls={accountMenuId}
+              onClick={() => setAccountOpen((open) => !open)}
+            >
+              <span className="site-menu-lines" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+            </button>
+            {accountOpen && (
+              <nav
+                className="site-account-menu"
+                id={accountMenuId}
+                aria-label="Tài khoản"
+              >
+                {mode === "guest" ? (
+                  <>
+                    <Link
+                      className="site-login"
+                      to="/login"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      <LogIn size={16} aria-hidden="true" />
+                      Đăng nhập
+                    </Link>
+                    <Link
+                      className="site-register"
+                      to="/register"
+                      onClick={() => setAccountOpen(false)}
+                    >
+                      Đăng ký
+                      <ArrowUpRight size={16} aria-hidden="true" />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    {mode === "unverified" && (
+                      <Link
+                        className="site-register"
+                        to="/verify-email"
+                        onClick={() => setAccountOpen(false)}
+                      >
+                        <ShieldCheck size={16} aria-hidden="true" />
+                        Xác minh email
+                      </Link>
+                    )}
+                    {mode === "member" && (
+                      <button
+                        className="site-profile"
+                        type="button"
+                        onClick={() => {
+                          setAccountOpen(false);
+                          onOpenProfile?.();
+                        }}
+                        title="Quản lý hồ sơ"
+                        aria-label="Quản lý hồ sơ"
+                      >
+                        <UserRound size={16} aria-hidden="true" />
+                        <span>Hồ sơ</span>
+                      </button>
+                    )}
+                    <button
+                      className="site-signout"
+                      type="button"
+                      onClick={() => {
+                        setAccountOpen(false);
+                        onLogout?.();
+                      }}
+                      aria-label="Đăng xuất"
+                      title="Đăng xuất"
+                    >
+                      <LogOut size={16} aria-hidden="true" />
+                      <span>Đăng xuất</span>
+                    </button>
+                  </>
+                )}
+              </nav>
+            )}
+          </div>
         )}
       </div>
     </header>

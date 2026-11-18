@@ -37,6 +37,7 @@ export function HomeRoute() {
       ) : (
         <HomeLanding
           mode={user ? "unverified" : "guest"}
+          profileName={user?.displayName?.trim() || user?.email?.split("@")[0] || "Tài khoản"}
           ready={!loading}
           onLogout={() => void signOut(auth)}
         />
