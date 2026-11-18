@@ -1,489 +1,1328 @@
-/* Public landing page. */
+/* Public landing page content: pinned 3D cards, isometric cubes & offset shadows on hero color washes. */
 .home-landing {
   min-width: 0;
   background: #fff;
   overflow-x: clip;
 }
+
 #root .poster-home.original-home {
   border-left-width: 0;
   border-right-width: 0;
 }
-.landing-content {
-  color: #0a0a0a;
-  background: #fff;
+
+#root .home-landing .landing-content {
+  --landing-max: 1440px;
+  --landing-pad-x: clamp(22px, 5vw, 88px);
+  --landing-grid-line: rgb(120 137 147 / 7%);
+  --landing-border: #c2cfda;
+  --landing-ink: #162535;
+  color: var(--landing-ink);
+  background:
+    linear-gradient(180deg, #fff 0%, transparent 140px),
+    radial-gradient(ellipse at 12% 10%, #dfedfa99, transparent 48%),
+    radial-gradient(ellipse at 88% 18%, #f5edcf99, transparent 46%),
+    radial-gradient(ellipse at 20% 56%, #e9e5ff6e, transparent 48%),
+    radial-gradient(ellipse at 85% 74%, #e8f5ef88, transparent 48%),
+    radial-gradient(#78899326 0.7px, transparent 0.7px) 0 0 / 22px 22px,
+    linear-gradient(to right, var(--landing-grid-line) 1px, transparent 1px) 0
+      0 / 44px 44px,
+    linear-gradient(to bottom, var(--landing-grid-line) 1px, transparent 1px) 0
+      0 / 44px 44px,
+    #f8f9f6;
 }
-.landing-content *,
-.landing-content *::before,
-.landing-content *::after {
+
+#root .home-landing .landing-content *,
+#root .home-landing .landing-content *::before,
+#root .home-landing .landing-content *::after {
   box-sizing: border-box;
 }
-.landing-features,
-.landing-how,
-.landing-faq {
-  max-width: 1600px;
-  margin: auto;
-  padding: 110px clamp(24px, 7vw, 135px);
+
+#root .home-landing .landing-content :not(.landing-pin):not(.landing-pin *) {
+  border-radius: 0;
 }
-.landing-section-heading > span,
-.landing-start > span {
-  color: var(--color-muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+
+/* Shared section container & typography */
+#root .home-landing .landing-content :is(.landing-features, .landing-faq) {
+  max-width: var(--landing-max);
+  margin-inline: auto;
+  padding-block: clamp(56px, 7vw, 100px);
+  padding-inline: var(--landing-pad-x);
 }
-.landing-section-heading h2,
-.landing-start h2 {
-  margin: 24px 0;
+
+#root .home-landing .landing-content .landing-section-heading h2,
+#root .home-landing .landing-content .landing-start h2 {
+  margin: 0;
   color: #0a0a0a;
-  font-size: clamp(40px, 4.3vw, 70px);
-  line-height: 1.05;
+  font-size: clamp(2.125rem, 1.35rem + 2.7vw, 4rem);
+  line-height: 1.04;
   font-weight: 400;
   letter-spacing: -0.045em;
 }
-.landing-section-heading h2 em,
-.landing-start h2 em {
-  color: var(--color-accent-light);
+
+#root .home-landing .landing-content .landing-section-heading h2 em,
+#root .home-landing .landing-content .landing-start h2 em {
+  color: var(--color-accent);
   font-style: normal;
 }
-.landing-section-heading > p {
-  max-width: 500px;
+
+/* 3D Pushpin (realistic top-pinned thumbtack) */
+#root .home-landing .landing-content .landing-pin {
+  --pin-light: #89a9ff;
+  --pin-main: #3563d8;
+  --pin-dark: #1d3c8f;
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  inline-size: 32px;
+  block-size: 32px;
+  translate: -50% 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+#root .home-landing .landing-content .landing-pin--mint {
+  --pin-light: #5fd7b5;
+  --pin-main: #226d5c;
+  --pin-dark: #134439;
+}
+
+#root .home-landing .landing-content .landing-pin--amber {
+  --pin-light: #ff9f70;
+  --pin-main: #df6333;
+  --pin-dark: #8e3513;
+}
+
+#root .home-landing .landing-content .landing-pin--violet {
+  --pin-light: #b6a6ff;
+  --pin-main: #674cfb;
+  --pin-dark: #3b26a6;
+}
+
+#root .home-landing .landing-content .landing-pin-shadow {
+  position: absolute;
+  top: 13px;
+  left: 11px;
+  inline-size: 20px;
+  block-size: 16px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgb(18 31 46 / 34%) 0%,
+    rgb(18 31 46 / 12%) 55%,
+    transparent 75%
+  );
+  transform: rotate(28deg) skewX(-18deg);
+}
+
+#root .home-landing .landing-content .landing-pin-base {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  inline-size: 20px;
+  block-size: 18px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: linear-gradient(155deg, var(--pin-main), var(--pin-dark));
+  box-shadow: 0 3px 5px rgb(16 28 43 / 28%);
+}
+
+#root .home-landing .landing-content .landing-pin-stem {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  inline-size: 10px;
+  block-size: 10px;
+  translate: -50% 0;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--pin-dark), var(--pin-main));
+}
+
+#root .home-landing .landing-content .landing-pin-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  inline-size: 18px;
+  block-size: 16px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff 0%,
+    var(--pin-light) 24%,
+    var(--pin-main) 66%,
+    var(--pin-dark) 100%
+  );
+  box-shadow:
+    inset 0 -2px 3px rgb(0 0 0 / 22%),
+    0 2px 3px rgb(0 0 0 / 18%);
+}
+
+/* 3D Isometric Cube Clusters */
+#root .home-landing .landing-content .landing-cubes {
+  display: block;
+  flex: none;
+  overflow: visible;
+  filter: drop-shadow(0 12px 18px rgb(22 37 53 / 10%));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #root .home-landing .landing-content .landing-cubes {
+    transition: translate 260ms ease;
+  }
+
+  #root .home-landing .landing-content .landing-heading-aside:hover .landing-cubes,
+  #root .home-landing .landing-content .landing-how-actions:hover .landing-cubes,
+  #root .home-landing .landing-content .landing-faq-intro:hover .landing-cubes {
+    translate: 0 -4px;
+  }
+}
+
+/* Dashed curved connector trail behind pinned cards */
+#root .home-landing .landing-content .landing-pin-trail {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root .home-landing .landing-content .landing-pin-trail path {
+  fill: none;
+  stroke: #9cb0c0;
+  stroke-width: 1.6;
+  stroke-dasharray: 5 6;
+}
+
+/* 1. Features: editorial heading + 3 pinned tilted 3D cards with offset shadows */
+#root .home-landing .landing-content .landing-features-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: end;
+}
+
+#root .home-landing .landing-content .landing-heading-aside {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-inline-start: clamp(18px, 2.5vw, 32px);
+  padding-block: 4px;
+  border-inline-start: 1px solid var(--landing-border);
+}
+
+#root .home-landing .landing-content .landing-heading-aside p {
+  max-width: 340px;
   margin: 0;
   color: var(--color-muted);
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.75;
 }
-.landing-feature-grid {
+
+#root .home-landing .landing-content .landing-feature-board {
+  position: relative;
+  margin-top: clamp(40px, 5vw, 62px);
+  padding-bottom: 36px;
+}
+
+#root .home-landing .landing-content .landing-pin-trail--features {
+  top: -12px;
+  block-size: 190px;
+}
+
+#root .home-landing .landing-content .landing-feature-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0;
-  margin-top: 54px;
-  border: 1px solid var(--color-line);
+  gap: clamp(24px, 3vw, 44px);
+  align-items: stretch;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.landing-feature-grid article {
+
+#root .home-landing .landing-content .landing-feature-grid > article {
+  --feature-color: var(--color-blue);
+  --feature-wash: var(--color-blue-soft);
+  --feature-glow: #dfedfa99;
+  --feature-offset: #d2e4f8;
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   min-width: 0;
-  padding: 34px;
-  border-right: 1px solid var(--color-line);
+  padding: 12px;
+  border: 1.5px solid var(--landing-ink);
   background: #fff;
+  box-shadow:
+    10px 10px 0 var(--feature-offset),
+    10px 10px 0 1.5px var(--landing-ink),
+    0 24px 40px -20px rgb(22 37 53 / 24%);
+  rotate: -1.4deg;
+  translate: 0 0;
 }
-.landing-feature-art {
-  align-self: stretch;
-  height: 168px;
-  margin: 24px 0 4px;
-  padding: 22px;
-  border: 1px solid color-mix(in srgb, var(--feature-color) 16%, white);
-  background: color-mix(in srgb, var(--feature-wash) 65%, white);
-  color: var(--feature-color);
+
+#root
+  .home-landing
+  .landing-content
+  .landing-feature-grid
+  > article:nth-child(2) {
+  --feature-color: var(--color-mint);
+  --feature-wash: var(--color-mint-soft);
+  --feature-glow: #dcf2e8a6;
+  --feature-offset: #cceede;
+  rotate: 1.3deg;
+  translate: 0 28px;
 }
-.feature-inboxes {
-  display: grid;
-  align-content: center;
-  gap: 9px;
+
+#root
+  .home-landing
+  .landing-content
+  .landing-feature-grid
+  > article:nth-child(3) {
+  --feature-color: var(--color-gold);
+  --feature-wash: var(--color-gold-soft);
+  --feature-glow: #f5edcfb3;
+  --feature-offset: #f5e2ae;
+  rotate: -1.1deg;
+  translate: 0 6px;
 }
-.feature-inboxes > div {
+
+@media (prefers-reduced-motion: no-preference) {
+  #root .home-landing .landing-content .landing-feature-grid > article {
+    transition:
+      rotate 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      translate 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms ease;
+  }
+
+  #root .home-landing .landing-content .landing-feature-grid > article:hover {
+    rotate: 0deg;
+    translate: 0 -8px;
+    box-shadow:
+      14px 14px 0 var(--feature-offset),
+      14px 14px 0 1.5px var(--landing-ink),
+      0 30px 46px -20px rgb(22 37 53 / 30%);
+  }
+
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:nth-child(2):hover {
+    translate: 0 20px;
+  }
+
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:nth-child(3):hover {
+    translate: 0 -2px;
+  }
+}
+
+#root .home-landing .landing-content .landing-feature-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border: 1px solid var(--color-line);
+  background:
+    radial-gradient(ellipse at 92% 8%, var(--feature-glow), transparent 64%),
+    radial-gradient(ellipse at 8% 92%, #e9e5ff40, transparent 58%),
+    color-mix(in oklab, var(--feature-wash) 44%, #fff);
+}
+
+#root .home-landing .landing-content .landing-feature-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  background: #fff;
-  border: 1px solid #d7e1e7;
-  box-shadow: 0 4px 10px #24364809;
+  justify-content: space-between;
+  padding-inline-end: 16px;
+  border-bottom: 1px solid var(--color-line);
+  background: rgb(255 255 255 / 66%);
 }
-.feature-inboxes > div:nth-child(2) {
-  margin-left: 18px;
-}
-.feature-inboxes img {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-.feature-inboxes > div > span {
-  display: grid;
-  flex: 1;
-  gap: 6px;
-}
-.feature-inboxes i {
-  height: 4px;
-  width: 75%;
-  background: #dce5f1;
-}
-.feature-inboxes i + i {
-  width: 50%;
-  background: #edf1f7;
-}
-.feature-inboxes svg {
-  width: 16px;
-  height: 16px;
-}
-.feature-inboxes > b {
-  margin-top: 4px;
-  font-size: 8px;
-  letter-spacing: 0.12em;
-  text-align: center;
-}
-.feature-temporary {
+
+#root .home-landing .landing-content .landing-feature-index {
   display: grid;
   place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  flex: none;
+  border-inline-end: 1px solid var(--color-line);
+  background: var(--feature-wash);
+  color: var(--feature-color);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+#root .home-landing .landing-content .landing-feature-pip {
+  display: block;
+  inline-size: 7px;
+  block-size: 7px;
+  background: color-mix(in oklab, var(--feature-color) 65%, white);
+}
+
+/* Framed square-grid drafting stage inside each pinned card */
+#root .home-landing .landing-content .landing-feature-art {
+  margin: 18px 18px 0;
+  min-block-size: 176px;
+  padding: 18px;
+  border: 1px solid var(--landing-border);
+  background:
+    radial-gradient(ellipse at 20% 20%, var(--feature-glow), transparent 65%),
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--feature-color) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--feature-color) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    #fff;
+  background-size: auto, 18px 18px, 18px 18px, auto;
+  color: var(--feature-color);
+}
+
+#root .home-landing .landing-content .feature-inboxes {
+  display: grid;
+  align-content: center;
   gap: 10px;
 }
-.feature-temporary > svg {
-  width: 38px;
-  height: 38px;
-  stroke-width: 1.4;
+
+#root .home-landing .landing-content .feature-inboxes > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  background: #fff;
+  border: 1px solid var(--landing-border);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--feature-color) 18%, transparent);
 }
-.feature-temporary > span {
-  font-size: 14px;
+
+#root .home-landing .landing-content .feature-inboxes > div:nth-child(2) {
+  margin-inline-start: 14px;
 }
-.feature-temporary > div {
+
+#root .home-landing .landing-content .feature-icon-well {
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  flex: none;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+}
+
+#root .home-landing .landing-content .feature-icon-well img {
+  display: block;
+  inline-size: 19px;
+  block-size: 19px;
+  object-fit: contain;
+}
+
+#root .home-landing .landing-content .feature-skeleton-lines {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+}
+
+#root .home-landing .landing-content .feature-skeleton-lines i {
+  display: block;
+  block-size: 4px;
+  inline-size: 76%;
+  background: #d9e3ec;
+}
+
+#root .home-landing .landing-content .feature-skeleton-lines i + i {
+  inline-size: 48%;
+  background: #edf2f7;
+}
+
+#root .home-landing .landing-content .feature-inbox-box {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  flex: none;
+  border: 1px solid color-mix(in oklab, var(--feature-color) 28%, white);
+  background: var(--feature-wash);
+}
+
+#root .home-landing .landing-content .feature-inbox-box svg {
+  inline-size: 13px;
+  block-size: 13px;
+}
+
+#root .home-landing .landing-content .feature-inboxes > b {
+  margin-top: 3px;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+}
+
+#root .home-landing .landing-content .feature-temporary {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+}
+
+#root .home-landing .landing-content .feature-timer-box {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  border: 1px solid color-mix(in oklab, var(--color-mint) 42%, white);
+  background: #fff;
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--color-mint) 18%, transparent);
+}
+
+#root .home-landing .landing-content .feature-timer-box svg {
+  inline-size: 21px;
+  block-size: 21px;
+  stroke-width: 1.5;
+}
+
+#root
+  .home-landing
+  .landing-content
+  .feature-temporary
+  > span:not(.feature-timer-box) {
+  color: var(--color-ink);
+  font-size: 13px;
+}
+
+#root .home-landing .landing-content .feature-temporary > div {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 7px 11px;
   background: #fff;
-  border: 1px solid #bdd9ce;
+  border: 1px solid color-mix(in oklab, var(--color-mint) 38%, white);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--color-mint) 18%, transparent);
   font-size: 11px;
   white-space: nowrap;
 }
-.feature-temporary i {
-  width: 6px;
-  height: 6px;
+
+#root .home-landing .landing-content .feature-temporary i {
+  display: block;
+  inline-size: 6px;
+  block-size: 6px;
   background: var(--color-mint);
-  border-radius: 50%;
 }
-.feature-sharing {
+
+#root .home-landing .landing-content .feature-sharing {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 16px;
 }
-.feature-sharing > div {
+
+#root .home-landing .landing-content .feature-sharing > div {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
 }
-.feature-sharing > div > span {
+
+#root
+  .home-landing
+  .landing-content
+  .feature-sharing
+  > div
+  > span:not(.feature-link-node) {
   display: grid;
   place-items: center;
-  width: 52px;
-  height: 52px;
-  border: 1px solid #dbc896;
+  inline-size: 50px;
+  block-size: 50px;
+  border: 1px solid #d9c58f;
   background: #fff;
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--color-gold) 18%, transparent);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
 }
-.feature-sharing > div > span:last-child {
-  background: #fae8b2;
+
+#root .home-landing .landing-content .feature-sharing > div > span:last-child {
+  background: var(--color-gold-soft);
 }
-.feature-sharing > b {
+
+#root .home-landing .landing-content .feature-link-node {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border: 1px solid #d9c58f;
+  background: #fff;
+}
+
+#root .home-landing .landing-content .feature-link-node svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+#root .home-landing .landing-content .feature-sharing > b {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 10px;
-  background: #fff9ea;
-  border: 1px solid #e7d6a6;
+  padding: 7px 12px;
+  background: #fff;
+  border: 1px solid #dfcc98;
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--color-gold) 15%, transparent);
   font-size: 11px;
   font-weight: 400;
 }
-.feature-sharing > b svg {
-  width: 15px;
-  height: 15px;
+
+#root .home-landing .landing-content .feature-sharing > b svg {
+  inline-size: 14px;
+  block-size: 14px;
 }
-#root .home-landing .landing-feature-grid > article {
-  padding: clamp(22px, 2.4vw, 34px);
-  border-top: 3px solid var(--feature-color);
+
+#root .home-landing .landing-content .landing-feature-body {
+  padding: 22px 18px 24px;
 }
-#root .home-landing .landing-feature-grid article > a {
-  width: 100%;
-  padding-top: 20px;
-  border-top: 1px solid color-mix(in srgb, var(--feature-color) 18%, white);
-}
-.landing-feature-grid article:last-child {
-  border-right: 0;
-}
-.landing-feature-number {
-  color: var(--color-muted-soft);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-.landing-feature-grid article > svg {
-  width: 26px;
-  height: 26px;
-  margin-top: 38px;
-  color: var(--color-accent);
-  stroke-width: 1.3;
-}
-.landing-feature-grid h3 {
-  margin: 22px 0 16px;
-  font-size: 26px;
+
+#root .home-landing .landing-content .landing-feature-body h3 {
+  margin: 0 0 10px;
+  color: #0a0a0a;
+  font-size: clamp(1.375rem, 1.15rem + 0.55vw, 1.625rem);
   font-weight: 400;
   letter-spacing: -0.03em;
 }
-.landing-feature-grid p {
-  margin: 0 0 30px;
+
+#root .home-landing .landing-content .landing-feature-body p {
+  margin: 0;
   color: var(--color-muted);
   font-size: 14px;
-  line-height: 1.9;
+  line-height: 1.75;
 }
-.landing-feature-grid a {
-  display: inline-flex;
+
+#root .home-landing .landing-content .landing-feature-link {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  inline-size: 100%;
   margin-top: auto;
-  color: var(--color-ink);
-  font-size: 12px;
-  text-decoration: none;
-}
-.landing-feature-grid a:hover {
-  color: var(--color-accent);
-}
-.landing-how {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  padding-inline-start: 18px;
   border-top: 1px solid var(--color-line);
-  border-bottom: 1px solid var(--color-line);
+  background: rgb(255 255 255 / 82%);
+  color: var(--landing-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
 }
-.landing-button {
-  display: inline-flex;
+
+#root .home-landing .landing-content .landing-square-arrow {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  flex: none;
+  border-inline-start: 1px solid var(--color-line);
+  background: var(--feature-wash);
+  color: var(--feature-color);
+  font-size: 16px;
+  font-weight: 400;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+@media (hover: hover) {
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:hover
+    .landing-feature-index {
+    background: var(--feature-color);
+    color: #fff;
+  }
+
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-link:hover
+    .landing-square-arrow,
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:hover
+    .landing-square-arrow {
+    background: var(--feature-color);
+    border-color: var(--feature-color);
+    color: #fff;
+  }
+
+  #root .home-landing .landing-content .landing-feature-link:hover {
+    background: #fff;
+    color: var(--feature-color);
+  }
+}
+
+/* 2. How it works: 3D cube cluster + zigzag pinned step cards with offset shadows */
+#root .home-landing .landing-content .landing-how {
+  max-width: none;
+  margin-inline: 0;
+  padding-block: clamp(64px, 7.5vw, 108px);
+  padding-inline: var(--landing-pad-x);
+  border-top: 1px solid var(--landing-border);
+  border-bottom: 1px solid var(--landing-border);
+  background:
+    radial-gradient(ellipse at 14% 25%, #e9e5ff80, transparent 52%),
+    radial-gradient(ellipse at 86% 75%, #dfedfa99, transparent 54%),
+    radial-gradient(ellipse at 52% 15%, #f5edcf70, transparent 50%),
+    linear-gradient(to bottom, rgb(120 137 147 / 6%) 1px, transparent 1px) 0 0 /
+      100% 34px,
+    rgb(255 255 255 / 78%);
+}
+
+#root .home-landing .landing-content .landing-how-inner {
+  max-width: calc(var(--landing-max) - (var(--landing-pad-x) * 2));
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(36px, 5vw, 84px);
+  align-items: start;
+}
+
+#root .home-landing .landing-content .landing-how-intro {
+  position: sticky;
+  top: 32px;
+  display: grid;
+  gap: 0;
+}
+
+#root .home-landing .landing-content .landing-how-actions {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 38px;
-  min-height: 54px;
-  padding: 0 22px;
-  border: 1px solid #0a0a0a;
-  background: #0a0a0a;
+  gap: 24px;
+  margin-top: 34px;
+}
+
+#root .home-landing .landing-content .landing-button {
+  display: inline-flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0;
+  min-block-size: 48px;
+  padding: 0;
+  border: 1.5px solid var(--landing-ink);
+  background: var(--landing-ink);
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-decoration: none;
+  box-shadow:
+    5px 5px 0 var(--color-accent-soft),
+    5px 5px 0 1.5px var(--landing-ink);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    translate 180ms ease;
 }
-.landing-button:hover {
-  background: var(--color-accent-deep);
+
+#root .home-landing .landing-content .landing-button > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 22px;
 }
-.landing-how .landing-button {
-  margin-top: 12px;
+
+#root .home-landing .landing-content .landing-button-arrow {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  border-inline-start: 1px solid rgb(255 255 255 / 22%);
+  font-size: 16px;
+  font-weight: 400;
 }
-.landing-how ol {
+
+#root .home-landing .landing-content .landing-button:hover {
+  background: var(--color-accent);
+  border-color: var(--landing-ink);
+  box-shadow:
+    7px 7px 0 var(--color-gold-soft),
+    7px 7px 0 1.5px var(--landing-ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #root .home-landing .landing-content .landing-button:hover {
+    translate: -2px -2px;
+  }
+
+  #root .home-landing .landing-content .landing-button:active {
+    translate: 2px 2px;
+    box-shadow:
+      2px 2px 0 var(--color-accent-soft),
+      2px 2px 0 1.5px var(--landing-ink);
+  }
+}
+
+#root .home-landing .landing-content .landing-steps-board {
+  position: relative;
+  padding-block: 12px;
+}
+
+#root .home-landing .landing-content .landing-pin-trail--steps {
+  top: 0;
+  block-size: 100%;
+}
+
+#root .home-landing .landing-content .landing-how ol {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 28px;
   margin: 0;
   padding: 0;
   list-style: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
-.landing-how li {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  padding: 27px 0;
-  border-bottom: 1px solid var(--color-line);
+
+#root .home-landing .landing-content .landing-how ol li {
+  --step-wash: var(--color-blue-soft);
+  --step-color: var(--color-blue);
+  --step-offset: #d2e4f8;
+  position: relative;
+  width: min(500px, calc(100% - 10px));
+  padding: 10px;
+  border: 1.5px solid var(--landing-ink);
+  background: #fff;
+  box-shadow:
+    8px 8px 0 var(--step-offset),
+    8px 8px 0 1.5px var(--landing-ink),
+    0 18px 34px -18px rgb(22 37 53 / 20%);
+  rotate: -1.4deg;
+  justify-self: start;
 }
-.landing-how li:first-child {
-  padding-top: 0;
+
+#root .home-landing .landing-content .landing-how ol li:nth-child(2) {
+  --step-wash: var(--color-accent-soft);
+  --step-color: var(--color-accent-text);
+  --step-offset: #dbd3ff;
+  rotate: 1.4deg;
+  justify-self: end;
+  margin-inline-end: 8px;
 }
-.landing-how li:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+
+#root .home-landing .landing-content .landing-how ol li:nth-child(3) {
+  --step-wash: var(--color-gold-soft);
+  --step-color: var(--color-gold);
+  --step-offset: #f5e2ae;
+  rotate: -1deg;
+  justify-self: start;
+  margin-inline-start: 28px;
 }
-.landing-how li > span {
-  padding-top: 5px;
-  color: var(--color-accent);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+
+@media (prefers-reduced-motion: no-preference) {
+  #root .home-landing .landing-content .landing-how ol li {
+    transition:
+      rotate 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      translate 240ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 240ms ease;
+  }
+
+  #root .home-landing .landing-content .landing-how ol li:hover {
+    rotate: 0deg;
+    translate: 0 -4px;
+    box-shadow:
+      11px 11px 0 var(--step-offset),
+      11px 11px 0 1.5px var(--landing-ink),
+      0 24px 38px -18px rgb(22 37 53 / 28%);
+  }
 }
-.landing-how h3 {
-  margin: 0 0 12px;
-  color: var(--color-ink-deep);
-  font-size: 24px;
+
+#root .home-landing .landing-content .landing-step-inner {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  border: 1px solid var(--color-line);
+  background: color-mix(in oklab, var(--step-wash) 52%, #fff);
+}
+
+#root .home-landing .landing-content .landing-step-inner > span {
+  display: grid;
+  place-items: center;
+  border-inline-end: 1px solid var(--color-line);
+  background: var(--step-wash);
+  color: var(--step-color);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+#root .home-landing .landing-content .landing-step-inner > div {
+  padding: 20px 24px;
+}
+
+#root .home-landing .landing-content .landing-step-inner h3 {
+  margin: 0 0 8px;
+  color: #0a0a0a;
+  font-size: 21px;
   font-weight: 400;
   letter-spacing: -0.025em;
 }
-.landing-how li p {
+
+#root .home-landing .landing-content .landing-step-inner p {
   margin: 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.72;
+}
+
+/* 3. FAQ: sticky editorial intro + 3D cubes + offset-shadowed accordion matrix */
+#root .home-landing .landing-content .landing-faq {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(32px, 5vw, 80px);
+  align-items: start;
+}
+
+#root .home-landing .landing-content .landing-faq-intro {
+  position: sticky;
+  top: 28px;
+}
+
+#root .home-landing .landing-content .landing-faq-intro h2 {
+  font-size: clamp(2rem, 1.3rem + 2.2vw, 3.25rem);
+}
+
+#root .home-landing .landing-content .landing-faq-note {
+  max-width: 340px;
+  margin: 18px 0 28px;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+#root .home-landing .landing-content .landing-faq-grid {
+  display: grid;
+  gap: 1px;
+  margin-inline-end: 10px;
+  border: 1.5px solid var(--landing-ink);
+  background: var(--landing-border);
+  box-shadow:
+    10px 10px 0 #dfedfa,
+    10px 10px 0 1.5px var(--landing-ink),
+    0 22px 38px -20px rgb(22 37 53 / 20%);
+}
+
+#root .home-landing .landing-content .landing-faq details {
+  padding: 0;
+  border: 0;
+  background: rgb(255 255 255 / 95%);
+  transition:
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+#root .home-landing .landing-content .landing-faq details[open] {
+  background: #fff;
+  box-shadow: inset 4px 0 0 var(--color-accent);
+}
+
+#root .home-landing .landing-content .landing-faq summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  color: var(--landing-ink);
+  font-size: 17px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+#root
+  .home-landing
+  .landing-content
+  .landing-faq
+  summary::-webkit-details-marker {
+  display: none;
+}
+
+#root .home-landing .landing-content .landing-faq summary::before {
+  content: "+";
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: none;
+  border: 1px solid var(--landing-ink);
+  background: var(--color-surface-blue);
+  color: var(--landing-ink);
+  font-size: 16px;
+  line-height: 1;
+  box-shadow: 2px 2px 0 var(--color-accent-soft);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+#root .home-landing .landing-content .landing-faq details[open] > summary {
+  color: var(--color-accent-text);
+}
+
+#root
+  .home-landing
+  .landing-content
+  .landing-faq
+  details[open]
+  > summary::before {
+  content: "−";
+  border-color: var(--landing-ink);
+  background: var(--color-accent);
+  color: #fff;
+}
+
+@media (hover: hover) {
+  #root .home-landing .landing-content .landing-faq summary:hover {
+    background: #fff;
+  }
+}
+
+#root .home-landing .landing-content .landing-faq details::details-content {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+}
+
+#root
+  .home-landing
+  .landing-content
+  .landing-faq
+  details:not([open])::details-content {
+  block-size: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #root .home-landing .landing-content .landing-faq details::details-content {
+    transition: block-size, content-visibility, display;
+    transition-duration: 0.25s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+}
+
+#root .home-landing .landing-content .landing-faq details p {
+  margin: 0;
+  padding: 0 24px 22px 68px;
   color: var(--color-muted);
   font-size: 14px;
   line-height: 1.8;
 }
-.landing-faq {
-  display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  gap: 80px;
-}
-.landing-faq .landing-section-heading h2 {
-  font-size: clamp(36px, 3.4vw, 54px);
-}
-.landing-faq details {
-  padding: 24px 0;
-  border-bottom: 1px solid var(--color-line);
-}
-.landing-faq details:first-child {
-  border-top: 1px solid var(--color-line);
-}
-.landing-faq summary {
-  color: var(--color-ink);
-  font-size: 17px;
-  line-height: 1.6;
-  cursor: pointer;
-}
-.landing-faq details p {
-  margin: 16px 0 0;
-  padding-right: 24px;
-  color: var(--color-muted);
-  font-size: 14px;
-  line-height: 1.9;
-}
-.landing-start {
-  padding: 85px 24px 90px;
-  border-block: 1px solid var(--color-line);
-  background: var(--color-surface);
+
+/* 4. Start CTA: pinned hero-tinted poster box with 3D cube & double offset shadow */
+#root .home-landing .landing-content .landing-start {
+  padding-block: clamp(56px, 6.5vw, 92px);
+  padding-inline: var(--landing-pad-x);
+  border-top: 1px solid var(--landing-border);
+  background:
+    radial-gradient(ellipse at 20% 50%, #dfedfa88, transparent 55%),
+    radial-gradient(ellipse at 80% 50%, #f5edcf88, transparent 55%),
+    radial-gradient(#78899326 0.7px, transparent 0.7px) 0 0 / 22px 22px,
+    #f8f9f6;
   text-align: center;
 }
-.landing-start h2 {
-  margin-top: 24px;
+
+#root .home-landing .landing-content .landing-start-stage {
+  position: relative;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline-end: 12px;
 }
-.landing-start > div {
+
+#root .home-landing .landing-content .landing-cubes--start {
+  position: absolute;
+  left: -34px;
+  bottom: -24px;
+  z-index: 3;
+}
+
+#root .home-landing .landing-content .landing-start-frame {
+  position: relative;
+  padding: 12px;
+  border: 1.5px solid var(--landing-ink);
+  background: #fff;
+  box-shadow:
+    12px 12px 0 var(--color-accent-soft),
+    12px 12px 0 1.5px var(--landing-ink),
+    0 28px 46px -22px rgb(22 37 53 / 24%);
+}
+
+#root .home-landing .landing-content .landing-start-body {
+  padding: clamp(38px, 5vw, 64px) clamp(20px, 4vw, 48px);
+  border: 1px solid var(--color-line);
+  background:
+    radial-gradient(ellipse at 14% 20%, #dfedfa88, transparent 54%),
+    radial-gradient(ellipse at 86% 80%, #f5edcf94, transparent 54%),
+    radial-gradient(ellipse at 50% 0%, #e9e5ff66, transparent 58%),
+    #fff;
+}
+
+#root .home-landing .landing-content .landing-start-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 26px;
   margin-top: 32px;
 }
-.landing-signin {
+
+#root .home-landing .landing-content .landing-signin {
   color: var(--color-accent-text);
   font-size: 13px;
   text-decoration: underline;
   text-underline-offset: 5px;
 }
-.landing-footer {
+
+#root .home-landing .landing-content .landing-signin:hover {
+  color: var(--landing-ink);
+}
+
+/* 5. Footer */
+#root .home-landing .landing-content .landing-footer {
+  padding: 32px var(--landing-pad-x);
+  border-top: 1px solid var(--landing-ink);
+  background: var(--landing-ink);
+  color: #fff;
+}
+
+#root .home-landing .landing-content .landing-footer-inner {
+  max-width: calc(var(--landing-max) - (var(--landing-pad-x) * 2));
+  margin-inline: auto;
   display: flex;
   align-items: center;
-  gap: 35px;
-  padding: 36px clamp(24px, 5vw, 96px);
+  gap: 32px;
 }
-.landing-footer-brand {
-  color: #0a0a0a;
+
+#root .home-landing .landing-content .landing-footer-brand {
+  color: #fff;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.04em;
   text-decoration: none;
 }
-.landing-footer-brand > span {
+
+#root .home-landing .landing-content .landing-footer-brand > span {
   color: var(--color-accent-light);
 }
-.landing-footer > span {
-  color: var(--color-muted-soft);
+
+#root .home-landing .landing-content .landing-footer-inner > span {
+  color: #cfdae4;
   font-size: 12px;
 }
-.landing-footer nav {
+
+#root .home-landing .landing-content .landing-footer nav {
   display: flex;
-  gap: 26px;
-  margin-left: auto;
+  gap: 24px;
+  margin-inline-start: auto;
 }
-.landing-footer nav a {
-  color: var(--color-muted);
+
+#root .home-landing .landing-content .landing-footer nav a {
+  color: #cfdae4;
   font-size: 12px;
   text-decoration: none;
 }
-.landing-footer nav a:hover {
+
+#root .home-landing .landing-content .landing-footer nav a:hover {
+  color: #fff;
   text-decoration: underline;
-}
-.landing-footer small {
-  color: var(--color-muted-soft);
-  font-size: 10px;
-}
-.landing-content a:focus-visible,
-.landing-content summary:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 5px;
+  text-underline-offset: 4px;
 }
 
-@media (max-width: 1100px) {
-  #root .poster-home.original-home {
-    grid-template-rows: auto minmax(0, 1fr) !important;
+#root .home-landing .landing-content .landing-footer small {
+  color: #cfdae4;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+#root .home-landing .landing-content a:focus-visible,
+#root .home-landing .landing-content summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+/* Responsive adaptation */
+@media (max-width: 1080px) {
+  #root .home-landing .landing-content .landing-features-heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
-  .landing-features,
-  .landing-how,
-  .landing-faq {
-    padding-block: 76px;
+
+  #root .home-landing .landing-content .landing-heading-aside {
+    padding-inline-start: 0;
+    padding-top: 16px;
+    border-inline-start: 0;
+    border-top: 1px solid var(--landing-border);
   }
-  .landing-feature-grid article {
-    padding: 26px;
-  }
-  .landing-how,
-  .landing-faq {
-    gap: 40px;
-  }
-  .landing-footer {
-    flex-wrap: wrap;
-    gap: 22px;
-  }
-  .landing-footer > span {
+
+  #root .home-landing .landing-content .landing-pin-trail--features {
     display: none;
   }
-}
-@media (max-width: 700px) {
-  .landing-features,
-  .landing-how,
-  .landing-faq {
-    padding: 58px 24px;
+
+  #root .home-landing .landing-content .landing-feature-board {
+    padding-bottom: 12px;
   }
-  .landing-section-heading h2,
-  .landing-start h2 {
-    font-size: 43px;
-  }
-  .landing-section-heading > p {
-    font-size: 14px;
-  }
-  .landing-feature-grid {
+
+  #root .home-landing .landing-content .landing-feature-grid {
     grid-template-columns: 1fr;
-    margin-top: 34px;
+    gap: 36px;
+    padding-inline-end: 10px;
   }
-  .landing-feature-grid article {
-    padding: 28px;
-    border-right: 0;
-    border-bottom: 1px solid var(--color-line);
+
+  #root .home-landing .landing-content .landing-feature-grid > article,
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:nth-child(2),
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:nth-child(3) {
+    translate: 0 0;
+    rotate: -0.7deg;
   }
-  .landing-feature-grid article:last-child {
-    border-bottom: 0;
+
+  #root
+    .home-landing
+    .landing-content
+    .landing-feature-grid
+    > article:nth-child(2) {
+    rotate: 0.7deg;
   }
-  .landing-feature-grid article > svg {
-    margin-top: 26px;
-  }
-  .landing-how,
-  .landing-faq {
+
+  #root .home-landing .landing-content .landing-how-inner,
+  #root .home-landing .landing-content .landing-faq {
     grid-template-columns: 1fr;
     gap: 36px;
   }
-  .landing-how li {
-    gap: 18px;
+
+  #root .home-landing .landing-content .landing-how-intro,
+  #root .home-landing .landing-content .landing-faq-intro {
+    position: static;
   }
-  .landing-how h3 {
-    font-size: 22px;
+
+  #root .home-landing .landing-content .landing-cubes--start {
+    display: none;
   }
-  .landing-faq .landing-section-heading h2 {
-    margin-bottom: 0;
-    font-size: 39px;
+}
+
+@media (max-width: 680px) {
+  #root .home-landing .landing-content {
+    --landing-pad-x: 18px;
   }
-  .landing-faq summary {
+
+  #root .home-landing .landing-content .landing-heading-aside {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #root .home-landing .landing-content .landing-feature-grid > article {
+    padding: 9px;
+    box-shadow:
+      7px 7px 0 var(--feature-offset),
+      7px 7px 0 1.5px var(--landing-ink),
+      0 18px 28px -18px rgb(22 37 53 / 22%);
+  }
+
+  #root .home-landing .landing-content .landing-pin-trail--steps {
+    display: none;
+  }
+
+  #root .home-landing .landing-content .landing-how ol li,
+  #root .home-landing .landing-content .landing-how ol li:nth-child(2),
+  #root .home-landing .landing-content .landing-how ol li:nth-child(3) {
+    width: calc(100% - 8px);
+    margin-inline: 0;
+    justify-self: start;
+    rotate: -0.6deg;
+    box-shadow:
+      6px 6px 0 var(--step-offset),
+      6px 6px 0 1.5px var(--landing-ink);
+  }
+
+  #root .home-landing .landing-content .landing-how ol li:nth-child(2) {
+    rotate: 0.6deg;
+  }
+
+  #root .home-landing .landing-content .landing-step-inner {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  #root .home-landing .landing-content .landing-step-inner > span {
+    font-size: 15px;
+  }
+
+  #root .home-landing .landing-content .landing-step-inner > div {
+    padding: 18px;
+  }
+
+  #root .home-landing .landing-content .landing-faq-grid {
+    margin-inline-end: 8px;
+    box-shadow:
+      7px 7px 0 #dfedfa,
+      7px 7px 0 1.5px var(--landing-ink);
+  }
+
+  #root .home-landing .landing-content .landing-faq summary {
+    padding: 18px;
+    gap: 12px;
     font-size: 16px;
   }
-  .landing-start {
-    padding: 64px 24px;
+
+  #root .home-landing .landing-content .landing-faq details p {
+    padding: 0 18px 18px 58px;
   }
-  .landing-start > div {
-    flex-direction: column;
-    gap: 24px;
+
+  #root .home-landing .landing-content .landing-start-stage {
+    padding-inline-end: 8px;
   }
-  .landing-footer {
-    justify-content: space-between;
-    padding: 30px 24px;
+
+  #root .home-landing .landing-content .landing-start-frame {
+    padding: 9px;
+    box-shadow:
+      7px 7px 0 var(--color-accent-soft),
+      7px 7px 0 1.5px var(--landing-ink);
   }
-  .landing-footer nav {
+
+  #root .home-landing .landing-content .landing-footer-inner {
+    flex-wrap: wrap;
+    gap: 16px 24px;
+  }
+
+  #root .home-landing .landing-content .landing-footer-inner > span {
+    display: none;
+  }
+
+  #root .home-landing .landing-content .landing-footer nav {
     order: 3;
-    width: 100%;
-    margin-left: 0;
+    inline-size: 100%;
+    margin-inline-start: 0;
   }
 }
