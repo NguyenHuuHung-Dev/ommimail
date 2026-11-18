@@ -84,8 +84,68 @@ function IsometricCube({
 function LandingCubeCluster({
   variant,
 }: {
-  variant: "features" | "steps" | "faq" | "start";
+  variant: "features" | "steps" | "faq" | "start" | "hero-left" | "hero-right";
 }) {
+  if (variant === "hero-left") {
+    return (
+      <svg
+        className="landing-cubes hero-cubes hero-cubes--left"
+        viewBox="0 0 132 110"
+        width="132"
+        height="110"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={40}
+          y={44}
+          size={22}
+          top="#dfedfa"
+          left="#9cc0ea"
+          right="#315e97"
+          shadow="#cfdce8"
+        />
+        <IsometricCube
+          x={84}
+          y={14}
+          size={24}
+          top="#e9e5ff"
+          left="#b9adfb"
+          right="#674cfb"
+          shadow="#d5cff5"
+        />
+      </svg>
+    );
+  }
+  if (variant === "hero-right") {
+    return (
+      <svg
+        className="landing-cubes hero-cubes hero-cubes--right"
+        viewBox="0 0 132 110"
+        width="132"
+        height="110"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={46}
+          y={16}
+          size={23}
+          top="#fff4d6"
+          left="#f1d286"
+          right="#c49234"
+          shadow="#e7dec1"
+        />
+        <IsometricCube
+          x={88}
+          y={46}
+          size={21}
+          top="#e8f5ef"
+          left="#9cd8c2"
+          right="#226d5c"
+          shadow="#cde6db"
+        />
+      </svg>
+    );
+  }
   if (variant === "features") {
     return (
       <svg
@@ -309,6 +369,8 @@ export function HomeLanding({
             </form>
           </section>
           <span className="poster-side-label">READ · REFRESH · REPEAT</span>
+          <LandingCubeCluster variant="hero-left" />
+          <LandingCubeCluster variant="hero-right" />
           <nav className="poster-socials" aria-label="Mạng xã hội">
             <a
               href="https://www.facebook.com/zingne1302"

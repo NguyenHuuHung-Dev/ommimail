@@ -6,10 +6,15 @@
   min-height: 0;
   border: 0;
   background:
-    linear-gradient(0deg, #fff, transparent 32%),
-    radial-gradient(ellipse at 18% 22%, #dfedfa99, transparent 58%),
-    radial-gradient(ellipse at 85% 32%, #f5edcf99, transparent 50%),
+    radial-gradient(ellipse at 16% 20%, #dfedfa9e, transparent 54%),
+    radial-gradient(ellipse at 86% 28%, #f5edcfa3, transparent 50%),
+    radial-gradient(ellipse at 24% 86%, #e9e5ff70, transparent 48%),
+    radial-gradient(ellipse at 82% 84%, #e8f5ef80, transparent 48%),
     radial-gradient(#78899326 0.7px, transparent 0.7px) 0 0 / 22px 22px,
+    linear-gradient(to right, rgb(120 137 147 / 7%) 1px, transparent 1px) 0 0 /
+      44px 44px,
+    linear-gradient(to bottom, rgb(120 137 147 / 7%) 1px, transparent 1px) 0
+      0 / 44px 44px,
     #f8f9f6;
   overflow: hidden;
 }
@@ -19,6 +24,42 @@
   width: 100%;
   margin: 0 auto;
   background: transparent;
+}
+#root .bubble-home .site-header .site-login,
+#root .bubble-home .site-header .site-register {
+  border-radius: 0;
+  border: 1.5px solid #162535;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    translate 160ms ease;
+}
+#root .bubble-home .site-header .site-login {
+  background: #fff;
+  color: #162535;
+  box-shadow:
+    3px 3px 0 #d2e4f8,
+    3px 3px 0 1.5px #162535;
+}
+#root .bubble-home .site-header .site-register {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow:
+    3px 3px 0 #d0c8f5,
+    3px 3px 0 1.5px #162535;
+}
+#root .bubble-home .site-header .site-account-trigger {
+  border-radius: 0;
+  border: 1.5px solid #162535;
+  background: #fff;
+  box-shadow:
+    3px 3px 0 #dbd3ff,
+    3px 3px 0 1.5px #162535;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #root .bubble-home .site-header :is(.site-login, .site-register):hover {
+    translate: -1px -1px;
+  }
 }
 #root .bubble-home .site-brand-dot {
   color: var(--color-accent);
@@ -200,14 +241,19 @@
 #root .bubble-home .bubble-mail-search {
   display: flex;
   align-items: stretch;
-  width: min(570px, 100%);
-  height: 58px;
+  width: min(580px, calc(100% - 10px));
+  height: 56px;
   margin: 0 auto;
-  border: 1px solid #9aa8b3;
-  background: rgba(255, 255, 255, 0.6);
+  border: 1.5px solid #162535;
+  border-radius: 0;
+  background: #fff;
   box-shadow:
-    inset 0 1px 0 #fff,
-    0 12px 30px #354e6c14;
+    7px 7px 0 #dbd3ff,
+    7px 7px 0 1.5px #162535,
+    0 18px 34px -20px rgb(22 37 53 / 24%);
+  transition:
+    box-shadow 180ms ease,
+    translate 180ms ease;
 }
 #root .bubble-mail-search input {
   min-width: 0;
@@ -216,8 +262,8 @@
   border: 0;
   outline: none;
   background: transparent;
-  color: #24323f;
-  font-size: 13px;
+  color: #162535;
+  font-size: 13.5px;
 }
 #root .bubble-mail-search input::placeholder {
   color: #647384;
@@ -225,30 +271,50 @@
 }
 #root .bubble-mail-search:focus-within {
   outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+  outline-offset: 4px;
 }
 #root .bubble-mail-search button {
   width: auto;
-  min-width: 170px;
+  min-width: 174px;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  align-self: center;
-  height: 30px;
+  gap: 18px;
+  align-self: stretch;
+  height: auto;
   padding: 0 20px;
   border: 0;
-  border-left: 1px solid #aeb9c5;
-  background: transparent;
-  color: #24323f;
-  font-size: 10px;
+  border-left: 1.5px solid #162535;
+  border-radius: 0;
+  background: #162535;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  transition: background-color 160ms ease;
+}
+#root .bubble-mail-search button:hover {
+  background: var(--color-accent);
 }
 #root .bubble-mail-search button b {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 400;
+}
+#root .bubble-home .hero-cubes {
+  position: absolute;
+  bottom: 34px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+  filter: drop-shadow(0 12px 18px rgb(22 37 53 / 12%));
+}
+#root .bubble-home .hero-cubes--left {
+  left: clamp(56px, 7vw, 132px);
+}
+#root .bubble-home .hero-cubes--right {
+  right: clamp(78px, 8vw, 148px);
 }
 #root .bubble-home .poster-side-label {
   position: absolute;
@@ -256,8 +322,9 @@
   top: 42%;
   writing-mode: vertical-rl;
   rotate: 180deg;
-  color: #000;
+  color: #162535;
   font-size: 9px;
+  font-weight: 700;
   letter-spacing: 0.15em;
   pointer-events: none;
 }
@@ -266,7 +333,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  inset: 42% 24px auto auto;
+  inset: 42% 26px auto auto;
   transform: translateY(-50%);
   z-index: 2;
 }
@@ -275,13 +342,41 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  border: 1px solid #c6cfd6;
-  color: #000;
-  background: #ffffffb3;
+  border: 1.5px solid #162535;
+  border-radius: 0;
+  color: #162535;
+  background: #eaf3ff;
+  box-shadow:
+    3px 3px 0 #d2e4f8,
+    3px 3px 0 1.5px #162535;
   pointer-events: auto;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    translate 160ms ease;
+}
+#root .bubble-home .poster-socials a:nth-child(2) {
+  background: #fff4d6;
+  box-shadow:
+    3px 3px 0 #f5e2ae,
+    3px 3px 0 1.5px #162535;
+}
+#root .bubble-home .poster-socials a:nth-child(3) {
+  background: #e9e5ff;
+  box-shadow:
+    3px 3px 0 #dbd3ff,
+    3px 3px 0 1.5px #162535;
 }
 #root .bubble-home .poster-socials a:hover {
-  background: #eef2fa;
+  background: #fff;
+  box-shadow:
+    4px 4px 0 var(--color-accent-soft),
+    4px 4px 0 1.5px #162535;
+}
+@media (prefers-reduced-motion: no-preference) {
+  #root .bubble-home .poster-socials a:hover {
+    translate: -1px -1px;
+  }
 }
 #root .bubble-home .poster-socials svg {
   width: 14px;
@@ -322,14 +417,32 @@
 #root .home-landing .landing-features {
   padding-top: 64px;
 }
+@media (max-width: 1024px) {
+  #root .bubble-home .hero-cubes {
+    display: none;
+  }
+}
 @media (max-width: 700px) {
   #root .bubble-home .poster-socials {
-    inset: 28% 10px auto auto;
+    inset: 34% 10px auto auto;
     gap: 8px;
   }
   #root .bubble-home .poster-socials a {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
+    box-shadow:
+      2px 2px 0 #d2e4f8,
+      2px 2px 0 1.5px #162535;
+  }
+  #root .bubble-home .poster-socials a:nth-child(2) {
+    box-shadow:
+      2px 2px 0 #f5e2ae,
+      2px 2px 0 1.5px #162535;
+  }
+  #root .bubble-home .poster-socials a:nth-child(3) {
+    box-shadow:
+      2px 2px 0 #dbd3ff,
+      2px 2px 0 1.5px #162535;
   }
   #root .home-landing .bubble-home {
     min-height: 0;
@@ -338,7 +451,7 @@
     --hero-art-height: clamp(200px, calc(100svh - 330px), 300px);
     width: 100%;
     min-height: 0;
-    padding: 8px 24px 28px;
+    padding: 8px 24px 32px;
     margin: 0;
     justify-content: center;
   }
@@ -348,8 +461,9 @@
     height: var(--hero-art-height);
   }
   .bubble-word {
-    top: 17%;
-    font-size: 19vw;
+    top: 18%;
+    font-size: 16.5vw;
+    opacity: 0.78;
   }
   #root .bubble-home .hero-illustration img {
     bottom: -60px;
@@ -374,8 +488,8 @@
     width: clamp(44px, 12vw, 60px);
   }
   #root .bubble-home .hero-provider-icon--outlook {
-    top: 42px;
-    right: 44px;
+    top: 36px;
+    right: 52px;
     width: clamp(50px, 14vw, 72px);
   }
   #root .bubble-home .hero-provider-icon--gmail {
@@ -395,15 +509,19 @@
     margin: 12px auto 18px;
   }
   #root .bubble-home .bubble-mail-search {
-    height: 54px;
+    height: 50px;
+    width: calc(100% - 6px);
+    box-shadow:
+      5px 5px 0 #dbd3ff,
+      5px 5px 0 1.5px #162535;
   }
   #root .bubble-mail-search input {
     padding: 0 12px;
     font-size: 12px;
   }
   #root .bubble-mail-search button {
-    min-width: 120px;
-    height: 30px;
+    min-width: 126px;
+    height: auto;
     padding: 0 12px;
     gap: 10px;
     font-size: 9px;

@@ -17,8 +17,8 @@
   --landing-border: #c2cfda;
   --landing-ink: #162535;
   color: var(--landing-ink);
+  border-top: 1px solid var(--landing-border);
   background:
-    linear-gradient(180deg, #fff 0%, transparent 140px),
     radial-gradient(ellipse at 12% 10%, #dfedfa99, transparent 48%),
     radial-gradient(ellipse at 88% 18%, #f5edcf99, transparent 46%),
     radial-gradient(ellipse at 20% 56%, #e9e5ff6e, transparent 48%),
