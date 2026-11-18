@@ -1,0 +1,364 @@
+/* Account connection surfaces share the landing page's illustrated palette. */
+#root .workspace-shell > .connect-page {
+  padding: 32px clamp(20px, 4vw, 64px) !important;
+  overflow: auto !important;
+  background:
+    radial-gradient(ellipse at 0 0, #eaf3ff, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, #eeeaff, transparent 55%),
+    var(--color-surface-warm) !important;
+}
+#root .connect-page .connect-surface {
+  display: block;
+  width: min(1180px, 100%);
+  height: auto;
+  max-height: none;
+  margin: 0 auto;
+  overflow: visible !important;
+}
+#root .connect-page .connect-surface > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 0;
+  padding: 0 0 26px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+#root .connect-page .connect-eyebrow {
+  color: var(--color-accent-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+#root .connect-page .connect-surface > header h2 {
+  margin: 12px 0 8px;
+  color: var(--color-ink-deep) !important;
+  font-size: clamp(32px, 3.4vw, 48px) !important;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+#root .connect-page .connect-surface > header p {
+  max-width: none;
+  margin: 0;
+  font-size: 15px;
+}
+#root .connect-page .connect-surface > header > button {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-color: var(--color-line) !important;
+  background: #fff;
+}
+#root .connect-page .connect-channels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+}
+#root .connect-page .connect-channel {
+  --channel-color: var(--color-coral);
+  --channel-wash: var(--color-coral-soft);
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 26px;
+  overflow: visible;
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--channel-color);
+  background: linear-gradient(150deg, var(--channel-wash), #fff 36%);
+}
+#root .connect-page .microsoft-channel {
+  --channel-color: var(--color-blue);
+  --channel-wash: var(--color-blue-soft);
+}
+#root .connect-page .connect-channel > header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 22px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--color-line);
+}
+#root .connect-page .connect-provider-mark {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  background: #ffffffb3;
+  border: 1px solid color-mix(in srgb, var(--channel-color) 18%, white);
+}
+#root .connect-page .connect-provider-mark img {
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+}
+#root .connect-page .connect-provider-mark span {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  padding: 3px 5px;
+  background: var(--channel-color);
+  color: #fff;
+  font-size: 9px;
+}
+#root .connect-page .connect-channel > header strong {
+  font-size: clamp(19px, 1.7vw, 25px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+#root .connect-page .connect-channel > header small {
+  margin-top: 7px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+#root .connect-page .connect-channel > button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--channel-color) 40%, white);
+  background: #fff;
+  color: var(--color-ink-deep);
+  text-align: left;
+}
+#root .connect-page .connect-channel > button:hover:not(:disabled) {
+  background: var(--channel-wash);
+  border-color: var(--channel-color);
+}
+#root .connect-page .connect-channel > button strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+#root .connect-page .connect-channel > button small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--color-muted);
+}
+#root .connect-page .connect-channel > button .provider {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  flex-shrink: 0;
+  background: var(--channel-wash);
+  color: var(--channel-color);
+  font-size: 16px;
+}
+#root .connect-page .gmail-divider {
+  margin: 24px 0 18px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+#root .connect-page .gmail-app-password,
+#root .connect-page .connect-channel .token-connect {
+  margin: 22px 0 0 !important;
+  padding: 22px !important;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface) !important;
+}
+#root .connect-page .gmail-app-password {
+  margin-top: 0 !important;
+}
+#root .connect-page .gmail-app-password > strong,
+#root .connect-page .token-connect > summary {
+  color: var(--color-ink-deep);
+  font-size: 18px;
+  font-weight: 400;
+}
+#root .connect-page :is(.gmail-app-password, .token-connect) > p {
+  margin: 10px 0 18px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+#root .connect-page .token-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+#root .connect-page :is(.gmail-app-password, .token-fields) > label {
+  display: block;
+  margin: 16px 0 7px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+#root .connect-page .token-fields label > span {
+  font-weight: 400;
+  color: var(--color-muted-soft);
+}
+#root .connect-page :is(.gmail-app-password, .token-fields) > input,
+#root .connect-page .token-fields > textarea,
+#root .connect-page .bulk-import > textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--color-line-strong);
+  background: #fff;
+  color: var(--color-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+#root .connect-page :is(.token-fields, .bulk-import) > textarea {
+  height: auto;
+  min-height: 90px;
+  resize: vertical;
+}
+#root .connect-page :is(input, textarea):focus {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--color-accent-soft);
+  outline-offset: 1px;
+}
+#root .connect-page .gmail-app-password > small {
+  display: block;
+  margin-top: 7px;
+  color: var(--color-muted-soft);
+  font-size: 11px;
+  text-align: right;
+}
+#root .connect-page .connect-channel .primary {
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  margin-top: 16px;
+  padding: 12px;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1.4;
+}
+#root .connect-page .connect-channel button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+#root .connect-page .bulk-import {
+  margin-top: 24px;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--color-line);
+  background: transparent;
+}
+#root .connect-page .bulk-import > strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 400;
+}
+#root .connect-page .bulk-import > small {
+  display: block;
+  margin: 8px 0 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+#root .connect-page .gmail-guide {
+  margin: 16px 0;
+  border: 1px solid #d8d1f0;
+  padding: 12px 14px;
+  background: #f2efff;
+}
+#root .connect-page .gmail-guide summary {
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-accent-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+#root .connect-page .gmail-guide-content {
+  padding-top: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+#root .connect-page .gmail-guide-content ol {
+  margin: 18px 0;
+  padding-left: 20px;
+}
+#root .connect-page .gmail-guide-content li {
+  padding: 6px 0 6px 4px;
+}
+#root
+  .connect-page
+  .gmail-guide-content
+  :is(li, .guide-note, .guide-warning)
+  span {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-muted);
+}
+#root .connect-page .gmail-guide-content a {
+  color: var(--color-accent-text);
+  text-underline-offset: 3px;
+}
+#root .connect-page .guide-note p {
+  margin: 0;
+}
+#root .connect-page .guide-warning {
+  padding: 12px;
+  border-left: 2px solid var(--color-gold);
+  background: var(--color-gold-soft);
+}
+#root .connect-page .guide-security {
+  margin-bottom: 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+#root .connect-page .connect-assurance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 24px;
+  padding: 16px;
+  color: var(--color-mint);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+#root .connect-page .connect-assurance svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+@media (max-width: 800px) {
+  #root .connect-page .connect-channels {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  #root .workspace-shell > .connect-page {
+    padding: 24px 18px !important;
+  }
+  #root .connect-page .connect-channel {
+    padding: 22px;
+  }
+}
+@media (max-width: 420px) {
+  #root .connect-page .connect-channel {
+    padding: 18px;
+  }
+  #root .connect-page .gmail-app-password,
+  #root .connect-page .connect-channel .token-connect {
+    padding: 16px !important;
+  }
+  #root .connect-page .connect-provider-mark {
+    width: 58px;
+    height: 58px;
+  }
+  #root .connect-page .connect-provider-mark img {
+    width: 48px;
+    height: 48px;
+  }
+}

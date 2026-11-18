@@ -135,11 +135,6 @@
 .admin-dashboard-page .admin-directory { height: auto; max-height: calc(100vh - 250px); }
 .mailbox-manager .mailbox-directory { margin-top: 14px; }
 
-/* Connect has no redundant page banner; provider cards are the page content. */
-.connect-page .connect-surface { grid-template-rows: minmax(0, 1fr) 40px!important; }
-.connect-page .connect-surface > header { display: none!important; }
-.connect-page .connect-channels { padding-top: 0; }
-
 /* Temp address creation belongs with the address picker in the left rail. */
 .temp-mail-page .temp-workspace { margin-top: 0!important; height: 100%!important; }
 .temp-mail-page:has(.temp-active-bar) .temp-workspace { height: calc(100% - 68px)!important; margin-top: 14px!important; }

@@ -29,6 +29,7 @@ import {
   Plus,
   RefreshCw,
   SlidersHorizontal,
+  ShieldCheck,
   Trash2,
   X,
 } from "lucide-react";
@@ -1312,6 +1313,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
       <section className="connect-modal connect-surface">
         <header>
           <div>
+            <span className="connect-eyebrow">YOUR NEXT CONNECTION</span>
             <h2>Connect an account</h2>
             <p>Bring every inbox into one workspace.</p>
           </div>
@@ -1321,7 +1323,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
         </header>
         <div className="connect-channels">
         <section className="connect-channel gmail-channel">
-          <header><span>01</span><div><strong>Google / Gmail</strong><small>OAuth 2.0 · Ready</small></div></header>
+          <header><div className="connect-provider-mark"><img src="/icons/gmail-3d.webp" alt="" /><span>01</span></div><div><strong>Google / Gmail</strong><small>Your everyday inbox, connected.</small></div></header>
           <button onClick={() => oauth("google")} disabled={Boolean(oauthBusy)}>
             <ProviderDot p="gmail" />
             <span>
@@ -1337,7 +1339,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
           <div className="gmail-app-password">
             <strong>App Password</strong>
             <p>Dùng App Password 16 ký tự được tạo đúng từ tài khoản Gmail này. Không dùng mật khẩu Gmail, mã OTP hoặc mã xác minh 2 bước.</p>
-            <details className="gmail-guide" open>
+            <details className="gmail-guide">
               <summary>Hướng dẫn lấy App Password 16 ký tự</summary>
               <div className="gmail-guide-content">
                 <div className="guide-note"><p><strong>App Password là gì?</strong><span>Đây là mật khẩu phụ Google tạo riêng cho OmniMail, không phải mật khẩu Gmail hay mã OTP. Bạn có thể thu hồi riêng bất kỳ lúc nào.</span></p></div>
@@ -1352,16 +1354,19 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
                 <p className="guide-security">Không gửi mã này cho người khác. Nếu nghi ngờ bị lộ, hãy quay lại Google App Passwords và thu hồi mã OmniMail.</p>
               </div>
             </details>
-            <input type="email" value={gmailEmail} onChange={(e) => setGmailEmail(e.target.value)} placeholder="yourname@gmail.com" />
-            <input value={gmailAppPassword} onChange={(e) => setGmailAppPassword(e.target.value)} placeholder="xxxx xxxx xxxx xxxx" autoComplete="off" />
+            <label htmlFor="connect-gmail-email">Gmail address</label>
+            <input id="connect-gmail-email" type="email" value={gmailEmail} onChange={(e) => setGmailEmail(e.target.value)} placeholder="yourname@gmail.com" />
+            <label htmlFor="connect-gmail-password">App Password</label>
+            <input id="connect-gmail-password" value={gmailAppPassword} onChange={(e) => setGmailAppPassword(e.target.value)} placeholder="xxxx xxxx xxxx xxxx" autoComplete="off" />
             <small>{gmailAppPassword.replace(/\s/g, "").length}/16 ký tự</small>
             <button className="primary" disabled={!gmailEmail || gmailAppPassword.replace(/\s/g, "").length !== 16 || gmailPasswordConnect.isPending} onClick={() => gmailPasswordConnect.mutate()}>{gmailPasswordConnect.isPending ? "Verifying…" : "Connect with App Password"}</button>
             {gmailPasswordConnect.error && <div className="connect-error">{gmailPasswordConnect.error.message}</div>}
           </div>
         </section>
         <section className="connect-channel microsoft-channel">
-          <header><span>02</span><div><strong>Outlook / Microsoft</strong><small>OAuth or refresh-token connection</small></div></header>
+          <header><div className="connect-provider-mark"><img src="/icons/outlook-3d.webp" alt="" /><span>02</span></div><div><strong>Outlook / Microsoft</strong><small>A clear view of your Microsoft mail.</small></div></header>
           <button
+            className="microsoft-oauth"
             onClick={() => oauth("microsoft")}
             disabled={Boolean(oauthBusy)}
           >
@@ -1385,18 +1390,24 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
             never returned to the browser.
           </p>
           <div className="token-fields">
+            <label htmlFor="connect-ms-email">Microsoft email</label>
             <input
+              id="connect-ms-email"
               type="email"
               value={msEmail}
               onChange={(e) => setMsEmail(e.target.value)}
               placeholder="Microsoft email"
             />
+            <label htmlFor="connect-ms-client">Client ID <span>(optional)</span></label>
             <input
+              id="connect-ms-client"
               value={msClient}
               onChange={(e) => setMsClient(e.target.value)}
               placeholder="Client ID (optional)"
             />
+            <label htmlFor="connect-ms-token">Refresh token</label>
             <textarea
+              id="connect-ms-token"
               value={msRefresh}
               onChange={(e) => setMsRefresh(e.target.value)}
               placeholder="Paste refresh token"
@@ -1420,6 +1431,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
               One account per line: email | client ID | refresh token
             </small>
             <textarea
+              aria-label="Microsoft accounts to import"
               value={bulkMicrosoft}
               onChange={(e) => setBulkMicrosoft(e.target.value)}
               placeholder={
@@ -1510,6 +1522,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
         </div>
         </section>
         </div>
+        <div className="connect-assurance"><ShieldCheck aria-hidden="true" /><span>Your original emails stay with your provider. Disconnect anytime.</span></div>
       </section>
     </main>
   );
