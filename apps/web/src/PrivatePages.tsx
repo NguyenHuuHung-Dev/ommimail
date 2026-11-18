@@ -23,6 +23,7 @@ import "./mailboxes-layout.css";
 import "./surface-depth.css";
 import "./connect-design.css";
 import "./auth-design.css";
+import "./unified-3d-theme.css";
 
 export function HomeRoute() {
   const { user, canAccess, loading } = useAuthSession();

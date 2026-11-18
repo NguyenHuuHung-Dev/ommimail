@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { CubeCluster3D } from "./CubeCluster3D";
 import { PrivacyPage, SecurityPage } from "./PublicHome";
 import { Seo } from "./Seo";
+import "./unified-3d-theme.css";
 
 const Guard = lazy(() =>
   import("./PrivatePages").then((module) => ({ default: module.Guard })),
@@ -30,6 +32,7 @@ function NotFound() {
         noIndex
       />
       <div>
+        <CubeCluster3D variant="empty" />
         <strong>404</strong>
         <h1>Không tìm thấy trang</h1>
         <p>Đường dẫn này không tồn tại hoặc đã được thay đổi.</p>

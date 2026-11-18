@@ -1,0 +1,1420 @@
+/* Unified Matte Card + 3D Isometric Cube + Multicolor Offset Shadow Theme
+   Applies consistently to all remaining pages (excluding HomeLanding & Mailboxes). */
+
+:root {
+  --u3d-ink: #162535;
+  --u3d-muted: #4b5c6e;
+  --u3d-canvas: #f8f9f6;
+  --u3d-blue: #d2e4f8;
+  --u3d-blue-tint: #f5f9ff;
+  --u3d-blue-ink: #315e97;
+  --u3d-mint: #cceede;
+  --u3d-mint-tint: #f4fbf7;
+  --u3d-mint-ink: #226d5c;
+  --u3d-gold: #f5e2ae;
+  --u3d-gold-tint: #fffbf0;
+  --u3d-gold-ink: #806017;
+  --u3d-lavender: #dbd3ff;
+  --u3d-lavender-tint: #f7f5ff;
+  --u3d-lavender-ink: #674cfb;
+  --u3d-coral: #fad9ce;
+  --u3d-coral-tint: #fff7f5;
+  --u3d-coral-ink: #a64d35;
+}
+
+/* ==========================================================================
+   GLOBAL VIEWPORT FRAME — Perimeter Bezel with Top & Upper-Right Offset Shadow
+   ========================================================================== */
+body::after {
+  content: "";
+  position: fixed;
+  top: 9px;
+  left: 6px;
+  right: 11px;
+  bottom: 6px;
+  border: 2px solid var(--u3d-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 75;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 74;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(
+      90deg,
+      var(--u3d-blue) 0% 20%,
+      var(--u3d-lavender) 20% 42%,
+      var(--u3d-mint) 42% 64%,
+      var(--u3d-gold) 64% 84%,
+      var(--u3d-coral) 84% 100%
+    ),
+    linear-gradient(
+      180deg,
+      var(--u3d-coral) 0% 24%,
+      var(--u3d-gold) 24% 50%,
+      var(--u3d-mint) 50% 76%,
+      var(--u3d-blue) 76% 100%
+    ),
+    linear-gradient(var(--u3d-ink), var(--u3d-ink)),
+    linear-gradient(var(--u3d-ink), var(--u3d-ink)),
+    linear-gradient(var(--u3d-ink), var(--u3d-ink)),
+    linear-gradient(var(--u3d-ink), var(--u3d-ink));
+  background-position:
+    left 12px top 4px,
+    right 6px top 4px,
+    left 12px top 2px,
+    left 12px top 2px,
+    right 4px top 2px,
+    right 4px bottom 10px;
+  background-size:
+    calc(100% - 18px) 5px,
+    5px calc(100% - 16px),
+    calc(100% - 16px) 2px,
+    2px 7px,
+    2px calc(100% - 12px),
+    7px 2px;
+}
+
+/* Shared helper for decorative cube clusters */
+.cube-cluster-3d {
+  display: block;
+  flex-shrink: 0;
+  max-width: 100%;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px rgba(22, 37, 53, 0.08));
+}
+
+.cube-cluster-3d--header {
+  width: clamp(92px, 10vw, 132px);
+}
+
+.cube-cluster-3d--badge {
+  width: 76px;
+}
+
+/* Shared Hero Atmospheric Backdrop across workspace sub-pages */
+#root .workspace-shell:not(.mailboxes-page) > .dashboard-page,
+#root .workspace-shell:not(.mailboxes-page) > .admin-console {
+  background-color: var(--u3d-canvas) !important;
+  background-image:
+    radial-gradient(circle at 12% 14%, rgba(223, 237, 250, 0.56) 0%, transparent 36%),
+    radial-gradient(circle at 86% 16%, rgba(233, 229, 255, 0.52) 0%, transparent 38%),
+    radial-gradient(circle at 78% 84%, rgba(232, 245, 239, 0.52) 0%, transparent 38%),
+    radial-gradient(circle at 18% 88%, rgba(245, 237, 207, 0.44) 0%, transparent 34%),
+    radial-gradient(rgba(22, 37, 53, 0.085) 1px, transparent 1px),
+    linear-gradient(to right, rgba(22, 37, 53, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 37, 53, 0.032) 1px, transparent 1px) !important;
+  background-size: auto, auto, auto, auto, 22px 22px, 44px 44px, 44px 44px !important;
+  color: var(--u3d-ink);
+}
+
+/* Force crisp square matte ink geometry across sub-pages */
+#root .workspace-shell:not(.mailboxes-page) .dashboard-page :is(
+  button,
+  input,
+  select,
+  textarea,
+  article,
+  section,
+  details
+),
+#root .workspace-shell:not(.mailboxes-page) .admin-console :is(
+  button,
+  input,
+  select,
+  article,
+  section
+) {
+  border-radius: 0 !important;
+}
+
+#root .workspace-shell:not(.mailboxes-page) :is(.dashboard-page, .admin-console) :is(input, select, textarea) {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+}
+
+#root .workspace-shell:not(.mailboxes-page) :is(.dashboard-page, .admin-console) :is(input, select, textarea):focus {
+  outline: none !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* Shared page header alignment */
+#root .workspace-shell:not(.mailboxes-page) .page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  border: 1.5px solid var(--u3d-ink);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink);
+}
+
+#root .workspace-shell:not(.mailboxes-page) .page-header h1 {
+  color: var(--u3d-ink) !important;
+  letter-spacing: -0.03em;
+}
+
+#root .workspace-shell:not(.mailboxes-page) .page-header .eyebrow {
+  display: inline-block;
+  padding: 3px 9px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-lavender-tint);
+  color: var(--u3d-lavender-ink) !important;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#root .workspace-shell:not(.mailboxes-page) .page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#root .workspace-shell:not(.mailboxes-page) .dashboard-page button.primary,
+#root .workspace-shell:not(.mailboxes-page) .admin-console button.primary {
+  min-height: 40px;
+  padding: 0 18px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-ink) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-lavender),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+}
+
+#root .workspace-shell:not(.mailboxes-page) .dashboard-page button.primary:disabled {
+  opacity: 0.56;
+  box-shadow:
+    2px 2px 0 var(--u3d-blue),
+    2px 2px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   1. CONNECT PAGE (/app/connect)
+   ========================================================================== */
+#root .connect-page.dashboard-page {
+  padding: clamp(20px, 3.2vw, 40px) clamp(16px, 3.2vw, 42px) 56px !important;
+  overflow-y: auto !important;
+}
+
+#root .connect-page .connect-surface {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 32px) !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  box-shadow:
+    8px 8px 0 var(--u3d-blue),
+    8px 8px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-surface > header {
+  padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-eyebrow {
+  display: inline-block;
+  padding: 3px 9px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink) !important;
+}
+
+#root .connect-page .connect-surface > header h2 {
+  color: var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-header-aside {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+#root .connect-page .connect-surface > header button {
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-lavender-tint) !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.15s ease, box-shadow 0.15s ease;
+}
+
+#root .connect-page .connect-channels {
+  gap: 22px !important;
+  margin-top: 24px !important;
+}
+
+#root .connect-page .connect-channel {
+  min-width: 0;
+  padding: 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-top: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.18s ease, box-shadow 0.18s ease;
+}
+
+#root .connect-page .connect-channel.gmail-channel {
+  background: linear-gradient(180deg, var(--u3d-coral-tint) 0%, #ffffff 42%) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-coral),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-channel.microsoft-channel {
+  background: linear-gradient(180deg, var(--u3d-blue-tint) 0%, #ffffff 42%) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-channel.temp-channel {
+  background: linear-gradient(180deg, var(--u3d-mint-tint) 0%, #ffffff 42%) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-mint),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .connect-page .connect-channel > header {
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid rgba(22, 37, 53, 0.16);
+}
+
+#root .connect-page .connect-provider-mark > span {
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink) !important;
+}
+
+#root .connect-page .connect-channel > button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-gold),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.15s ease, box-shadow 0.15s ease;
+}
+
+#root .connect-page .gmail-app-password,
+#root .connect-page .token-connect,
+#root .connect-page .temp-connect,
+#root .connect-page .bulk-import {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+#root .connect-page .gmail-guide {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-gold-tint) !important;
+}
+
+#root .connect-page .address-builder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+#root .connect-page .address-builder input,
+#root .connect-page .address-builder select {
+  min-width: 0;
+  flex: 1 1 130px;
+}
+
+/* ==========================================================================
+   2. TEMP MAIL PAGE (/app/temp-mail)
+   ========================================================================== */
+#root .temp-mail-page.dashboard-page {
+  padding: clamp(16px, 2.4vw, 28px) clamp(14px, 2.8vw, 34px) !important;
+}
+
+#root .temp-mail-page .temp-active-bar {
+  padding: 16px 20px !important;
+  margin-bottom: 18px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: linear-gradient(90deg, var(--u3d-mint-tint) 0%, #ffffff 55%) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-mint),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-active-bar > button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  font-weight: 700;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-active-bar > button.copied {
+  background: var(--u3d-mint-tint) !important;
+  color: var(--u3d-mint-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-mint),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-active-bar > button.danger {
+  background: var(--u3d-coral-tint) !important;
+  color: var(--u3d-coral-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-coral),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-workspace {
+  gap: 18px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#root .temp-mail-page .temp-addresses {
+  padding: 16px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-lavender),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-addresses > header {
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid rgba(22, 37, 53, 0.16);
+}
+
+#root .temp-mail-page .temp-addresses > header b {
+  padding: 2px 8px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-lavender-tint);
+  color: var(--u3d-lavender-ink);
+}
+
+#root .temp-mail-page .temp-sidebar-create {
+  padding: 14px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-gold-tint) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-gold),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-address {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-address.active {
+  background: var(--u3d-mint-tint) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-mint),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-message-list {
+  padding: 16px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-message-list > header {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1.5px solid rgba(22, 37, 53, 0.16);
+}
+
+#root .temp-mail-page .temp-message-list > header button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-blue-tint) !important;
+}
+
+#root .temp-mail-page .temp-message-list > button {
+  margin-bottom: 10px;
+  padding: 12px 14px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-gold),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.15s ease, box-shadow 0.15s ease;
+}
+
+#root .temp-mail-page .temp-message-list > button:nth-of-type(4n + 1) {
+  box-shadow: 3px 3px 0 var(--u3d-blue), 3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+#root .temp-mail-page .temp-message-list > button:nth-of-type(4n + 2) {
+  box-shadow: 3px 3px 0 var(--u3d-mint), 3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+#root .temp-mail-page .temp-message-list > button:nth-of-type(4n + 3) {
+  box-shadow: 3px 3px 0 var(--u3d-lavender), 3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+#root .temp-mail-page .temp-message-list > button:nth-of-type(4n + 4) {
+  box-shadow: 3px 3px 0 var(--u3d-gold), 3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-message-list > button.active {
+  background: var(--u3d-lavender-tint) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-lavender-ink),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-reader {
+  padding: 20px 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-gold),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   3. MAILBOX DIRECTORY PAGE (/app/accounts)
+   ========================================================================== */
+#root .mailbox-manager.dashboard-page {
+  padding: clamp(20px, 3vw, 38px) clamp(16px, 3vw, 42px) 52px !important;
+  overflow-y: auto !important;
+}
+
+#root .mailbox-manager .mailbox-toolbar {
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  border: 1.5px solid var(--u3d-ink);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow:
+    5px 5px 0 var(--u3d-mint),
+    5px 5px 0 1.5px var(--u3d-ink);
+}
+
+#root .mailbox-manager .mailbox-directory {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-lavender),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .mailbox-manager .mailbox-directory > header {
+  background: var(--u3d-lavender-tint) !important;
+  border-bottom: 1.5px solid var(--u3d-ink) !important;
+  color: var(--u3d-ink) !important;
+}
+
+#root .mailbox-manager .mailbox-directory > article {
+  border-bottom: 1px solid rgba(22, 37, 53, 0.14) !important;
+}
+
+#root .mailbox-manager .mailbox-actions button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-blue-tint) !important;
+  color: var(--u3d-ink) !important;
+  font-weight: 700;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .mailbox-manager .mailbox-actions button.disconnect-account {
+  background: var(--u3d-coral-tint) !important;
+  color: var(--u3d-coral-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-coral),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .mailbox-manager .mailbox-pagination button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-gold),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   4. SHARING HUB (/app/mail-sharing & /app/mailbox-sharing)
+   ========================================================================== */
+#root .sharing-hub-page.dashboard-page {
+  padding: clamp(20px, 3vw, 38px) clamp(16px, 3vw, 42px) 52px !important;
+}
+
+#root .sharing-hub-page .sharing-mode-tabs {
+  gap: 12px !important;
+  border-bottom: 0 !important;
+  margin-bottom: 22px !important;
+}
+
+#root .sharing-hub-page .sharing-mode-tabs button {
+  padding: 12px 18px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-blue),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.15s ease, box-shadow 0.15s ease;
+}
+
+#root .sharing-hub-page .sharing-mode-tabs button.active {
+  background: var(--u3d-lavender-tint) !important;
+  color: var(--u3d-lavender-ink) !important;
+  box-shadow:
+    5px 5px 0 var(--u3d-lavender),
+    5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-tabs {
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+}
+
+#root .sharing-hub-page .shared-message-tabs button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-mint),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-tabs button.active {
+  background: var(--u3d-mint-tint) !important;
+  color: var(--u3d-mint-ink) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-mint-ink),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-workspace {
+  gap: 18px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#root .sharing-hub-page .shared-message-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-list article {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-gold),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-list article:nth-of-type(3n + 1) {
+  box-shadow: 4px 4px 0 var(--u3d-blue), 4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+#root .sharing-hub-page .shared-message-list article:nth-of-type(3n + 2) {
+  box-shadow: 4px 4px 0 var(--u3d-mint), 4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+#root .sharing-hub-page .shared-message-list article:nth-of-type(3n + 3) {
+  box-shadow: 4px 4px 0 var(--u3d-lavender), 4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-list article.active {
+  background: var(--u3d-lavender-tint) !important;
+  box-shadow:
+    5px 5px 0 var(--u3d-lavender-ink),
+    5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-message-reader {
+  padding: 18px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-mint),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* 4 multicolor stat cards in Mailbox Sharing */
+#root .sharing-hub-page .share-stat-grid {
+  gap: 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#root .sharing-hub-page .share-stat-grid article {
+  padding: 18px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .share-stat-grid article:nth-child(1) {
+  background: var(--u3d-blue-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-blue), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .sharing-hub-page .share-stat-grid article:nth-child(2) {
+  background: var(--u3d-mint-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-mint), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .sharing-hub-page .share-stat-grid article:nth-child(3) {
+  background: var(--u3d-lavender-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-lavender), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .sharing-hub-page .share-stat-grid article:nth-child(4) {
+  background: var(--u3d-gold-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-gold), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .share-batch-builder {
+  padding: 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-lavender),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .share-access-dashboard {
+  padding: 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-blue),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .shared-with-me-panel,
+#root .sharing-hub-page .share-empty-state {
+  padding: 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-gold),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .share-mailbox-check-grid label.selected {
+  border-color: var(--u3d-ink) !important;
+  background: var(--u3d-lavender-tint) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .sharing-hub-page .share-batch-action button,
+#root .sharing-hub-page .share-access-header button,
+#root .sharing-hub-page .share-access-table article > button {
+  min-height: 36px;
+  border: 1.5px solid var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-coral),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   5. ADMIN CONSOLE (/app/mail-admin for admins)
+   ========================================================================== */
+#root .admin-console {
+  padding: clamp(20px, 3vw, 38px) clamp(16px, 3vw, 42px) 52px !important;
+  overflow-y: auto !important;
+}
+
+#root .admin-console .admin-page-heading {
+  padding: 22px 24px !important;
+  margin-bottom: 22px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-lavender),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .admin-console .admin-eyebrow {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink) !important;
+}
+
+#root .admin-console .admin-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+#root .admin-console .admin-button {
+  min-height: 40px;
+  padding: 0 16px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-ink) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-blue),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .admin-console .admin-metrics {
+  gap: 16px !important;
+  margin-bottom: 22px !important;
+}
+
+#root .admin-console .admin-metric {
+  border: 1.5px solid var(--u3d-ink) !important;
+  padding: 18px 20px !important;
+  transition: translate 0.16s ease, box-shadow 0.16s ease;
+}
+
+#root .admin-console .admin-metric:nth-child(1) {
+  background: var(--u3d-blue-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-blue), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .admin-console .admin-metric:nth-child(2) {
+  background: var(--u3d-mint-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-mint), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .admin-console .admin-metric:nth-child(3) {
+  background: var(--u3d-gold-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-gold), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+#root .admin-console .admin-metric:nth-child(4) {
+  background: var(--u3d-coral-tint) !important;
+  box-shadow: 5px 5px 0 var(--u3d-coral), 5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .admin-console .admin-metric.selected {
+  outline: 2px solid var(--u3d-lavender-ink);
+  outline-offset: -4px;
+}
+
+#root .admin-console .admin-user-panel {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-mint),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .admin-console .admin-status-tabs button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+}
+
+#root .admin-console .admin-status-tabs button.active {
+  background: var(--u3d-lavender-tint) !important;
+  color: var(--u3d-lavender-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   6. PREMIUM UPGRADE PAGE (/app/mail-admin for basic/premium)
+   ========================================================================== */
+#root .premium-page.dashboard-page {
+  padding: clamp(20px, 3vw, 38px) clamp(16px, 3vw, 42px) 52px !important;
+  overflow-y: auto !important;
+}
+
+#root .premium-page .premium-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  max-width: 1120px;
+  margin: 0 auto 24px !important;
+  padding: 22px 24px !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-gold),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-heading > div {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+#root .premium-page .premium-heading > div > span {
+  display: inline-block;
+  padding: 3px 9px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink) !important;
+}
+
+#root .premium-page .premium-grid {
+  max-width: 1120px;
+  margin: 0 auto !important;
+  gap: 22px !important;
+}
+
+#root .premium-page .premium-plan {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: linear-gradient(180deg, var(--u3d-lavender-tint) 0%, #ffffff 34%) !important;
+  box-shadow:
+    7px 7px 0 var(--u3d-lavender),
+    7px 7px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-membership {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-mint-tint) !important;
+}
+
+#root .premium-page .premium-pay-button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-ink) !important;
+  color: #ffffff !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-gold),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-order {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-gold-tint) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-gold),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-how {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-blue),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-how ol li b {
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-blue-tint);
+  color: var(--u3d-blue-ink);
+}
+
+#root .premium-page .premium-manual {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-mint-tint) !important;
+  box-shadow:
+    6px 6px 0 var(--u3d-mint),
+    6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .premium-page .premium-order button,
+#root .premium-page .premium-manual button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   7. AUTH PAGES (/login, /register, /forgot-password) & VERIFY EMAIL (/verify-email)
+   ========================================================================== */
+#root .auth.auth-redesign,
+#root .auth.verification-layout {
+  background-color: var(--u3d-canvas) !important;
+  background-image:
+    radial-gradient(circle at 12% 16%, rgba(223, 237, 250, 0.62) 0%, transparent 38%),
+    radial-gradient(circle at 86% 18%, rgba(233, 229, 255, 0.56) 0%, transparent 38%),
+    radial-gradient(circle at 76% 84%, rgba(232, 245, 239, 0.56) 0%, transparent 38%),
+    radial-gradient(circle at 20% 88%, rgba(245, 237, 207, 0.48) 0%, transparent 34%),
+    radial-gradient(rgba(22, 37, 53, 0.085) 1px, transparent 1px),
+    linear-gradient(to right, rgba(22, 37, 53, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 37, 53, 0.032) 1px, transparent 1px) !important;
+  background-size: auto, auto, auto, auto, 22px 22px, 44px 44px, 44px 44px !important;
+}
+
+#root .auth.auth-redesign :is(
+  a,
+  button,
+  input,
+  section,
+  aside,
+  span.auth-scene-eyebrow
+) {
+  border-radius: 0 !important;
+}
+
+#root .auth-redesign .auth-return-home {
+  padding: 8px 14px;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-mint),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.15s ease, box-shadow 0.15s ease;
+}
+
+#root .auth-redesign .auth-scene {
+  position: relative;
+  padding: clamp(22px, 3vw, 32px) !important;
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow:
+    8px 8px 0 var(--u3d-blue),
+    8px 8px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth-redesign .auth-scene-eyebrow {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink) !important;
+}
+
+#root .auth-redesign .auth-scene-cubes {
+  margin: 0 auto 6px;
+}
+
+#root .auth.auth-redesign .auth-panel .auth-card {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    8px 8px 0 var(--u3d-lavender),
+    8px 8px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth-redesign .auth-provider-grid .provider-button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+  transition: translate 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+}
+
+#root .auth-redesign .auth-provider-grid .provider-button:nth-child(2) {
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth-redesign .auth-provider-grid .provider-button:nth-child(3) {
+  box-shadow:
+    3px 3px 0 var(--u3d-mint),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth-redesign .auth-card form input {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+}
+
+#root .auth-redesign .auth-card form input:focus {
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth-redesign .auth-card .primary {
+  border: 1.5px solid var(--u3d-ink) !important;
+  background: var(--u3d-ink) !important;
+  color: #ffffff !important;
+  box-shadow:
+    5px 5px 0 var(--u3d-gold),
+    5px 5px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth.verification-layout {
+  min-height: 100dvh;
+  padding: clamp(24px, 4vw, 48px) 16px !important;
+}
+
+#root .auth.verification-layout .verification-card {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  box-shadow:
+    8px 8px 0 var(--u3d-mint),
+    8px 8px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth.verification-layout .verify-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#root .auth.verification-layout .verify-badge > span {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1.5px solid var(--u3d-ink);
+  border-radius: 0 !important;
+  background: var(--u3d-lavender-tint);
+  color: var(--u3d-lavender-ink);
+}
+
+#root .auth.verification-layout .verification-help {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  background: var(--u3d-gold-tint) !important;
+}
+
+#root .auth.verification-layout .verification-card > button {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+}
+
+#root .auth.verification-layout .verification-card > button.primary {
+  background: var(--u3d-ink) !important;
+  color: #ffffff !important;
+  box-shadow:
+    4px 4px 0 var(--u3d-mint),
+    4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .auth.verification-layout .verification-card > button.secondary-button {
+  background: #ffffff !important;
+  color: var(--u3d-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   8. PUBLIC INFO PAGES (/security, /privacy) & 404 PAGE
+   ========================================================================== */
+#root .public-home {
+  border: 0 !important;
+}
+
+#root .public-home.info-page {
+  min-height: 100dvh;
+  background-color: var(--u3d-canvas) !important;
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(223, 237, 250, 0.58) 0%, transparent 36%),
+    radial-gradient(circle at 86% 18%, rgba(233, 229, 255, 0.54) 0%, transparent 38%),
+    radial-gradient(circle at 78% 84%, rgba(232, 245, 239, 0.54) 0%, transparent 38%),
+    radial-gradient(rgba(22, 37, 53, 0.085) 1px, transparent 1px),
+    linear-gradient(to right, rgba(22, 37, 53, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 37, 53, 0.032) 1px, transparent 1px) !important;
+  background-size: auto, auto, auto, 22px 22px, 44px 44px, 44px 44px !important;
+}
+
+#root .public-home.info-page .info-main {
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+#root .public-home.info-page .info-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border: 1.5px solid var(--u3d-ink);
+  background: #ffffff;
+  color: var(--u3d-ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow:
+    4px 4px 0 var(--u3d-gold),
+    4px 4px 0 1.5px var(--u3d-ink);
+}
+
+#root .public-home.info-page .info-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  border: 1.5px solid var(--u3d-ink);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    7px 7px 0 var(--u3d-blue),
+    7px 7px 0 1.5px var(--u3d-ink);
+}
+
+#root .public-home.info-page .info-hero-row > div {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+#root .public-home.info-page .public-kicker {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-lavender-tint);
+  color: var(--u3d-lavender-ink);
+}
+
+#root .public-home.info-page .info-main > article {
+  padding: clamp(20px, 3vw, 30px);
+  border: 1.5px solid var(--u3d-ink);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    7px 7px 0 var(--u3d-mint),
+    7px 7px 0 1.5px var(--u3d-ink);
+}
+
+#root .public-home.info-page .info-main > article h2 {
+  margin-top: 22px;
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid rgba(22, 37, 53, 0.14);
+  color: var(--u3d-ink);
+}
+
+#root .public-home.info-page .info-main > article h2:first-child {
+  margin-top: 0;
+}
+
+#root .not-found-page {
+  box-sizing: border-box !important;
+  width: 100%;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  overflow-x: clip;
+  background-color: var(--u3d-canvas);
+  background-image:
+    radial-gradient(circle at 18% 20%, rgba(223, 237, 250, 0.62) 0%, transparent 40%),
+    radial-gradient(circle at 82% 78%, rgba(233, 229, 255, 0.56) 0%, transparent 40%),
+    radial-gradient(rgba(22, 37, 53, 0.085) 1px, transparent 1px),
+    linear-gradient(to right, rgba(22, 37, 53, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 37, 53, 0.032) 1px, transparent 1px);
+  background-size: auto, auto, 22px 22px, 44px 44px, 44px 44px;
+}
+
+#root .not-found-page > div {
+  box-sizing: border-box !important;
+  width: min(500px, calc(100% - 8px));
+  max-width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 28px 22px;
+  border: 1.5px solid var(--u3d-ink);
+  background: rgba(255, 255, 255, 0.96);
+  text-align: center;
+  box-shadow:
+    6px 6px 0 var(--u3d-coral),
+    6px 6px 0 1.5px var(--u3d-ink);
+}
+
+#root .not-found-page .cube-cluster-3d--empty {
+  width: min(176px, 100%);
+}
+
+#root .not-found-page > div > strong {
+  padding: 3px 12px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-gold-ink);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+}
+
+#root .not-found-page > div > h1 {
+  margin: 4px 0 0;
+  color: var(--u3d-ink);
+  font-family: "Times New Roman", Times, serif;
+}
+
+#root .not-found-page > div > a {
+  margin-top: 6px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--u3d-ink);
+  border-radius: 0;
+  background: var(--u3d-ink);
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow:
+    4px 4px 0 var(--u3d-lavender),
+    4px 4px 0 1.5px var(--u3d-ink);
+}
+
+/* ==========================================================================
+   9. MODALS & DIALOGS (ProfileModal, MessageShareModal, AdminUserModal)
+   ========================================================================== */
+#root .profile-modal,
+#root .message-share-modal,
+#root .admin-user-modal {
+  border: 1.5px solid var(--u3d-ink) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    10px 10px 0 var(--u3d-lavender),
+    10px 10px 0 1.5px var(--u3d-ink) !important;
+}
+
+/* ==========================================================================
+   10. REDUCED-MOTION SAFE HOVER MICRO-INTERACTIONS
+   ========================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  #root .connect-page .connect-surface > header button:hover:not(:disabled),
+  #root .connect-page .connect-channel > button:hover:not(:disabled),
+  #root .temp-mail-page .temp-active-bar > button:hover:not(:disabled),
+  #root .temp-mail-page .temp-message-list > button:hover,
+  #root .sharing-hub-page .sharing-mode-tabs button:hover,
+  #root .admin-console .admin-metric:hover,
+  #root .admin-console .admin-button:hover:not(:disabled),
+  #root .auth-redesign .auth-return-home:hover,
+  #root .auth-redesign .provider-button:hover:not(:disabled),
+  #root .public-home.info-page .info-back:hover,
+  #root .not-found-page > div > a:hover {
+    translate: -1.5px -1.5px;
+  }
+}
+
+/* ==========================================================================
+   11. TABLET & PHONE RESPONSIVENESS
+   ========================================================================== */
+@media (max-width: 1040px) {
+  #root .connect-page .connect-channels {
+    grid-template-columns: 1fr !important;
+  }
+
+  #root .temp-mail-page .temp-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #root .sharing-hub-page .shared-message-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #root .sharing-hub-page .share-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #root .admin-console .admin-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #root .premium-page .premium-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  body::after {
+    top: 7px;
+    left: 4px;
+    right: 8px;
+    bottom: 4px;
+    border-width: 1.5px;
+  }
+
+  body::before {
+    background-position:
+      left 8px top 3px,
+      right 4px top 3px,
+      left 8px top 1.5px,
+      left 8px top 1.5px,
+      right 2.5px top 1.5px,
+      right 2.5px bottom 8px;
+    background-size:
+      calc(100% - 12px) 4px,
+      4px calc(100% - 12px),
+      calc(100% - 10.5px) 1.5px,
+      1.5px 5.5px,
+      1.5px calc(100% - 9.5px),
+      5.5px 1.5px;
+  }
+
+  #root .workspace-shell:not(.mailboxes-page) .page-header,
+  #root .admin-console .admin-page-heading,
+  #root .premium-page .premium-heading,
+  #root .public-home.info-page .info-hero-row {
+    padding: 16px !important;
+  }
+
+  #root .connect-page .connect-surface {
+    padding: 16px !important;
+  }
+
+  #root .connect-page .connect-channel,
+  #root .temp-mail-page .temp-addresses,
+  #root .temp-mail-page .temp-message-list,
+  #root .temp-mail-page .temp-reader,
+  #root .sharing-hub-page .share-batch-builder,
+  #root .sharing-hub-page .share-access-dashboard,
+  #root .admin-console .admin-user-panel,
+  #root .premium-page .premium-plan,
+  #root .premium-page .premium-order,
+  #root .premium-page .premium-how,
+  #root .premium-page .premium-manual,
+  #root .auth-redesign .auth-scene,
+  #root .auth-redesign .auth-card {
+    padding: 16px !important;
+  }
+
+  #root .sharing-hub-page .share-stat-grid,
+  #root .admin-console .admin-metrics {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  #root .mailbox-manager .mailbox-directory > header {
+    display: none !important;
+  }
+
+  #root .mailbox-manager .mailbox-directory > article {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+  }
+}
