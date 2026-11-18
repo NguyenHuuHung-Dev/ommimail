@@ -48,14 +48,6 @@
     3px 3px 0 #d0c8f5,
     3px 3px 0 1.5px #162535;
 }
-#root .bubble-home .site-header .site-account-trigger {
-  border-radius: 0;
-  border: 1.5px solid #162535;
-  background: #fff;
-  box-shadow:
-    3px 3px 0 #dbd3ff,
-    3px 3px 0 1.5px #162535;
-}
 @media (prefers-reduced-motion: no-preference) {
   #root .bubble-home .site-header :is(.site-login, .site-register):hover {
     translate: -1px -1px;

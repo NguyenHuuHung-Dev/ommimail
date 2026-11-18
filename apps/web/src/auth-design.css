@@ -46,7 +46,7 @@
   display: block;
   width: 30px;
   height: 30px;
-  mix-blend-mode: multiply;
+  object-fit: contain;
 }
 .auth-wordmark strong > span {
   margin-left: 4px;

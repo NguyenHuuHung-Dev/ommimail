@@ -108,7 +108,7 @@ export function SiteHeader({
         onClick={() => window.scrollTo({ top: 0 })}
         aria-label="OmniMail — Trang chủ"
       >
-        <img src="/logo.jpg" width="28" height="28" alt="" />
+        <img src="/logo.png" width="28" height="28" alt="" />
         <strong>OmniMail</strong>
         <span className="site-brand-dot">.</span>
       </Link>
