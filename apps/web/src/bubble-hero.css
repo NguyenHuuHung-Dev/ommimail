@@ -5,13 +5,12 @@
   height: auto;
   min-height: 0;
   border: 0;
-  background: radial-gradient(
-    ellipse at 50% 35%,
-    #f7bfda 0%,
-    #fce2ef 38%,
-    #fff8fc 67%,
-    #fff 95%
-  );
+  background:
+    linear-gradient(0deg, #fff, transparent 32%),
+    radial-gradient(ellipse at 18% 22%, #dfedfa99, transparent 58%),
+    radial-gradient(ellipse at 85% 32%, #f5edcf99, transparent 50%),
+    radial-gradient(#78899326 0.7px, transparent 0.7px) 0 0 / 22px 22px,
+    #f8f9f6;
   overflow: hidden;
 }
 #root .bubble-home .site-header {
@@ -21,7 +20,11 @@
   margin: 0 auto;
   background: transparent;
 }
+#root .bubble-home .site-brand-dot {
+  color: var(--color-accent);
+}
 #root .bubble-home .bubble-hero {
+  --hero-art-height: clamp(220px, calc(100svh - 340px), 420px);
   min-width: 0;
   width: 100%;
   margin: 0;
@@ -30,9 +33,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  min-height: 720px;
-  padding: 0 40px 44px;
+  justify-content: flex-start;
+  min-height: 0;
+  padding: 0 64px 36px;
   border: 0;
   box-shadow: none;
   isolation: isolate;
@@ -44,7 +47,7 @@
   top: 14%;
   left: 50%;
   transform: translateX(-50%);
-  color: #fff;
+  color: #dce3e7;
   opacity: 1;
   font:
     400 clamp(90px, 12vw, 185px)/1 "Times New Roman",
@@ -58,6 +61,54 @@
   width: min(1080px, 100%);
   height: clamp(360px, 36vw, 500px);
   flex: none;
+}
+.hero-illustration {
+  position: relative;
+  width: min(1080px, 100%);
+  height: var(--hero-art-height);
+  flex: none;
+  pointer-events: none;
+  overflow: visible;
+}
+#root .bubble-home .hero-illustration img {
+  position: absolute;
+  inset: auto;
+  left: 50%;
+  bottom: -72px;
+  display: block;
+  width: 600px;
+  height: 600px;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  transform: translateX(calc(-50% + 36px));
+}
+.hero-provider-icons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+#root .bubble-home .hero-provider-icon {
+  position: absolute;
+  width: clamp(82px, 8vw, 116px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 16px #354e6c24);
+  animation: hero-icon-float 7s ease-in-out infinite;
+  scale: 0.8;
+}
+#root .bubble-home .hero-provider-icon--outlook {
+  top: 26px;
+  right: 16%;
+  rotate: 10deg;
+  animation-delay: -1.5s;
+}
+#root .bubble-home .hero-provider-icon--gmail {
+  top: calc(var(--hero-art-height) * 0.66);
+  left: 17%;
+  rotate: -12deg;
+  animation-delay: -5s;
 }
 .bubble-scene {
   position: absolute;
@@ -91,15 +142,26 @@
   width: 21%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, #fff9fb, #efb5cf 68%, #d99ab8);
-  box-shadow: 0 8px 16px #a9617b1a;
+  background: radial-gradient(
+    circle at 30% 25%,
+    var(--color-surface),
+    var(--color-accent-soft) 68%,
+    var(--color-accent-light)
+  );
+  box-shadow: 0 8px 16px
+    color-mix(in srgb, var(--color-accent-text) 10.2%, transparent);
 }
 .bubble-fallback i:nth-child(3n) {
-  background: radial-gradient(circle at 30% 25%, #fff, #f5dbe6 70%, #e7bdcf);
+  background: radial-gradient(
+    circle at 30% 25%,
+    #fff,
+    var(--color-surface-blue) 70%,
+    var(--color-accent-soft)
+  );
   scale: 0.8;
 }
 .bubble-scene:focus-visible {
-  outline: 2px solid #a65a7d;
+  outline: 2px solid var(--color-accent-text);
   outline-offset: 6px;
 }
 .bubble-live {
@@ -114,7 +176,7 @@
   z-index: 1;
   width: min(960px, 100%);
   text-align: center;
-  margin-top: 14px;
+  margin-top: 0;
 }
 #root .bubble-copy h1 {
   margin: 0;
@@ -125,12 +187,12 @@
   letter-spacing: -0.06em;
 }
 #root .bubble-copy h1 em {
-  color: #e86b9f;
+  color: var(--color-accent);
   font-style: normal;
 }
 #root .bubble-copy > p {
-  margin: 16px auto 24px;
-  max-width: 480px;
+  margin: 12px auto 18px;
+  max-width: 580px;
   font-size: 16px;
   line-height: 1.6;
   color: #000;
@@ -141,11 +203,11 @@
   width: min(570px, 100%);
   height: 58px;
   margin: 0 auto;
-  border: 1px solid #a78495;
+  border: 1px solid #9aa8b3;
   background: rgba(255, 255, 255, 0.6);
   box-shadow:
     inset 0 1px 0 #fff,
-    0 12px 30px #a7547714;
+    0 12px 30px #354e6c14;
 }
 #root .bubble-mail-search input {
   min-width: 0;
@@ -154,15 +216,15 @@
   border: 0;
   outline: none;
   background: transparent;
-  color: #37222f;
+  color: #24323f;
   font-size: 13px;
 }
 #root .bubble-mail-search input::placeholder {
-  color: #816071;
+  color: #647384;
   opacity: 1;
 }
 #root .bubble-mail-search:focus-within {
-  outline: 2px solid #be7a99;
+  outline: 2px solid var(--color-accent);
   outline-offset: 3px;
 }
 #root .bubble-mail-search button {
@@ -177,9 +239,9 @@
   height: 30px;
   padding: 0 20px;
   border: 0;
-  border-left: 1px solid #bd9aaa;
+  border-left: 1px solid #aeb9c5;
   background: transparent;
-  color: #34202e;
+  color: #24323f;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -199,66 +261,130 @@
   letter-spacing: 0.15em;
   pointer-events: none;
 }
-#root .bubble-home .poster-side-label--right {
-  left: auto;
-  top: auto;
-  right: 26px;
-  bottom: 24px;
-  rotate: 0deg;
-}
 #root .bubble-home .poster-socials {
   position: absolute;
-  right: 24px;
-  top: 39%;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  inset: 42% 24px auto auto;
+  transform: translateY(-50%);
+  z-index: 2;
 }
 #root .bubble-home .poster-socials a {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid #d7b9c8;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #c6cfd6;
   color: #000;
-  background: transparent;
+  background: #ffffffb3;
+  pointer-events: auto;
 }
 #root .bubble-home .poster-socials a:hover {
-  background: #fff8fc;
+  background: #eef2fa;
 }
 #root .bubble-home .poster-socials svg {
   width: 14px;
   height: 14px;
 }
+#root .bubble-home .hero-provider-icon--facebook {
+  top: 36px;
+  left: 13%;
+  rotate: -12deg;
+  animation-delay: -2s;
+}
+#root .bubble-home .hero-provider-icon--instagram {
+  top: calc(var(--hero-art-height) * 0.64);
+  right: 13%;
+  width: clamp(68px, 7vw, 100px);
+  rotate: 8deg;
+  animation-delay: -3.5s;
+}
+#root .bubble-home .poster-socials a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 5px;
+}
+@keyframes hero-icon-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #root .bubble-home .hero-provider-icon {
+    animation: none;
+    transition: none;
+  }
+}
 #root .home-landing .landing-features {
   padding-top: 64px;
 }
 @media (max-width: 700px) {
-  #root .bubble-home .poster-socials,
-  #root .bubble-home .poster-side-label {
-    display: none;
+  #root .bubble-home .poster-socials {
+    inset: 28% 10px auto auto;
+    gap: 8px;
+  }
+  #root .bubble-home .poster-socials a {
+    width: 28px;
+    height: 28px;
   }
   #root .home-landing .bubble-home {
     min-height: 0;
   }
   #root .bubble-home .bubble-hero {
+    --hero-art-height: clamp(200px, calc(100svh - 330px), 300px);
     width: 100%;
     min-height: 0;
-    padding: 8px 24px 36px;
+    padding: 8px 24px 28px;
     margin: 0;
     justify-content: center;
   }
-  .bubble-art {
+  .bubble-art,
+  .hero-illustration {
     width: calc(100% + 24px);
-    height: 320px;
+    height: var(--hero-art-height);
   }
   .bubble-word {
     top: 17%;
     font-size: 19vw;
   }
+  #root .bubble-home .hero-illustration img {
+    bottom: -60px;
+    width: clamp(360px, 110vw, 440px);
+    height: clamp(360px, 110vw, 440px);
+    transform: translateX(-50%);
+  }
+  #root .bubble-home .poster-side-label {
+    left: 7px;
+    top: 26%;
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  #root .bubble-home .hero-provider-icon--facebook {
+    top: 40px;
+    left: 12px;
+    width: clamp(46px, 13vw, 64px);
+  }
+  #root .bubble-home .hero-provider-icon--instagram {
+    top: calc(var(--hero-art-height) * 0.7);
+    right: 40px;
+    width: clamp(44px, 12vw, 60px);
+  }
+  #root .bubble-home .hero-provider-icon--outlook {
+    top: 42px;
+    right: 44px;
+    width: clamp(50px, 14vw, 72px);
+  }
+  #root .bubble-home .hero-provider-icon--gmail {
+    top: calc(var(--hero-art-height) * 0.74);
+    left: 14px;
+    width: clamp(50px, 14vw, 72px);
+  }
   #root .bubble-copy {
-    margin-top: 12px;
+    margin-top: 0;
   }
   #root .bubble-copy h1 {
     font-size: clamp(35px, 8.4vw, 54px);
@@ -266,7 +392,7 @@
   #root .bubble-copy > p {
     font-size: 13px;
     max-width: 300px;
-    margin: 17px auto 24px;
+    margin: 12px auto 18px;
   }
   #root .bubble-home .bubble-mail-search {
     height: 54px;

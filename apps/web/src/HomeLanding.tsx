@@ -1,7 +1,14 @@
-import { Facebook, Github, Instagram } from "lucide-react";
+import {
+  Facebook,
+  Github,
+  Instagram,
+  Inbox,
+  Link2,
+  ShieldCheck,
+  Timer,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader, type SiteHeaderProps } from "./SiteHeader";
-import { BubbleScene } from "./BubbleScene";
 import "./home-landing.css";
 import "./bubble-hero.css";
 
@@ -25,7 +32,49 @@ export function HomeLanding({
           <span className="bubble-word" aria-hidden="true">
             CONNECT
           </span>
-          <BubbleScene />
+          <div className="hero-illustration" aria-hidden="true">
+            <img
+              src="/illustrations/marketing.svg"
+              width="512"
+              height="512"
+              alt=""
+              draggable={false}
+            />
+          </div>
+          <div className="hero-provider-icons" aria-hidden="true">
+            <img
+              className="hero-provider-icon hero-provider-icon--facebook"
+              src="/icons/facebook-3d.webp"
+              width="512"
+              height="512"
+              alt=""
+              draggable={false}
+            />
+            <img
+              className="hero-provider-icon hero-provider-icon--instagram"
+              src="/icons/instagram-3d.webp"
+              width="512"
+              height="512"
+              alt=""
+              draggable={false}
+            />
+            <img
+              className="hero-provider-icon hero-provider-icon--outlook"
+              src="/icons/outlook-3d.webp"
+              width="512"
+              height="512"
+              alt=""
+              draggable={false}
+            />
+            <img
+              className="hero-provider-icon hero-provider-icon--gmail"
+              src="/icons/gmail-3d.webp"
+              width="512"
+              height="512"
+              alt=""
+              draggable={false}
+            />
+          </div>
           <section className="bubble-copy">
             <h1 id="home-title">
               <span>Every inbox.</span> <em>One signal.</em>
@@ -57,17 +106,14 @@ export function HomeLanding({
             </form>
           </section>
           <span className="poster-side-label">READ · REFRESH · REPEAT</span>
-          <span className="poster-side-label poster-side-label--right">
-            READ · REFRESH · REPEAT
-          </span>
-          <div className="poster-socials">
+          <nav className="poster-socials" aria-label="Mạng xã hội">
             <a
               href="https://www.facebook.com/zingne1302"
               target="_blank"
               rel="noreferrer"
               aria-label="Facebook của Hữu Hưng"
             >
-              <Facebook />
+              <Facebook aria-hidden="true" />
             </a>
             <a
               href="https://www.instagram.com/huuhungstart/"
@@ -75,9 +121,10 @@ export function HomeLanding({
               rel="noreferrer"
               aria-label="Instagram của Hữu Hưng"
             >
-              <Instagram />
+              <Instagram aria-hidden="true" />
             </a>
             <a
+              className="hero-github-link"
               href="https://github.com/NguyenHuuHung-Dev"
               target="_blank"
               rel="noreferrer"
@@ -85,7 +132,7 @@ export function HomeLanding({
             >
               <Github />
             </a>
-          </div>
+          </nav>
         </main>
       </div>
 
@@ -109,6 +156,28 @@ export function HomeLanding({
           <div className="landing-feature-grid">
             <article>
               <span className="landing-feature-number">01 / CONNECT</span>
+              <div
+                className="landing-feature-art feature-inboxes"
+                aria-hidden="true"
+              >
+                <div>
+                  <img src="/icons/gmail-3d.webp" alt="" />
+                  <span>
+                    <i />
+                    <i />
+                  </span>
+                  <Inbox />
+                </div>
+                <div>
+                  <img src="/icons/outlook-3d.webp" alt="" />
+                  <span>
+                    <i />
+                    <i />
+                  </span>
+                  <Inbox />
+                </div>
+                <b>ONE INBOX. ALL CONNECTED.</b>
+              </div>
               <h3>Gmail & Outlook</h3>
               <p>
                 Kết nối các hộp thư bạn đang sử dụng. Chuyển giữa tài khoản, đọc
@@ -118,6 +187,16 @@ export function HomeLanding({
             </article>
             <article>
               <span className="landing-feature-number">02 / TEMPORARY</span>
+              <div
+                className="landing-feature-art feature-temporary"
+                aria-hidden="true"
+              >
+                <Timer />
+                <span>Ready when you are.</span>
+                <div>
+                  <i /> your-next-inbox@mail.tm
+                </div>
+              </div>
               <h3>Một địa chỉ tạm thời</h3>
               <p>
                 Tạo Temp Mail cho những nhu cầu ngắn hạn. Nhận thư và theo dõi
@@ -127,6 +206,19 @@ export function HomeLanding({
             </article>
             <article>
               <span className="landing-feature-number">03 / SHARE</span>
+              <div
+                className="landing-feature-art feature-sharing"
+                aria-hidden="true"
+              >
+                <div>
+                  <span>YOU</span>
+                  <Link2 />
+                  <span>TEAM</span>
+                </div>
+                <b>
+                  <ShieldCheck /> Read-only access
+                </b>
+              </div>
               <h3>Chia sẻ có kiểm soát</h3>
               <p>
                 Cấp quyền xem hộp thư hoặc chia sẻ một tin nhắn. Theo dõi quyền

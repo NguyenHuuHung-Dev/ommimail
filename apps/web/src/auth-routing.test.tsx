@@ -255,10 +255,10 @@ describe("session restoration and landing routes", () => {
     expect(container.querySelector('[data-testid="workspace"]')).toBeNull();
   });
 
-  it("keeps mailbox search on the interactive public hero and asks visitors to sign in before opening mail", async () => {
+  it("keeps mailbox search on the illustrated public hero and asks visitors to sign in before opening mail", async () => {
     await render("/");
     await restored(null);
-    expect(container.querySelector(".bubble-scene")).not.toBeNull();
+    expect(container.querySelector(".hero-illustration img")).not.toBeNull();
     expect(container.textContent).toContain(
       "Gmail, Outlook and temporary mail in one focused workspace.",
     );

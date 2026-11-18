@@ -78,7 +78,7 @@ it("pauses offscreen and disposes GPU resources when leaving Home", async () => 
   expect(mocks.dispose).toHaveBeenCalledOnce();
   expect(disconnect).toHaveBeenCalledOnce();
 });
-it("keeps mailbox search separate from the interactive decoration", async () => {
+it("keeps mailbox search and social links alongside the hero illustration", async () => {
   const onSearch = vi.fn();
   await render(
     <MemoryRouter>
@@ -98,13 +98,16 @@ it("keeps mailbox search separate from the interactive decoration", async () => 
   ).toHaveLength(3);
   expect(
     container.querySelectorAll(".bubble-hero .poster-side-label"),
-  ).toHaveLength(2);
-  await act(async () =>
-    container.querySelector<HTMLButtonElement>(".bubble-scene")!.click(),
-  );
+  ).toHaveLength(1);
+  expect(
+    container
+      .querySelector<HTMLImageElement>(".hero-illustration img")
+      ?.getAttribute("src"),
+  ).toBe("/illustrations/marketing.svg");
+  expect(container.querySelector("canvas")).toBeNull();
   expect(onSearch).toHaveBeenCalledTimes(1);
 });
-it("retains a decorative fallback and working search if WebGL cannot initialize", async () => {
+it("renders the home illustration and search without initializing WebGL", async () => {
   mocks.create.mockImplementation(() => {
     throw new Error("No WebGL");
   });
@@ -113,7 +116,9 @@ it("retains a decorative fallback and working search if WebGL cannot initialize"
       <HomeLanding mode="guest" />
     </MemoryRouter>,
   );
-  expect(container.querySelectorAll(".bubble-fallback i")).toHaveLength(8);
+  expect(mocks.create).not.toHaveBeenCalled();
+  expect(container.querySelector(".hero-illustration img")).not.toBeNull();
+  expect(container.querySelector(".bubble-fallback")).toBeNull();
   expect(container.querySelector('[name="mailQuery"]')).not.toBeNull();
 });
 it.each([48, 80])(
