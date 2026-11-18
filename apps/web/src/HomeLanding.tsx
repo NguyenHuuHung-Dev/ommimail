@@ -1,13 +1,17 @@
 import {
+  ArrowUp,
   Facebook,
   Github,
+  Globe,
   Instagram,
   Inbox,
   Link2,
+  Mail,
   ShieldCheck,
   Timer,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { CubeCluster3D } from "./CubeCluster3D";
 import { SiteHeader, type SiteHeaderProps } from "./SiteHeader";
 import "./home-landing.css";
 import "./bubble-hero.css";
@@ -713,15 +717,197 @@ export function HomeLanding({
         </section>
         <footer className="landing-footer">
           <div className="landing-footer-inner">
-            <Link to="/" className="landing-footer-brand">
-              OmniMail<span>.</span>
-            </Link>
-            <span>Every inbox. One signal.</span>
-            <nav aria-label="Thông tin OmniMail">
-              <Link to="/security">Bảo mật</Link>
-              <Link to="/privacy">Quyền riêng tư</Link>
-            </nav>
-            <small>© 2026 OmniMail</small>
+            <div className="landing-footer-top">
+              <div className="landing-footer-about">
+                <Link to="/" className="landing-footer-brand">
+                  <img src="/logo.png" width="28" height="28" alt="" />
+                  <span>
+                    OmniMail<span>.</span>
+                  </span>
+                </Link>
+                <span className="landing-footer-kicker">
+                  EVERY INBOX · ONE SIGNAL
+                </span>
+                <p className="landing-footer-desc">
+                  Không gian đọc và quản lý tập trung cho Gmail, Microsoft
+                  Outlook và email tạm thời mail.tm — giúp bạn theo dõi nhiều
+                  hộp thư, lấy mã OTP nhanh và chia sẻ quyền xem an toàn trong
+                  một cửa sổ gọn gàng.
+                </p>
+                <ul
+                  className="landing-footer-badges"
+                  aria-label="Nền tảng và chế độ hỗ trợ"
+                >
+                  <li>Gmail OAuth &amp; App Password</li>
+                  <li>Outlook / Azure</li>
+                  <li>mail.tm Temp Mail</li>
+                  <li>Chỉ đọc an toàn</li>
+                </ul>
+                <div className="landing-footer-contact">
+                  <span>
+                    <Mail size={14} aria-hidden="true" />
+                    Liên hệ:{" "}
+                    <a href="mailto:hung130225qn@gmail.com">
+                      hung130225qn@gmail.com
+                    </a>
+                  </span>
+                  <span>
+                    <Globe size={14} aria-hidden="true" />
+                    Portfolio:{" "}
+                    <a
+                      href="https://lazingday.me"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      lazingday.me ↗
+                    </a>
+                  </span>
+                  <small>
+                    Thao tác ngắt kết nối hoặc thu hồi quyền không bao giờ xóa
+                    thư gốc tại nhà cung cấp email.
+                  </small>
+                </div>
+              </div>
+
+              <nav
+                className="landing-footer-col"
+                aria-label="Tính năng OmniMail"
+              >
+                <h3>Không gian hộp thư</h3>
+                <ul>
+                  <li>
+                    <Link to="/app/mailboxes">Hộp thư hợp nhất</Link>
+                    <small>
+                      Đọc Gmail &amp; Outlook dạng danh sách 2 dòng rõ ràng,
+                      tách riêng Thư chính và Spam.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/app/connect">Kết nối tài khoản</Link>
+                    <small>
+                      Thêm nhiều tài khoản qua Google OAuth 2.0, App Password 16
+                      ký tự hoặc Refresh Token.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/app/temp-mail">Email tạm thời</Link>
+                    <small>
+                      Tạo nhanh hộp thư dùng một lần mail.tm và tự động làm mới
+                      thư mới mỗi 3 giây.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/app/mail-sharing">Chia sẻ có kiểm soát</Link>
+                    <small>
+                      Chia sẻ riêng từng thư hoặc quyền xem mailbox theo tài
+                      khoản chỉ đọc.
+                    </small>
+                  </li>
+                </ul>
+              </nav>
+
+              <nav
+                className="landing-footer-col"
+                aria-label="Tài khoản và hướng dẫn"
+              >
+                <h3>Tài khoản &amp; Bắt đầu</h3>
+                <ul>
+                  <li>
+                    <Link to="/login">Truy cập tài khoản</Link>
+                    <small>
+                      Đăng nhập bằng email hoặc Google, Facebook, Microsoft để
+                      tiếp tục làm việc.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/register">Đăng ký miễn phí</Link>
+                    <small>
+                      Khởi tạo tài khoản OmniMail Basic, xác minh email nhanh và
+                      kết nối hộp thư đầu tiên.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/forgot-password">Khôi phục mật khẩu</Link>
+                    <small>
+                      Nhận liên kết đặt lại mật khẩu an toàn trực tiếp tới email
+                      đăng ký.
+                    </small>
+                  </li>
+                  <li>
+                    <Link to="/app/mail-admin">Gói OmniMail Premium</Link>
+                    <small>
+                      Tự động tách mã OTP, ghim nhóm hộp thư riêng và mở khóa
+                      chia sẻ mailbox.
+                    </small>
+                  </li>
+                </ul>
+              </nav>
+
+              <div className="landing-footer-col landing-footer-col--trust">
+                <nav aria-label="Thông tin OmniMail">
+                  <h3>Bảo mật &amp; Minh bạch</h3>
+                  <ul>
+                    <li>
+                      <Link to="/security">Bảo mật</Link>
+                      <small>
+                        Kết nối HTTPS, mã hóa thông tin nhạy cảm ở máy chủ và
+                        xác thực lại quyền trên từng yêu cầu API.
+                      </small>
+                    </li>
+                    <li>
+                      <Link to="/privacy">Quyền riêng tư</Link>
+                      <small>
+                        Minh bạch phạm vi dữ liệu đồng bộ, tìm kiếm và cơ chế
+                        ngắt kết nối chủ động.
+                      </small>
+                    </li>
+                  </ul>
+                </nav>
+
+                <div className="landing-footer-trust-card">
+                  <div className="landing-footer-trust-head">
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    <strong>Nguyên tắc chỉ đọc</strong>
+                    <CubeCluster3D variant="badge" />
+                  </div>
+                  <p>
+                    OmniMail ưu tiên bảo toàn hộp thư gốc của bạn: không tự động
+                    gửi thư hay xóa email trên Gmail và Outlook, đồng thời cho
+                    phép thu hồi quyền chia sẻ ngay lập tức.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="landing-footer-bottom">
+              <div className="landing-footer-copy">
+                <small>© 2026 OmniMail. Mọi quyền được bảo lưu.</small>
+                <span>Nền tảng đọc &amp; quản lý đa hộp thư tập trung.</span>
+              </div>
+              <div className="landing-footer-bottom-meta">
+                <a
+                  href="https://lazingday.me"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  lazingday.me ↗
+                </a>
+                <a href="mailto:hung130225qn@gmail.com">
+                  hung130225qn@gmail.com
+                </a>
+                <Link to="/app/accounts">Danh bạ mailbox</Link>
+                <button
+                  type="button"
+                  className="landing-footer-top-btn"
+                  onClick={() =>
+                    window.scrollTo({ top: 0, behavior: "smooth" })
+                  }
+                >
+                  <ArrowUp size={14} aria-hidden="true" />
+                  <span>Về đầu trang</span>
+                </button>
+              </div>
+            </div>
           </div>
         </footer>
       </div>
