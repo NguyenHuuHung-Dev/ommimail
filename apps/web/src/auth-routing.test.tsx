@@ -231,7 +231,6 @@ describe("session restoration and landing routes", () => {
       expect(container.querySelectorAll(".poster-home")).toHaveLength(1);
       expect(container.querySelector(".landing-content")).not.toBeNull();
       expect(container.textContent).toContain("Every inbox.");
-      await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Menu tài khoản"]')!.click());
       expect(
         container.querySelector('.site-header a[href="/login"]'),
       ).not.toBeNull();

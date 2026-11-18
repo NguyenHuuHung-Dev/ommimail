@@ -85,6 +85,7 @@ export function SiteHeader({
           to={to}
           className={`site-nav-link${active ? " is-active" : ""}`}
           aria-current={active ? "page" : undefined}
+          onClick={() => setAccountOpen(false)}
         >
           <Icon size={16} aria-hidden="true" />
           <span>{label}</span>
@@ -119,6 +120,17 @@ export function SiteHeader({
           <span className="site-session-loading" role="status">
             Đang kết nối…
           </span>
+        ) : mode === "guest" ? (
+          <>
+            <Link className="site-login" to="/login">
+              <LogIn size={16} aria-hidden="true" />
+              Đăng nhập
+            </Link>
+            <Link className="site-register" to="/register">
+              Đăng ký
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
+          </>
         ) : (
           <div
             className="site-account-controls"
@@ -128,20 +140,18 @@ export function SiteHeader({
                 setAccountOpen(false);
             }}
           >
-            {mode !== "guest" && (
-              <div className="site-account-identity">
-                <strong title={profileName}>{profileName}</strong>
-                <small>
-                  {mode === "unverified"
-                    ? "Chưa xác minh"
-                    : role === "admin"
-                      ? "Quản trị viên"
-                      : role === "premium"
-                        ? "Premium"
-                        : "Basic"}
-                </small>
-              </div>
-            )}
+            <div className="site-account-identity">
+              <strong title={profileName}>{profileName}</strong>
+              <small>
+                {mode === "unverified"
+                  ? "Chưa xác minh"
+                  : role === "admin"
+                    ? "Quản trị viên"
+                    : role === "premium"
+                      ? "Premium"
+                      : "Basic"}
+              </small>
+            </div>
             <button
               className="site-account-trigger"
               ref={triggerRef}
@@ -163,67 +173,48 @@ export function SiteHeader({
                 id={accountMenuId}
                 aria-label="Tài khoản"
               >
-                {mode === "guest" ? (
-                  <>
-                    <Link
-                      className="site-login"
-                      to="/login"
-                      onClick={() => setAccountOpen(false)}
-                    >
-                      <LogIn size={16} aria-hidden="true" />
-                      Đăng nhập
-                    </Link>
-                    <Link
-                      className="site-register"
-                      to="/register"
-                      onClick={() => setAccountOpen(false)}
-                    >
-                      Đăng ký
-                      <ArrowUpRight size={16} aria-hidden="true" />
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    {mode === "unverified" && (
-                      <Link
-                        className="site-register"
-                        to="/verify-email"
-                        onClick={() => setAccountOpen(false)}
-                      >
-                        <ShieldCheck size={16} aria-hidden="true" />
-                        Xác minh email
-                      </Link>
-                    )}
-                    {mode === "member" && (
-                      <button
-                        className="site-profile"
-                        type="button"
-                        onClick={() => {
-                          setAccountOpen(false);
-                          onOpenProfile?.();
-                        }}
-                        title="Quản lý hồ sơ"
-                        aria-label="Quản lý hồ sơ"
-                      >
-                        <UserRound size={16} aria-hidden="true" />
-                        <span>Hồ sơ</span>
-                      </button>
-                    )}
-                    <button
-                      className="site-signout"
-                      type="button"
-                      onClick={() => {
-                        setAccountOpen(false);
-                        onLogout?.();
-                      }}
-                      aria-label="Đăng xuất"
-                      title="Đăng xuất"
-                    >
-                      <LogOut size={16} aria-hidden="true" />
-                      <span>Đăng xuất</span>
-                    </button>
-                  </>
+                <div className="site-compact-navigation">
+                  <span className="site-menu-section-label">Điều hướng</span>
+                  {navigationLinks()}
+                </div>
+                {mode === "unverified" && (
+                  <Link
+                    className="site-register"
+                    to="/verify-email"
+                    onClick={() => setAccountOpen(false)}
+                  >
+                    <ShieldCheck size={16} aria-hidden="true" />
+                    Xác minh email
+                  </Link>
                 )}
+                {mode === "member" && (
+                  <button
+                    className="site-profile"
+                    type="button"
+                    onClick={() => {
+                      setAccountOpen(false);
+                      onOpenProfile?.();
+                    }}
+                    title="Quản lý hồ sơ"
+                    aria-label="Quản lý hồ sơ"
+                  >
+                    <UserRound size={16} aria-hidden="true" />
+                    <span>Hồ sơ</span>
+                  </button>
+                )}
+                <button
+                  className="site-signout"
+                  type="button"
+                  onClick={() => {
+                    setAccountOpen(false);
+                    onLogout?.();
+                  }}
+                  aria-label="Đăng xuất"
+                  title="Đăng xuất"
+                >
+                  <LogOut size={16} aria-hidden="true" />
+                  <span>Đăng xuất</span>
+                </button>
               </nav>
             )}
           </div>

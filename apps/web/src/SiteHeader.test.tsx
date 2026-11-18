@@ -28,11 +28,7 @@ async function render(path: string, props: SiteHeaderProps = {}) {
 describe("shared website navigation", () => {
   it("offers real login and registration links to visitors and highlights Home", async () => {
     await render("/");
-    await act(async () =>
-      container
-        .querySelector<HTMLButtonElement>('[aria-label="Menu tài khoản"]')!
-        .click(),
-    );
+    expect(container.querySelector('[aria-label="Menu tài khoản"]')).toBeNull();
     expect(container.querySelector(".site-login")?.getAttribute("href")).toBe(
       "/login",
     );

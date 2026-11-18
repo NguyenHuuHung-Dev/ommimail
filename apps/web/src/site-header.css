@@ -1,7 +1,8 @@
 /* Shared home navigation, independent of page-wide legacy styles. */
 #root .site-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: clamp(18px, 2.8vw, 44px);
   align-items: center;
   min-width: 0;
   min-height: 88px;
@@ -52,7 +53,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 44px;
+  gap: clamp(18px, 2.7vw, 44px);
   min-width: 0;
 }
 .site-header .site-nav-link {
@@ -127,6 +128,9 @@
 }
 .site-header .site-login {
   padding-inline: 12px;
+}
+.site-header .site-header-actions > .site-login {
+  border-color: var(--color-line-strong);
 }
 .site-header .site-register {
   background: var(--color-accent);
@@ -205,6 +209,9 @@
   display: grid;
   gap: 4px;
   width: 194px;
+  max-height: calc(100dvh - 94px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 7px;
   border: 1px solid var(--color-line);
   border-radius: 9px;
@@ -212,6 +219,9 @@
   box-shadow:
     0 4px 8px #24364808,
     0 16px 36px #2436481a;
+}
+.site-compact-navigation {
+  display: none;
 }
 #root .site-header .site-account-menu :is(a, button) {
   display: flex;
@@ -268,51 +278,81 @@
     transition: none;
   }
 }
-@media (max-width: 1200px) {
+/* Keep the full navigation on one row on laptops and smaller desktops. */
+@media (min-width: 801px) and (max-width: 1100px) {
+  #root .site-header {
+    column-gap: 16px;
+    padding-inline: 24px;
+    min-height: 80px;
+  }
+  .site-header .site-brand {
+    gap: 5px;
+    font-size: 23px;
+  }
+  .site-header .site-brand img {
+    width: 25px;
+    height: 25px;
+  }
+  .site-header .site-navigation {
+    gap: clamp(12px, 1.5vw, 17px);
+  }
+  .site-header .site-nav-link {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .site-account-controls {
+    gap: 8px;
+  }
+  .site-header .site-account-identity {
+    max-width: 100px;
+  }
+  .site-header .site-account-identity strong {
+    font-size: 12px;
+  }
+  .site-header .site-account-identity small {
+    font-size: 10px;
+  }
+  #root .site-header .site-account-trigger {
+    width: 34px;
+    height: 36px;
+  }
+}
+/* Compact screens use the existing three-line menu instead of a second row. */
+@media (max-width: 800px) {
   #root .site-header {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: auto auto;
-    gap: 0 16px;
-    padding: 12px 28px 0;
+    column-gap: 12px;
+    min-height: 72px;
+    padding: 0 20px;
   }
-  .site-header .site-brand,
-  .site-header-actions {
-    min-height: 52px;
+  .site-header .site-brand {
+    gap: 4px;
+    font-size: 23px;
+  }
+  .site-header .site-brand img {
+    width: 25px;
+    height: 25px;
+  }
+  .site-header .site-navigation {
+    display: none;
   }
   .site-header-actions {
     grid-column: 2;
     grid-row: 1;
+    gap: 6px;
   }
-  .site-header .site-navigation {
-    grid-column: 1/-1;
-    grid-row: 2;
-    justify-content: center;
-    gap: 28px;
-    height: 44px;
-    overflow-x: auto;
-    scrollbar-width: none;
+  .site-header .site-header-actions > :is(.site-login, .site-register) {
+    min-height: 40px;
+    padding-inline: 10px;
   }
-  .site-navigation::-webkit-scrollbar {
+  .site-header-actions > :is(.site-login, .site-register) > svg {
     display: none;
-  }
-}
-@media (max-width: 700px) {
-  #root .site-header {
-    padding: 8px 18px 0;
-    gap: 0 8px;
-  }
-  .site-header .site-brand {
-    gap: 0;
-    font-size: 23px;
-  }
-  .site-header-actions {
-    gap: 8px;
   }
   .site-account-controls {
     gap: 10px;
   }
   .site-header .site-account-identity {
-    max-width: clamp(72px, 23vw, 110px);
+    max-width: clamp(72px, 23vw, 130px);
   }
   .site-header .site-account-identity strong {
     font-size: 12px;
@@ -325,27 +365,49 @@
     height: 36px;
   }
   .site-header .site-account-menu {
-    top: calc(100% + 10px);
+    top: calc(100% + 12px);
+    width: 220px;
   }
-  .site-header .site-login,
-  .site-header .site-register {
-    min-height: 38px;
-    padding-inline: 11px;
-    gap: 5px;
-    font-size: 11px;
+  .site-compact-navigation {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-line);
   }
-  .site-header .site-login {
-    padding-inline: 8px;
+  .site-menu-section-label {
+    padding: 8px 12px 6px;
+    color: var(--color-muted-soft);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
-  .site-header .site-navigation {
-    justify-content: flex-start;
-    gap: 18px;
-    height: 42px;
+  .site-header .site-compact-navigation .site-nav-link > svg {
+    display: block;
   }
-  .site-header .site-nav-link {
+  #root .site-header .site-compact-navigation .site-nav-link {
+    font-size: 12px;
+  }
+  #root .site-header .site-compact-navigation .site-nav-link.is-active {
+    color: var(--color-accent-text);
+    background: #f3f0ff;
+  }
+  .site-header .site-compact-navigation .site-nav-link.is-active > span {
+    background: transparent;
+  }
+  .site-header .site-compact-navigation .site-unread {
+    position: static;
+    margin-left: auto;
     font-size: 9px;
   }
-  .site-header .site-nav-link > span {
-    display: inline;
+}
+@media (max-width: 360px) {
+  #root .site-header:has(.site-header-actions > .site-login) {
+    column-gap: 8px;
+    padding-inline: 14px;
+  }
+  .site-header .site-header-actions > :is(.site-login, .site-register) {
+    padding-inline: 7px;
   }
 }
