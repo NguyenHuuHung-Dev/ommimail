@@ -12,6 +12,209 @@ import { SiteHeader, type SiteHeaderProps } from "./SiteHeader";
 import "./home-landing.css";
 import "./bubble-hero.css";
 
+function LandingPushPin({
+  tone,
+}: {
+  tone: "blue" | "mint" | "amber" | "violet";
+}) {
+  return (
+    <span
+      className={`landing-pin landing-pin--${tone}`}
+      aria-hidden="true"
+    >
+      <i className="landing-pin-shadow" />
+      <i className="landing-pin-base" />
+      <i className="landing-pin-stem" />
+      <i className="landing-pin-head" />
+    </span>
+  );
+}
+
+function IsometricCube({
+  x,
+  y,
+  size = 24,
+  top,
+  left,
+  right,
+  shadow,
+}: {
+  x: number;
+  y: number;
+  size?: number;
+  top: string;
+  left: string;
+  right: string;
+  shadow: string;
+}) {
+  const dx = size * 0.866;
+  const dy = size * 0.5;
+  const h = size;
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <polygon
+        points={`7,${dy * 2 + h + 5} ${dx + 7},${dy + h + 5} 7,${h + 5} ${-dx + 7},${dy + h + 5}`}
+        fill={shadow}
+      />
+      <polygon
+        points={`0,0 ${dx},${dy} 0,${dy * 2} ${-dx},${dy}`}
+        fill={top}
+        stroke="#162535"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <polygon
+        points={`${-dx},${dy} 0,${dy * 2} 0,${dy * 2 + h} ${-dx},${dy + h}`}
+        fill={left}
+        stroke="#162535"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+      <polygon
+        points={`0,${dy * 2} ${dx},${dy} ${dx},${dy + h} 0,${dy * 2 + h}`}
+        fill={right}
+        stroke="#162535"
+        strokeWidth="1.25"
+        strokeLinejoin="round"
+      />
+    </g>
+  );
+}
+
+function LandingCubeCluster({
+  variant,
+}: {
+  variant: "features" | "steps" | "faq" | "start";
+}) {
+  if (variant === "features") {
+    return (
+      <svg
+        className="landing-cubes landing-cubes--features"
+        viewBox="0 0 156 108"
+        width="156"
+        height="108"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={44}
+          y={28}
+          size={24}
+          top="#dfedfa"
+          left="#9ec2ec"
+          right="#5381bd"
+          shadow="#cfdce8"
+        />
+        <IsometricCube
+          x={108}
+          y={24}
+          size={22}
+          top="#fff4d6"
+          left="#f1d286"
+          right="#c49234"
+          shadow="#e7dec1"
+        />
+        <IsometricCube
+          x={76}
+          y={4}
+          size={26}
+          top="#e9e5ff"
+          left="#b9adfb"
+          right="#674cfb"
+          shadow="#d5cff5"
+        />
+      </svg>
+    );
+  }
+  if (variant === "steps") {
+    return (
+      <svg
+        className="landing-cubes landing-cubes--steps"
+        viewBox="0 0 164 88"
+        width="164"
+        height="88"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={32}
+          y={26}
+          size={20}
+          top="#dfedfa"
+          left="#a2c5ed"
+          right="#315e97"
+          shadow="#d5e1ec"
+        />
+        <IsometricCube
+          x={82}
+          y={14}
+          size={22}
+          top="#e9e5ff"
+          left="#b9adfb"
+          right="#674cfb"
+          shadow="#d8d1f7"
+        />
+        <IsometricCube
+          x={132}
+          y={24}
+          size={20}
+          top="#e8f5ef"
+          left="#9cd8c2"
+          right="#226d5c"
+          shadow="#cde6db"
+        />
+      </svg>
+    );
+  }
+  if (variant === "faq") {
+    return (
+      <svg
+        className="landing-cubes landing-cubes--faq"
+        viewBox="0 0 116 92"
+        width="116"
+        height="92"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={40}
+          y={22}
+          size={22}
+          top="#e8f5ef"
+          left="#9fd8c3"
+          right="#226d5c"
+          shadow="#d1e6dd"
+        />
+        <IsometricCube
+          x={78}
+          y={8}
+          size={24}
+          top="#e9e5ff"
+          left="#b9adfb"
+          right="#674cfb"
+          shadow="#d8d1f7"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg
+      className="landing-cubes landing-cubes--start"
+      viewBox="0 0 104 96"
+      width="104"
+      height="96"
+      aria-hidden="true"
+    >
+      <IsometricCube
+        x={52}
+        y={14}
+        size={28}
+        top="#fff4d6"
+        left="#eed083"
+        right="#c59436"
+        shadow="#e2d9bd"
+      />
+    </svg>
+  );
+}
+
 export function HomeLanding({
   onSearchMail,
   ...header
@@ -141,167 +344,269 @@ export function HomeLanding({
           className="landing-features"
           aria-labelledby="landing-features-title"
         >
-          <header className="landing-section-heading">
-            <span>ONE WORKSPACE. EVERY INBOX.</span>
-            <h2 id="landing-features-title">
-              Ít tab hơn.
-              <br />
-              <em>Nhiều tập trung hơn.</em>
-            </h2>
-            <p>
-              Những công cụ bạn cần, cùng xuất hiện trong một không gian quen
-              thuộc.
-            </p>
+          <header className="landing-section-heading landing-features-heading">
+            <div className="landing-heading-main">
+              <h2 id="landing-features-title">
+                Ít tab hơn.
+                <br />
+                <em>Nhiều tập trung hơn.</em>
+              </h2>
+            </div>
+            <div className="landing-heading-aside">
+              <LandingCubeCluster variant="features" />
+              <p>
+                Những công cụ bạn cần, cùng xuất hiện trong một không gian quen
+                thuộc.
+              </p>
+            </div>
           </header>
-          <div className="landing-feature-grid">
-            <article>
-              <span className="landing-feature-number">01 / CONNECT</span>
-              <div
-                className="landing-feature-art feature-inboxes"
-                aria-hidden="true"
-              >
-                <div>
-                  <img src="/icons/gmail-3d.webp" alt="" />
-                  <span>
-                    <i />
-                    <i />
-                  </span>
-                  <Inbox />
+          <div className="landing-feature-board">
+            <svg
+              className="landing-pin-trail landing-pin-trail--features"
+              viewBox="0 0 1200 180"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path d="M 190 48 C 340 135, 460 142, 600 72 C 745 6, 865 24, 1010 56" />
+            </svg>
+            <div className="landing-feature-grid">
+              <article className="landing-feature-card landing-feature-card--connect">
+                <LandingPushPin tone="blue" />
+                <div className="landing-feature-inner">
+                  <div className="landing-feature-head">
+                    <span className="landing-feature-index">01</span>
+                    <i className="landing-feature-pip" aria-hidden="true" />
+                  </div>
+                  <div
+                    className="landing-feature-art feature-inboxes"
+                    aria-hidden="true"
+                  >
+                    <div>
+                      <span className="feature-icon-well">
+                        <img src="/icons/gmail-3d.webp" alt="" />
+                      </span>
+                      <span className="feature-skeleton-lines">
+                        <i />
+                        <i />
+                      </span>
+                      <span className="feature-inbox-box">
+                        <Inbox />
+                      </span>
+                    </div>
+                    <div>
+                      <span className="feature-icon-well">
+                        <img src="/icons/outlook-3d.webp" alt="" />
+                      </span>
+                      <span className="feature-skeleton-lines">
+                        <i />
+                        <i />
+                      </span>
+                      <span className="feature-inbox-box">
+                        <Inbox />
+                      </span>
+                    </div>
+                    <b>ONE INBOX. ALL CONNECTED.</b>
+                  </div>
+                  <div className="landing-feature-body">
+                    <h3>Gmail & Outlook</h3>
+                    <p>
+                      Kết nối các hộp thư bạn đang sử dụng. Chuyển giữa tài
+                      khoản, đọc và tìm thư trong cùng một giao diện.
+                    </p>
+                  </div>
+                  <Link className="landing-feature-link" to="/app/connect">
+                    <span>Kết nối hộp thư</span>
+                    <span className="landing-square-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
                 </div>
-                <div>
-                  <img src="/icons/outlook-3d.webp" alt="" />
-                  <span>
-                    <i />
-                    <i />
-                  </span>
-                  <Inbox />
+              </article>
+              <article className="landing-feature-card landing-feature-card--temp">
+                <LandingPushPin tone="mint" />
+                <div className="landing-feature-inner">
+                  <div className="landing-feature-head">
+                    <span className="landing-feature-index">02</span>
+                    <i className="landing-feature-pip" aria-hidden="true" />
+                  </div>
+                  <div
+                    className="landing-feature-art feature-temporary"
+                    aria-hidden="true"
+                  >
+                    <span className="feature-timer-box">
+                      <Timer />
+                    </span>
+                    <span>Ready when you are.</span>
+                    <div>
+                      <i /> your-next-inbox@mail.tm
+                    </div>
+                  </div>
+                  <div className="landing-feature-body">
+                    <h3>Một địa chỉ tạm thời</h3>
+                    <p>
+                      Tạo Temp Mail cho những nhu cầu ngắn hạn. Nhận thư và theo
+                      dõi nội dung ngay trong OmniMail.
+                    </p>
+                  </div>
+                  <Link className="landing-feature-link" to="/app/temp-mail">
+                    <span>Khám phá Temp Mail</span>
+                    <span className="landing-square-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
                 </div>
-                <b>ONE INBOX. ALL CONNECTED.</b>
-              </div>
-              <h3>Gmail & Outlook</h3>
-              <p>
-                Kết nối các hộp thư bạn đang sử dụng. Chuyển giữa tài khoản, đọc
-                và tìm thư trong cùng một giao diện.
-              </p>
-              <Link to="/app/connect">Kết nối hộp thư →</Link>
-            </article>
-            <article>
-              <span className="landing-feature-number">02 / TEMPORARY</span>
-              <div
-                className="landing-feature-art feature-temporary"
-                aria-hidden="true"
-              >
-                <Timer />
-                <span>Ready when you are.</span>
-                <div>
-                  <i /> your-next-inbox@mail.tm
+              </article>
+              <article className="landing-feature-card landing-feature-card--share">
+                <LandingPushPin tone="amber" />
+                <div className="landing-feature-inner">
+                  <div className="landing-feature-head">
+                    <span className="landing-feature-index">03</span>
+                    <i className="landing-feature-pip" aria-hidden="true" />
+                  </div>
+                  <div
+                    className="landing-feature-art feature-sharing"
+                    aria-hidden="true"
+                  >
+                    <div>
+                      <span>YOU</span>
+                      <span className="feature-link-node">
+                        <Link2 />
+                      </span>
+                      <span>TEAM</span>
+                    </div>
+                    <b>
+                      <ShieldCheck /> Read-only access
+                    </b>
+                  </div>
+                  <div className="landing-feature-body">
+                    <h3>Chia sẻ có kiểm soát</h3>
+                    <p>
+                      Cấp quyền xem hộp thư hoặc chia sẻ một tin nhắn. Theo dõi
+                      quyền truy cập và thu hồi khi không còn cần thiết.
+                    </p>
+                  </div>
+                  <Link className="landing-feature-link" to="/app/mail-sharing">
+                    <span>Tìm hiểu chia sẻ</span>
+                    <span className="landing-square-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
                 </div>
-              </div>
-              <h3>Một địa chỉ tạm thời</h3>
-              <p>
-                Tạo Temp Mail cho những nhu cầu ngắn hạn. Nhận thư và theo dõi
-                nội dung ngay trong OmniMail.
-              </p>
-              <Link to="/app/temp-mail">Khám phá Temp Mail →</Link>
-            </article>
-            <article>
-              <span className="landing-feature-number">03 / SHARE</span>
-              <div
-                className="landing-feature-art feature-sharing"
-                aria-hidden="true"
-              >
-                <div>
-                  <span>YOU</span>
-                  <Link2 />
-                  <span>TEAM</span>
-                </div>
-                <b>
-                  <ShieldCheck /> Read-only access
-                </b>
-              </div>
-              <h3>Chia sẻ có kiểm soát</h3>
-              <p>
-                Cấp quyền xem hộp thư hoặc chia sẻ một tin nhắn. Theo dõi quyền
-                truy cập và thu hồi khi không còn cần thiết.
-              </p>
-              <Link to="/app/mail-sharing">Tìm hiểu chia sẻ →</Link>
-            </article>
+              </article>
+            </div>
           </div>
         </section>
 
         <section className="landing-how" aria-labelledby="landing-how-title">
-          <div className="landing-section-heading">
-            <span>GET STARTED</span>
-            <h2 id="landing-how-title">
-              Kết nối một lần.
-              <br />
-              <em>Theo dõi ở một nơi.</em>
-            </h2>
-            <Link className="landing-button home-primary" to={startPath}>
-              {member
-                ? "Mở Mailboxes"
-                : pending
-                  ? "Tiếp tục xác minh"
-                  : "Tạo tài khoản miễn phí"}{" "}
-              →
-            </Link>
+          <div className="landing-how-inner">
+            <div className="landing-section-heading landing-how-intro">
+              <h2 id="landing-how-title">
+                Kết nối một lần.
+                <br />
+                <em>Theo dõi ở một nơi.</em>
+              </h2>
+              <div className="landing-how-actions">
+                <Link className="landing-button home-primary" to={startPath}>
+                  <span>
+                    {member
+                      ? "Mở Mailboxes"
+                      : pending
+                        ? "Tiếp tục xác minh"
+                        : "Tạo tài khoản miễn phí"}
+                  </span>
+                  <span className="landing-button-arrow" aria-hidden="true">
+                    →
+                  </span>
+                </Link>
+                <LandingCubeCluster variant="steps" />
+              </div>
+            </div>
+            <div className="landing-steps-board">
+              <svg
+                className="landing-pin-trail landing-pin-trail--steps"
+                viewBox="0 0 480 460"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path d="M 185 88 C 330 98, 365 162, 295 215 C 215 268, 120 302, 185 375" />
+              </svg>
+              <ol>
+                <li>
+                  <LandingPushPin tone="blue" />
+                  <div className="landing-step-inner">
+                    <span>01</span>
+                    <div>
+                      <h3>Tạo tài khoản và xác minh email</h3>
+                      <p>
+                        Bắt đầu bằng email của bạn, rồi mở liên kết xác minh
+                        trong hộp thư.
+                      </p>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <LandingPushPin tone="violet" />
+                  <div className="landing-step-inner">
+                    <span>02</span>
+                    <div>
+                      <h3>Kết nối hộp thư</h3>
+                      <p>
+                        Thêm Gmail, Outlook hoặc tạo một địa chỉ Temp Mail theo
+                        nhu cầu.
+                      </p>
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <LandingPushPin tone="amber" />
+                  <div className="landing-step-inner">
+                    <span>03</span>
+                    <div>
+                      <h3>Mở thư, tìm kiếm, chia sẻ</h3>
+                      <p>
+                        Chọn mailbox để đọc thư và quản lý quyền xem trong cùng
+                        một không gian.
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              </ol>
+            </div>
           </div>
-          <ol>
-            <li>
-              <span>01</span>
-              <div>
-                <h3>Tạo tài khoản và xác minh email</h3>
-                <p>
-                  Bắt đầu bằng email của bạn, rồi mở liên kết xác minh trong hộp
-                  thư.
-                </p>
-              </div>
-            </li>
-            <li>
-              <span>02</span>
-              <div>
-                <h3>Kết nối hộp thư</h3>
-                <p>
-                  Thêm Gmail, Outlook hoặc tạo một địa chỉ Temp Mail theo nhu
-                  cầu.
-                </p>
-              </div>
-            </li>
-            <li>
-              <span>03</span>
-              <div>
-                <h3>Mở thư, tìm kiếm, chia sẻ</h3>
-                <p>
-                  Chọn mailbox để đọc thư và quản lý quyền xem trong cùng một
-                  không gian.
-                </p>
-              </div>
-            </li>
-          </ol>
         </section>
 
         <section className="landing-faq" aria-labelledby="landing-faq-title">
-          <header className="landing-section-heading">
-            <span>A FEW THINGS TO KNOW</span>
+          <header className="landing-section-heading landing-faq-intro">
             <h2 id="landing-faq-title">Trước khi bắt đầu.</h2>
+            <p className="landing-faq-note">
+              Những câu hỏi thường gặp về xác minh tài khoản, đồng bộ hộp thư và
+              quyền chia sẻ.
+            </p>
+            <LandingCubeCluster variant="faq" />
           </header>
-          <div>
+          <div className="landing-faq-grid">
             <details>
-              <summary>Tài khoản mới có cần xác minh email không?</summary>
+              <summary>
+                <span>Tài khoản mới có cần xác minh email không?</span>
+              </summary>
               <p>
                 Có. Sau khi đăng ký, bạn cần mở liên kết xác minh được gửi tới
                 email trước khi sử dụng các tính năng hộp thư.
               </p>
             </details>
             <details>
-              <summary>Ngắt kết nối có xóa thư gốc của tôi không?</summary>
+              <summary>
+                <span>Ngắt kết nối có xóa thư gốc của tôi không?</span>
+              </summary>
               <p>
                 Không. Ngắt kết nối Gmail hoặc Outlook chỉ gỡ kết nối khỏi
                 OmniMail; thư gốc vẫn ở nhà cung cấp của bạn.
               </p>
             </details>
             <details>
-              <summary>Người được chia sẻ có thể sửa hộp thư không?</summary>
+              <summary>
+                <span>Người được chia sẻ có thể sửa hộp thư không?</span>
+              </summary>
               <p>
                 Quyền chia sẻ trong OmniMail là quyền xem. Bạn có thể thu hồi
                 quyền truy cập khi không còn cần thiết.
@@ -311,38 +616,51 @@ export function HomeLanding({
         </section>
 
         <section className="landing-start">
-          <span>LESS NOISE. MORE FOCUS.</span>
-          <h2>
-            Mọi hộp thư.
-            <br />
-            <em>Một nơi để bắt đầu.</em>
-          </h2>
-          <div>
-            <Link className="landing-button" to={startPath}>
-              {member
-                ? "Vào hộp thư"
-                : pending
-                  ? "Xác minh email"
-                  : "Bắt đầu với OmniMail"}{" "}
-              →
-            </Link>
-            {!member && !pending && (
-              <Link className="landing-signin" to="/login">
-                Đã có tài khoản? Đăng nhập ↗
-              </Link>
-            )}
+          <div className="landing-start-stage">
+            <LandingCubeCluster variant="start" />
+            <div className="landing-start-frame">
+              <LandingPushPin tone="violet" />
+              <div className="landing-start-body">
+                <h2>
+                  Mọi hộp thư.
+                  <br />
+                  <em>Một nơi để bắt đầu.</em>
+                </h2>
+                <div className="landing-start-actions">
+                  <Link className="landing-button" to={startPath}>
+                    <span>
+                      {member
+                        ? "Vào hộp thư"
+                        : pending
+                          ? "Xác minh email"
+                          : "Bắt đầu với OmniMail"}
+                    </span>
+                    <span className="landing-button-arrow" aria-hidden="true">
+                      →
+                    </span>
+                  </Link>
+                  {!member && !pending && (
+                    <Link className="landing-signin" to="/login">
+                      Đã có tài khoản? Đăng nhập ↗
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </section>
         <footer className="landing-footer">
-          <Link to="/" className="landing-footer-brand">
-            OmniMail<span>.</span>
-          </Link>
-          <span>Every inbox. One signal.</span>
-          <nav aria-label="Thông tin OmniMail">
-            <Link to="/security">Bảo mật</Link>
-            <Link to="/privacy">Quyền riêng tư</Link>
-          </nav>
-          <small>© 2026 OmniMail</small>
+          <div className="landing-footer-inner">
+            <Link to="/" className="landing-footer-brand">
+              OmniMail<span>.</span>
+            </Link>
+            <span>Every inbox. One signal.</span>
+            <nav aria-label="Thông tin OmniMail">
+              <Link to="/security">Bảo mật</Link>
+              <Link to="/privacy">Quyền riêng tư</Link>
+            </nav>
+            <small>© 2026 OmniMail</small>
+          </div>
         </footer>
       </div>
     </div>
