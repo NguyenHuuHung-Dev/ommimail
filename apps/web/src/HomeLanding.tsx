@@ -88,7 +88,14 @@ function IsometricCube({
 function LandingCubeCluster({
   variant,
 }: {
-  variant: "features" | "steps" | "faq" | "start" | "hero-left" | "hero-right";
+  variant:
+    | "features"
+    | "steps"
+    | "faq"
+    | "start"
+    | "start-right"
+    | "hero-left"
+    | "hero-right";
 }) {
   if (variant === "hero-left") {
     return (
@@ -258,22 +265,88 @@ function LandingCubeCluster({
       </svg>
     );
   }
+  if (variant === "start-right") {
+    return (
+      <svg
+        className="landing-cubes landing-cubes--start-right"
+        viewBox="0 0 156 124"
+        width="156"
+        height="124"
+        aria-hidden="true"
+      >
+        <IsometricCube
+          x={42}
+          y={44}
+          size={20}
+          top="#fff0e8"
+          left="#f1baa7"
+          right="#c05a40"
+          shadow="#f2cfc5"
+        />
+        <IsometricCube
+          x={86}
+          y={12}
+          size={24}
+          top="#e9e5ff"
+          left="#b9adfb"
+          right="#674cfb"
+          shadow="#d5cff5"
+        />
+        <IsometricCube
+          x={116}
+          y={54}
+          size={20}
+          top="#dfedfa"
+          left="#9cc0ea"
+          right="#315e97"
+          shadow="#cfdce8"
+        />
+      </svg>
+    );
+  }
   return (
     <svg
       className="landing-cubes landing-cubes--start"
-      viewBox="0 0 104 96"
-      width="104"
-      height="96"
+      viewBox="0 0 176 138"
+      width="176"
+      height="138"
       aria-hidden="true"
     >
       <IsometricCube
-        x={52}
-        y={14}
-        size={28}
+        x={44}
+        y={56}
+        size={22}
+        top="#dfedfa"
+        left="#9cc0ea"
+        right="#315e97"
+        shadow="#cfdce8"
+      />
+      <IsometricCube
+        x={90}
+        y={16}
+        size={26}
         top="#fff4d6"
         left="#eed083"
         right="#c59436"
         shadow="#e2d9bd"
+      />
+      <IsometricCube
+        x={132}
+        y={48}
+        size={22}
+        top="#e8f5ef"
+        left="#9fd8c3"
+        right="#226d5c"
+        shadow="#cde6db"
+      />
+      <IsometricCube
+        x={86}
+        y={74}
+        size={19}
+        top="#e9e5ff"
+        left="#b9adfb"
+        right="#674cfb"
+        shadow="#d5cff5"
       />
     </svg>
   );
@@ -684,32 +757,82 @@ export function HomeLanding({
         <section className="landing-start">
           <div className="landing-start-stage">
             <LandingCubeCluster variant="start" />
+            <LandingCubeCluster variant="start-right" />
             <div className="landing-start-frame">
               <LandingPushPin tone="violet" />
               <div className="landing-start-body">
-                <h2>
-                  Mọi hộp thư.
-                  <br />
-                  <em>Một nơi để bắt đầu.</em>
-                </h2>
-                <div className="landing-start-actions">
-                  <Link className="landing-button" to={startPath}>
-                    <span>
-                      {member
-                        ? "Vào hộp thư"
-                        : pending
-                          ? "Xác minh email"
-                          : "Bắt đầu với OmniMail"}
-                    </span>
-                    <span className="landing-button-arrow" aria-hidden="true">
-                      →
-                    </span>
-                  </Link>
-                  {!member && !pending && (
-                    <Link className="landing-signin" to="/login">
-                      Đã có tài khoản? Đăng nhập ↗
+                <div className="landing-start-main">
+                  <span className="landing-start-kicker">
+                    BẮT ĐẦU TRONG 30 GIÂY
+                  </span>
+                  <h2>
+                    Mọi hộp thư.
+                    <br />
+                    <em>Một nơi để bắt đầu.</em>
+                  </h2>
+                  <p className="landing-start-lead">
+                    Kết nối Gmail, Microsoft Outlook và email tạm thời trong
+                    cùng một không gian làm việc — theo dõi thư mới gọn gàng,
+                    lấy OTP nhanh và giữ nguyên toàn bộ thư gốc tại nhà cung
+                    cấp.
+                  </p>
+                  <div className="landing-start-actions">
+                    <Link className="landing-button" to={startPath}>
+                      <span>
+                        {member
+                          ? "Vào hộp thư"
+                          : pending
+                            ? "Xác minh email"
+                            : "Bắt đầu với OmniMail"}
+                      </span>
+                      <span className="landing-button-arrow" aria-hidden="true">
+                        →
+                      </span>
                     </Link>
-                  )}
+                    {!member && !pending && (
+                      <Link className="landing-signin" to="/login">
+                        Đã có tài khoản? Đăng nhập ↗
+                      </Link>
+                    )}
+                  </div>
+                  <ul
+                    className="landing-start-perks"
+                    aria-label="Ưu điểm khởi tạo"
+                  >
+                    <li>Miễn phí gói Basic</li>
+                    <li>Không lưu mật khẩu Gmail</li>
+                    <li>Thu hồi quyền 1 chạm</li>
+                  </ul>
+                </div>
+
+                <div className="landing-start-visual" aria-hidden="true">
+                  <div className="landing-start-mini landing-start-mini--blue">
+                    <div className="landing-start-mini-icons">
+                      <img src="/icons/gmail-3d.webp" alt="" />
+                      <img src="/icons/outlook-3d.webp" alt="" />
+                    </div>
+                    <div>
+                      <strong>Gmail + Outlook hợp nhất</strong>
+                      <small>Đồng bộ nhiều tài khoản · Tách riêng Spam</small>
+                    </div>
+                  </div>
+                  <div className="landing-start-mini landing-start-mini--mint">
+                    <span className="landing-start-mini-badge">OTP</span>
+                    <div>
+                      <strong>Tách mã xác minh tức thì</strong>
+                      <small>Nhận diện tự động · Sao chép trong 1 lần bấm</small>
+                    </div>
+                  </div>
+                  <div className="landing-start-mini landing-start-mini--lavender">
+                    <span className="landing-start-mini-icon">
+                      <Timer size={16} />
+                    </span>
+                    <div>
+                      <strong>Temp Mail &amp; Chia sẻ an toàn</strong>
+                      <small>Làm mới mỗi 3 giây · Quyền đọc có kiểm soát</small>
+                    </div>
+                    <CubeCluster3D variant="badge" />
+                  </div>
                 </div>
               </div>
             </div>
