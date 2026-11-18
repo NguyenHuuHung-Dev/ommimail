@@ -4,8 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
 import { AuthSession } from "./AuthSession";
+import "./palette.css";
 import "./public-home.css";
 import "./surface-depth.css";
+import "./theme-surfaces.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={new QueryClient()}>

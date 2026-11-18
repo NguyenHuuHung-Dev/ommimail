@@ -1,6 +1,6 @@
 .mail-sharing-page {
   padding: 18px clamp(22px, 3vw, 48px) 48px!important;
-  background: #f7dce4!important;
+  background: var(--color-surface-blue)!important;
 }
 
 .share-access-header > button {
@@ -11,7 +11,7 @@
   gap: 7px;
   border: 1px solid #0a0a0a;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
@@ -19,7 +19,7 @@
 }
 
 .share-access-header > button:hover:not(:disabled) {
-  background: #f2bdcc;
+  background: var(--color-accent-soft);
   color: #0a0a0a;
 }
 
@@ -45,12 +45,12 @@
 
 .share-stat-grid article:first-child,
 .share-stat-grid article:last-child {
-  background: #f3c4d2;
+  background: var(--color-accent-soft);
 }
 
 .share-stat-grid small,
 .share-stat-grid span {
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 8px;
   font-weight: 900;
   text-transform: uppercase;
@@ -66,7 +66,7 @@
 .share-access-dashboard {
   border: 1px solid #0a0a0a;
   background: #fff;
-  box-shadow: 9px 9px 0 #df9fb3;
+  box-shadow: 9px 9px 0 var(--color-accent-light);
 }
 
 .share-batch-builder {
@@ -79,9 +79,9 @@
   display: flex;
   align-items: flex-start;
   gap: 11px;
-  border-right: 1px solid #eadde1;
-  border-bottom: 1px solid #eadde1;
-  background: #fff8fa;
+  border-right: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .share-builder-heading > span {
@@ -91,7 +91,7 @@
   display: grid;
   place-items: center;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
   font-size: 9px;
   font-weight: 900;
 }
@@ -108,7 +108,7 @@
 
 .share-builder-heading small {
   margin-top: 6px;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 8px;
   line-height: 1.45;
 }
@@ -117,7 +117,7 @@
 .share-recipient-batch {
   min-width: 0;
   padding: 16px 18px;
-  border-bottom: 1px solid #eadde1;
+  border-bottom: 1px solid var(--color-line);
 }
 
 .share-selector-toolbar {
@@ -136,14 +136,14 @@
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  border: 1px solid #ddc4cc;
+  border: 1px solid var(--color-line);
   background: #fff;
 }
 
 .share-selector-toolbar svg,
 .share-access-toolbar svg {
   width: 14px;
-  color: #b5657d;
+  color: var(--color-accent);
 }
 
 .share-selector-toolbar input[type="text"],
@@ -163,7 +163,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #66545a;
+  color: var(--color-text);
   font-size: 9px;
   font-weight: 900;
   white-space: nowrap;
@@ -193,15 +193,15 @@
   align-items: center;
   gap: 7px;
   padding: 9px 10px;
-  border: 1px solid #eadde1;
+  border: 1px solid var(--color-line);
   background: #fff;
   cursor: pointer;
 }
 
 .share-mailbox-check-grid > label:hover,
 .share-mailbox-check-grid > label.selected {
-  border-color: #b5657d;
-  background: #fff3f6;
+  border-color: var(--color-accent);
+  background: var(--color-surface);
 }
 
 .share-mailbox-check-grid span,
@@ -220,7 +220,7 @@
 
 .share-mailbox-check-grid small {
   margin-top: 4px;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 8px;
 }
 
@@ -235,7 +235,7 @@
   min-height: 128px;
   padding: 12px;
   resize: vertical;
-  border: 1px solid #ddc4cc;
+  border: 1px solid var(--color-line);
   outline: 0;
   background: #fff;
   font: 10px/1.7 monospace!important;
@@ -243,13 +243,13 @@
 
 .share-recipient-batch textarea:focus {
   border-color: #0a0a0a;
-  box-shadow: 3px 3px 0 #f2bdcc;
+  box-shadow: 3px 3px 0 var(--color-accent-soft);
 }
 
 .share-recipient-preview {
   padding: 12px;
-  border: 1px solid #eadde1;
-  background: #fff8fa;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .share-recipient-preview > span {
@@ -277,7 +277,7 @@
 .share-recipient-preview > div small {
   width: 100%;
   margin-bottom: 3px;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 8px;
 }
 
@@ -285,9 +285,9 @@
   max-width: 210px;
   padding: 5px 7px;
   overflow: hidden;
-  border: 1px solid #ddc4cc;
+  border: 1px solid var(--color-line);
   background: #fff;
-  color: #6f4e58;
+  color: var(--color-muted);
   font-size: 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -321,7 +321,7 @@
 
 .share-batch-action small {
   margin-top: 5px;
-  color: #a99ba0;
+  color: var(--color-muted-soft);
   font-size: 8px;
 }
 
@@ -333,8 +333,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #f2bdcc;
-  background: #f2bdcc;
+  border: 1px solid var(--color-accent-soft);
+  background: var(--color-accent-soft);
   color: #0a0a0a;
   font-size: 9px;
   font-weight: 900;
@@ -406,7 +406,7 @@
 
 .share-access-header p {
   margin: 0;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 9px;
 }
 
@@ -416,8 +416,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-bottom: 1px solid #eadde1;
-  background: #fff8fa;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 
 .share-access-table > header,
@@ -432,7 +432,7 @@
   min-height: 34px;
   padding: 0 16px;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
   font-size: 8px;
   font-weight: 900;
   text-transform: uppercase;
@@ -442,11 +442,11 @@
 .share-access-table > article {
   min-height: 62px;
   padding: 9px 16px;
-  border-bottom: 1px solid #f0e4e7;
+  border-bottom: 1px solid var(--color-surface-blue);
 }
 
 .share-access-table > article:hover {
-  background: #fff7f9;
+  background: var(--color-surface);
 }
 
 .share-access-table article > div {
@@ -474,7 +474,7 @@
 
 .share-access-table article small {
   margin-top: 3px;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 8px;
 }
 
@@ -489,7 +489,7 @@
 .share-access-badge {
   width: max-content;
   padding: 5px 7px;
-  background: #f3c4d2;
+  background: var(--color-accent-soft);
   font-size: 8px;
   font-weight: 900;
   text-transform: uppercase;
@@ -497,9 +497,9 @@
 
 .share-access-table article > button {
   padding: 7px 8px;
-  border: 1px solid #dcb6c1;
+  border: 1px solid var(--color-line-strong);
   background: #fff;
-  color: #a04762;
+  color: var(--color-accent-text);
   font-size: 8px;
   font-weight: 900;
 }
@@ -507,7 +507,7 @@
 .share-access-table article > button:hover:not(:disabled) {
   border-color: #0a0a0a;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
 }
 
 .share-no-access {
@@ -516,13 +516,13 @@
   place-items: center;
   align-content: center;
   gap: 7px;
-  color: #806d73;
+  color: var(--color-muted);
   font-size: 10px;
 }
 
 .share-no-access svg {
   width: 22px;
-  color: #b5657d;
+  color: var(--color-accent);
 }
 
 .mail-sharing-page .shared-with-me-panel {

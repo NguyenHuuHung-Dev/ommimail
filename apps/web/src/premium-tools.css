@@ -1,11 +1,11 @@
 .otp-card {
   margin: 18px 0 22px;
   padding: 16px 18px;
-  border: 1px solid #e5d5dc;
+  border: 1px solid var(--color-line);
   border-left: 3px solid #0a0a0a;
   border-radius: 0;
-  background: #fcf8fa;
-  color: #151214;
+  background: var(--color-surface);
+  color: var(--color-ink-deep);
   white-space: normal;
   opacity: 1;
   translate: 0 0;
@@ -30,23 +30,23 @@
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #6d5861;
+  color: var(--color-muted);
 }
 .otp-heading > small {
   font-size: 11px;
-  color: #78656c;
+  color: var(--color-muted);
 }
 .otp-card p {
   font-size: 13px;
   line-height: 1.6;
   margin: 8px 0 0;
-  color: #5a4a51;
+  color: var(--color-text);
 }
 .otp-card button {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #151214;
+  border: 1px solid var(--color-ink-deep);
   background: #ffffff;
   color: #0a0a0a;
   border-radius: 0;
@@ -80,7 +80,7 @@
 }
 .mailbox-organization {
   padding: 14px 14px 18px;
-  color: #151214;
+  color: var(--color-ink-deep);
   min-width: 0;
 }
 .organization-heading {
@@ -92,25 +92,25 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #78656c;
+  color: var(--color-muted);
   flex-wrap: wrap;
 }
 .organization-filter {
   display: grid;
   gap: 6px;
   font-size: 12px;
-  color: #5e4e55;
+  color: var(--color-text);
   margin: 10px 0 16px;
 }
 .organization-filter select,
 .organization-editor input {
   width: 100%;
   min-width: 0;
-  border: 1px solid #dfcfd5;
+  border: 1px solid var(--color-line);
   border-radius: 0;
   background: #ffffff;
   padding: 8px 10px;
-  color: #151214;
+  color: var(--color-ink-deep);
   font: inherit;
   font-size: 13px;
   transition: border-color 160ms ease, background-color 160ms ease;
@@ -118,7 +118,7 @@
 .organization-filter select:focus,
 .organization-editor input:focus {
   outline: none;
-  border-color: #151214;
+  border-color: var(--color-ink-deep);
 }
 .organized-group {
   margin: 16px 0;
@@ -130,9 +130,9 @@
   text-transform: uppercase;
   margin: 0 0 6px;
   padding-bottom: 5px;
-  border-bottom: 1px solid #efe4e8;
+  border-bottom: 1px solid var(--color-surface-blue);
   overflow-wrap: anywhere;
-  color: #725d66;
+  color: var(--color-muted);
 }
 .organized-mailbox {
   display: flex;
@@ -145,10 +145,10 @@
     border-color 150ms ease;
 }
 .organized-mailbox:hover {
-  background: #faf3f6;
+  background: var(--color-surface);
 }
 .organized-mailbox.active {
-  background: #f5dfe7;
+  background: var(--color-surface-blue);
   border-left-color: #0a0a0a;
 }
 .organized-mailbox button {
@@ -177,7 +177,7 @@
 }
 .organized-open small {
   font-size: 11px;
-  color: #7c646e;
+  color: var(--color-muted);
   overflow-wrap: anywhere;
 }
 .organized-pin {
@@ -187,7 +187,7 @@
   justify-content: center;
   padding: 6px 8px;
   font-size: 11px;
-  color: #7c646e;
+  color: var(--color-muted);
   opacity: 0;
   transition: opacity 150ms ease, color 150ms ease;
 }
@@ -210,21 +210,21 @@
 .organization-editor {
   display: grid;
   gap: 8px;
-  border-top: 1px solid #eadde1;
+  border-top: 1px solid var(--color-line);
   padding-top: 14px;
   margin-top: 16px;
   font-size: 12px;
-  color: #5e4e55;
+  color: var(--color-text);
 }
 .organization-editor > small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #7c646e;
+  color: var(--color-muted);
   font-size: 12px;
 }
 .organization-editor button {
-  border: 1px solid #151214;
+  border: 1px solid var(--color-ink-deep);
   background: #ffffff;
   color: #0a0a0a;
   padding: 8px 12px;
@@ -250,7 +250,7 @@
   line-height: 1.5;
 }
 .mailbox-organization [role="alert"] {
-  color: #9e2a45;
+  color: var(--color-accent-text);
 }
 .otp-card .sr-only {
   position: absolute;

@@ -10,8 +10,8 @@
   overflow: auto;
   isolation: isolate;
   background: #fff;
-  color: #21191d;
-  border: 1px solid #30242a;
+  color: var(--color-ink-deep);
+  border: 1px solid var(--color-ink);
   box-shadow: 0 20px 70px rgb(26 18 22 / 24%);
 }
 
@@ -24,9 +24,9 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 26px;
-  border-bottom: 1px solid #ddcbd2;
-  background: #f8eaf0;
-  color: #21191d;
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-surface-blue);
+  color: var(--color-ink-deep);
 }
 
 .profile-heading {
@@ -44,7 +44,7 @@
   place-items: center;
   flex: 0 0 46px;
   height: 46px;
-  background: #21191d;
+  background: var(--color-ink-deep);
   color: #fff;
   font-size: 16px;
 }
@@ -54,9 +54,9 @@
   width: 36px;
   height: 36px;
   flex: none;
-  border: 1px solid #d5bdc7;
+  border: 1px solid var(--color-line-strong);
   background: #fff;
-  color: #30242a;
+  color: var(--color-ink);
 }
 .profile-modal > header > button svg {
   width: 18px;
@@ -69,15 +69,15 @@
 }
 .profile-summary {
   display: grid;
-  border: 1px solid #e0d2d8;
-  background: #fcf8fa;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
 }
 .profile-summary > div {
   min-width: 0;
   padding: 16px;
 }
 .profile-summary > div + div {
-  border-left: 1px solid #e0d2d8;
+  border-left: 1px solid var(--color-line);
 }
 .profile-summary small,
 .profile-summary strong {
@@ -85,7 +85,7 @@
 }
 .profile-summary small {
   margin-bottom: 7px;
-  color: #725b65;
+  color: var(--color-muted);
   font-size: 12px;
 }
 .profile-summary strong {
@@ -99,7 +99,7 @@
   display: grid;
   gap: 16px;
   padding: 20px;
-  border: 1px solid #e0d2d8;
+  border: 1px solid var(--color-line);
   background: #fff;
 }
 .profile-section-title {
@@ -107,7 +107,7 @@
   align-items: center;
   gap: 10px;
   padding-bottom: 14px;
-  border-bottom: 1px solid #eadde2;
+  border-bottom: 1px solid var(--color-line);
 }
 .profile-section-title span,
 .profile-section-title strong,
@@ -115,44 +115,44 @@
   display: block;
 }
 .profile-section-title strong {
-  color: #30242a;
+  color: var(--color-ink);
   font-size: 17px;
   font-weight: 600;
 }
 .profile-section-title small {
   margin-top: 5px;
-  color: #725b65;
+  color: var(--color-muted);
   font-size: 13px;
   line-height: 1.5;
 }
 .profile-form label {
   display: grid;
   gap: 8px;
-  color: #493740;
+  color: var(--color-text);
   font-size: 14px;
 }
 .profile-form input {
   width: 100%;
   height: 42px;
   padding: 0 12px;
-  border: 1px solid #cbb8c0;
+  border: 1px solid var(--color-line-strong);
   background: #fff;
-  color: #21191d;
+  color: var(--color-ink-deep);
   font-size: 16px;
 }
 .profile-modal input::placeholder {
-  color: #7c6570;
+  color: var(--color-muted);
   opacity: 1;
 }
 .profile-modal input:focus-visible,
 .profile-modal button:focus-visible {
-  outline: 2px solid #9b496b;
+  outline: 2px solid var(--color-accent-text);
   outline-offset: 2px;
 }
 #root .profile-form .primary {
   width: max-content;
   justify-self: end;
-  background: #21191d;
+  background: var(--color-ink-deep);
   color: #fff;
   font-size: 13px;
 }

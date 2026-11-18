@@ -1,17 +1,17 @@
 /* Consistent elevation: a fine lit edge, a near shadow and soft ambient shade. */
 :root {
   --surface-depth:
-    0 2px 4px rgb(78 37 56 / 4%), 0 14px 35px -18px rgb(105 48 75 / 27%);
+    0 2px 4px rgb(38 65 91 / 4%), 0 14px 35px -18px rgb(38 65 91 / 23%);
   --surface-raised:
-    0 4px 9px rgb(78 37 56 / 6%), 0 22px 42px -20px rgb(105 48 75 / 34%);
+    0 4px 9px rgb(38 65 91 / 6%), 0 22px 42px -20px rgb(38 65 91 / 30%);
 }
 #root .home-landing .landing-feature-grid {
   gap: 22px;
   border: 0;
 }
 #root .home-landing .landing-feature-grid article {
-  border: 1px solid #ead5df;
-  background: linear-gradient(145deg, #fff, #fff9fc);
+  border: 1px solid var(--color-line);
+  background: linear-gradient(145deg, #fff, var(--color-surface));
   box-shadow: var(--surface-depth);
   transition:
     translate 180ms ease,
@@ -43,19 +43,19 @@
   .profile-modal
   :is(.profile-form, .profile-mailbox-dashboard, .profile-summary) {
   box-shadow: var(--surface-depth) !important;
-  border-color: #e1cbd5;
+  border-color: var(--color-line);
 }
 #root .profile-modal,
 #root .workspace-shell .admin-user-modal,
 #root .workspace-shell .message-share-modal {
   box-shadow:
-    0 4px 14px #32192515,
-    0 30px 85px #32192540 !important;
+    0 4px 14px color-mix(in srgb, var(--color-ink-deep) 8.24%, transparent),
+    0 30px 85px color-mix(in srgb, var(--color-ink-deep) 25.1%, transparent) !important;
 }
 #root .workspace-shell .otp-card {
   box-shadow:
     inset 0 1px 0 #fff,
-    0 7px 20px -10px #a44d7840 !important;
+    0 7px 20px -10px color-mix(in srgb, var(--color-accent-text) 25.1%, transparent) !important;
 }
 @media (hover: hover) {
   #root .home-landing .landing-feature-grid article:hover {

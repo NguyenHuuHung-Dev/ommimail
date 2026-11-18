@@ -1,6 +1,6 @@
 :root {
-  --scrollbar-thumb: #d5c2ca;
-  --scrollbar-track: #faf6f8;
+  --scrollbar-thumb: var(--color-line-strong);
+  --scrollbar-track: var(--color-surface);
   --editorial-serif: "Times New Roman", Times, serif;
 }
 
@@ -103,7 +103,7 @@
 
 .auth-showcase li {
   padding: 12px 14px !important;
-  border-left: 2px solid #f2bdcc !important;
+  border-left: 2px solid var(--color-accent-soft) !important;
 }
 
 .landing-feature-grid article {
@@ -113,7 +113,7 @@
 }
 
 .dashboard-page {
-  color: #151214;
+  color: var(--color-ink-deep);
 }
 
 .dashboard-page .page-header h1,
@@ -136,8 +136,8 @@
 }
 
 .temp-active-bar {
-  background: #151214;
-  border: 1px solid #151214;
+  background: var(--color-ink-deep);
+  border: 1px solid var(--color-ink-deep);
 }
 
 .temp-active-bar strong {
@@ -149,19 +149,19 @@
 .temp-reader,
 .connect-channel,
 .mailbox-directory {
-  border-color: #e6d7dd;
+  border-color: var(--color-line);
   box-shadow: none;
 }
 
 .temp-address.active,
 .temp-message-list > button.active {
-  background: #f6e1e9;
+  background: var(--color-surface-blue);
 }
 
 .connect-channel > header span {
-  background: #f6e1e9;
-  color: #5c3445;
-  border-color: #e3c3cf;
+  background: var(--color-surface-blue);
+  color: var(--color-text);
+  border-color: var(--color-line);
 }
 
 @media (prefers-reduced-motion: reduce) {

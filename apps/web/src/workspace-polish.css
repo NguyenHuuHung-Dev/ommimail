@@ -11,7 +11,7 @@
   grid-template-rows: auto minmax(0, 1fr) !important;
   height: 100dvh;
   min-height: 0;
-  border: 2px solid #151214 !important;
+  border: 2px solid var(--color-ink-deep) !important;
   border-radius: 0 !important;
   background: #ffffff !important;
   overflow: hidden;
@@ -151,8 +151,8 @@
 
 #root .workspace-shell .mailbox-account-rail {
   padding: 0 !important;
-  border-right: 1px solid #e6d7dd !important;
-  background: #fdfbfc !important;
+  border-right: 1px solid var(--color-line) !important;
+  background: var(--color-surface) !important;
 }
 
 #root .workspace-shell .mailbox-rail-title {
@@ -160,19 +160,19 @@
   align-items: center;
   min-height: 48px;
   padding: 0 16px !important;
-  border-bottom: 1px solid #efe4e8;
+  border-bottom: 1px solid var(--color-surface-blue);
   font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: 0.2em !important;
   text-transform: uppercase;
-  color: #6e5a63 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .mailbox-rail-search.search {
   height: 38px !important;
   margin: 12px 14px 4px !important;
   padding: 0 12px !important;
-  border: 1px solid #dfd0d6 !important;
+  border: 1px solid var(--color-line) !important;
   background: #ffffff !important;
   box-shadow: none !important;
   transition: border-color 160ms ease;
@@ -184,11 +184,11 @@
 
 #root .workspace-shell .mailbox-rail-search input {
   font-size: 13.5px !important;
-  color: #151214 !important;
+  color: var(--color-ink-deep) !important;
 }
 
 #root .workspace-shell .mailbox-rail-search input::placeholder {
-  color: #96828b !important;
+  color: var(--color-muted-soft) !important;
 }
 
 #root .workspace-shell .mailbox-provider-group {
@@ -197,7 +197,7 @@
 
 #root .workspace-shell .mailbox-provider-heading {
   padding: 6px 4px !important;
-  border-bottom: 1px solid #efe4e8 !important;
+  border-bottom: 1px solid var(--color-surface-blue) !important;
   margin-bottom: 6px;
   background: transparent !important;
 }
@@ -206,7 +206,7 @@
   font-size: 11px !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase;
-  color: #725d66 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .mailbox-account-list {
@@ -221,16 +221,16 @@
   border: 0 !important;
   border-left: 2px solid transparent !important;
   font-size: 13.5px !important;
-  color: #2b2126 !important;
+  color: var(--color-ink-deep) !important;
   background: transparent;
 }
 
 #root .workspace-shell .mailbox-account-list button:hover {
-  background: #faf3f6 !important;
+  background: var(--color-surface) !important;
 }
 
 #root .workspace-shell .mailbox-account-list button.active {
-  background: #f5dfe7 !important;
+  background: var(--color-surface-blue) !important;
   border-left-color: #0a0a0a !important;
   color: #0a0a0a !important;
   font-weight: 700 !important;
@@ -240,14 +240,14 @@
    CENTER COLUMN — Message List & Header
    ========================================================================== */
 #root .workspace-shell .inbox-pane {
-  border-right: 1px solid #e6d7dd !important;
+  border-right: 1px solid var(--color-line) !important;
   background: #ffffff !important;
 }
 
 #root .workspace-shell .list-head {
   min-height: 78px !important;
   padding: 14px 20px !important;
-  border-bottom: 1px solid #e6d7dd !important;
+  border-bottom: 1px solid var(--color-line) !important;
   background: #ffffff !important;
 }
 
@@ -260,7 +260,7 @@
   font-weight: 700 !important;
   letter-spacing: 0.22em !important;
   text-transform: uppercase;
-  color: #7a646e !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .mailbox-picker label {
@@ -279,7 +279,7 @@
   font-weight: 600 !important;
   letter-spacing: 0.14em !important;
   text-transform: uppercase;
-  color: #846d77 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .mailbox-head-actions {
@@ -290,9 +290,9 @@
 #root .workspace-shell .account-sync,
 #root .workspace-shell .account-disconnect {
   height: 34px !important;
-  border: 1px solid #dfd0d6 !important;
+  border: 1px solid var(--color-line) !important;
   background: #ffffff !important;
-  color: #151214 !important;
+  color: var(--color-ink-deep) !important;
   box-shadow: none !important;
   transition:
     background-color 150ms ease,
@@ -311,7 +311,7 @@
   min-width: 18px !important;
   height: 18px !important;
   padding: 0 5px !important;
-  background: #151214 !important;
+  background: var(--color-ink-deep) !important;
   color: #ffffff !important;
   font-size: 10px !important;
 }
@@ -319,7 +319,7 @@
 #root .workspace-shell .spam-toolbar-button:hover:not(:disabled),
 #root .workspace-shell .account-sync:hover:not(:disabled) {
   border-color: #0a0a0a !important;
-  background: #faf3f6 !important;
+  background: var(--color-surface) !important;
 }
 
 #root .workspace-shell .spam-toolbar-button.open {
@@ -329,18 +329,18 @@
 }
 
 #root .workspace-shell .spam-toolbar-button.open b {
-  background: #f2bdcc !important;
+  background: var(--color-accent-soft) !important;
   color: #0a0a0a !important;
 }
 
 #root .workspace-shell .account-disconnect {
   width: 34px !important;
-  color: #8c3b55 !important;
+  color: var(--color-danger) !important;
 }
 
 #root .workspace-shell .account-disconnect:hover:not(:disabled) {
-  border-color: #8c3b55 !important;
-  background: #fff2f6 !important;
+  border-color: var(--color-danger) !important;
+  background: var(--color-danger-soft) !important;
 }
 
 #root .workspace-shell .message-list {
@@ -356,7 +356,7 @@
   margin: 0 !important;
   padding: 15px 18px !important;
   border: 0 !important;
-  border-bottom: 1px solid #efe5e9 !important;
+  border-bottom: 1px solid var(--color-surface-blue) !important;
   border-left: 3px solid transparent !important;
   background: #ffffff !important;
   box-shadow: none !important;
@@ -366,8 +366,8 @@
 }
 
 #root .workspace-shell .message-row:hover {
-  background: #fcf6f8 !important;
-  border-left-color: #d9b8c4 !important;
+  background: var(--color-surface) !important;
+  border-left-color: var(--color-line-strong) !important;
 }
 
 #root .workspace-shell .message-row.unread {
@@ -376,7 +376,7 @@
 }
 
 #root .workspace-shell .message-row.selected {
-  background: #f6e1e9 !important;
+  background: var(--color-surface-blue) !important;
   border-left-color: #0a0a0a !important;
   box-shadow: none !important;
 }
@@ -385,9 +385,9 @@
   width: 34px !important;
   height: 34px !important;
   margin-top: 2px;
-  border: 1px solid #dfd0d6 !important;
-  background: #faf5f7 !important;
-  color: #3a2b31 !important;
+  border: 1px solid var(--color-line) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-ink) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: 0.05em;
@@ -411,7 +411,7 @@
 
 #root .workspace-shell .message-meta span {
   font-size: 12px !important;
-  color: #7c6670 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .message-row h3 {
@@ -419,7 +419,7 @@
   font-size: 14.5px !important;
   font-weight: 600 !important;
   line-height: 1.35 !important;
-  color: #151214 !important;
+  color: var(--color-ink-deep) !important;
 }
 
 #root .workspace-shell .message-row.unread h3 {
@@ -430,7 +430,7 @@
 #root .workspace-shell .message-row p {
   font-size: 13px !important;
   line-height: 1.45 !important;
-  color: #6f5b64 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .chips {
@@ -440,9 +440,9 @@
 
 #root .workspace-shell .chips span {
   padding: 2px 7px !important;
-  border: 1px solid #e2d2d8 !important;
-  background: #faf5f7 !important;
-  color: #6b5660 !important;
+  border: 1px solid var(--color-line) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-muted) !important;
   font-size: 10px !important;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -452,7 +452,7 @@
   width: 28px !important;
   height: 28px !important;
   border: 1px solid transparent !important;
-  color: #826b75 !important;
+  color: var(--color-muted) !important;
   opacity: 0;
   transition: opacity 140ms ease, border-color 140ms ease, background-color 140ms ease;
 }
@@ -465,7 +465,7 @@
 }
 
 #root .workspace-shell .message-more summary:hover {
-  border-color: #151214 !important;
+  border-color: var(--color-ink-deep) !important;
   background: #ffffff !important;
   color: #0a0a0a !important;
 }
@@ -492,17 +492,17 @@
 #root .workspace-shell .detail-toolbar {
   height: 48px !important;
   padding: 0 clamp(24px, 3.6vw, 48px) !important;
-  background: #fdfbfc !important;
-  color: #6e5a63 !important;
-  border-bottom: 1px solid #e6d7dd !important;
+  background: var(--color-surface) !important;
+  color: var(--color-muted) !important;
+  border-bottom: 1px solid var(--color-line) !important;
 }
 
 #root .workspace-shell .detail-toolbar small {
   margin-left: auto;
   padding: 3px 8px;
-  border: 1px solid #dfd0d6;
+  border: 1px solid var(--color-line);
   background: #ffffff;
-  color: #6e5a63 !important;
+  color: var(--color-muted) !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   letter-spacing: 0.2em !important;
@@ -518,7 +518,7 @@
   align-items: flex-start !important;
   gap: 16px !important;
   padding-bottom: 18px;
-  border-bottom: 1px solid #efe4e8;
+  border-bottom: 1px solid var(--color-surface-blue);
 }
 
 #root .workspace-shell .subject-row h2 {
@@ -531,9 +531,9 @@
 
 #root .workspace-shell .subject-row .label {
   padding: 4px 10px !important;
-  border: 1px solid #dfd0d6 !important;
-  background: #faf4f6 !important;
-  color: #5e4b53 !important;
+  border: 1px solid var(--color-line) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   letter-spacing: 0.16em !important;
@@ -543,14 +543,14 @@
 #root .workspace-shell .sender {
   margin-top: 16px !important;
   padding-bottom: 16px;
-  border-bottom: 1px solid #efe4e8;
+  border-bottom: 1px solid var(--color-surface-blue);
 }
 
 #root .workspace-shell .sender .large-avatar {
   width: 38px !important;
   height: 38px !important;
-  border: 1px solid #151214 !important;
-  background: #faf3f6 !important;
+  border: 1px solid var(--color-ink-deep) !important;
+  background: var(--color-surface) !important;
   color: #0a0a0a !important;
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -563,28 +563,28 @@
 
 #root .workspace-shell .sender small {
   font-size: 13px !important;
-  color: #725d66 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .sender time {
   font-size: 12.5px !important;
-  color: #725d66 !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .account-line {
   margin-top: 12px !important;
   font-size: 12.5px !important;
   font-style: italic;
-  color: #78636c !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .mail-body {
   margin-top: 20px !important;
   padding-top: 18px !important;
-  border-top: 1px solid #efe4e8 !important;
+  border-top: 1px solid var(--color-surface-blue) !important;
   font-size: 15.5px !important;
   line-height: 1.75 !important;
-  color: #151214 !important;
+  color: var(--color-ink-deep) !important;
 }
 
 /* ==========================================================================
@@ -593,7 +593,7 @@
 #root .workspace-shell .empty {
   gap: 8px !important;
   padding: 36px 24px !important;
-  color: #7a646e !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .empty h3 {
@@ -602,7 +602,7 @@
   font-weight: 600 !important;
   font-style: italic;
   letter-spacing: -0.01em !important;
-  color: #3f3137 !important;
+  color: var(--color-ink) !important;
 }
 
 #root .workspace-shell .empty p {
@@ -610,7 +610,7 @@
   margin: 0 !important;
   font-size: 13.5px !important;
   line-height: 1.6 !important;
-  color: #7a646e !important;
+  color: var(--color-muted) !important;
 }
 
 #root .workspace-shell .profile-modal,

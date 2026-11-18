@@ -13,10 +13,10 @@
   width: min(100%, 480px);
   overflow-wrap: anywhere;
   padding: clamp(24px, 4vw, 36px);
-  border: 1px solid #151214;
+  border: 1px solid var(--color-ink-deep);
   border-radius: 0;
   background: #ffffff;
-  box-shadow: 6px 6px 0 #f2bdcc;
+  box-shadow: 6px 6px 0 var(--color-accent-soft);
   font-size: 15px;
   line-height: 1.65;
   opacity: 1;
@@ -77,12 +77,12 @@
 }
 
 .verification-help {
-  border: 1px solid #eadde1;
-  border-left: 3px solid #151214;
+  border: 1px solid var(--color-line);
+  border-left: 3px solid var(--color-ink-deep);
   border-radius: 0;
   padding: 14px 16px;
-  background: #fcf8fa;
-  color: #4f4147;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
   line-height: 1.6;
 }

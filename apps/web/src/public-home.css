@@ -4,12 +4,12 @@ body {
 
 .public-home,
 .not-found-page {
-  --ph-pink: #f2bdcc;
-  --ph-soft: #fff5f8;
+  --ph-pink: var(--color-accent-soft);
+  --ph-soft: var(--color-surface);
   --ph-ink: #0a0a0a;
-  --ph-muted: #68575d;
-  --ph-line: #e5c8d2;
-  --ph-accent: #e78aa7;
+  --ph-muted: var(--color-muted);
+  --ph-line: var(--color-line);
+  --ph-accent: var(--color-accent-light);
   min-height: 100vh;
   background: #fff;
   color: var(--ph-ink);
@@ -161,8 +161,8 @@ body {
   background:
     radial-gradient(
       ellipse at 78% 46%,
-      #f9dce5 0,
-      #fbeaf0 20%,
+      var(--color-surface-blue) 0,
+      var(--color-surface-blue) 20%,
       transparent 48%
     ),
     #fff;
@@ -396,7 +396,7 @@ body {
 .public-feature-grid p {
   margin: 0;
   font-size: 17px;
-  color: #51444a;
+  color: var(--color-text);
   line-height: 1.65;
 }
 .public-feature-lead p {
@@ -446,7 +446,7 @@ body {
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.06em;
-  color: #a95370;
+  color: var(--color-accent-text);
   margin-bottom: 32px;
 }
 .public-how li strong {
@@ -511,7 +511,7 @@ body {
 }
 .public-security-copy > p {
   margin: 24px 0 30px;
-  color: #dccbd1;
+  color: var(--color-line);
   font-size: 19px;
   line-height: 1.65;
 }
@@ -519,14 +519,14 @@ body {
   list-style: none;
   padding: 0;
   margin: 0;
-  border-top: 1px solid #514047;
+  border-top: 1px solid var(--color-text);
 }
 .public-security-points li {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px 0;
-  border-bottom: 1px solid #514047;
+  border-bottom: 1px solid var(--color-text);
   font-size: 17px;
 }
 .public-security-points svg {
@@ -708,7 +708,7 @@ body {
   place-items: center;
   text-align: center;
   padding: 24px;
-  background: #fff5f8;
+  background: var(--color-surface);
 }
 .not-found-page strong {
   display: block;
@@ -722,8 +722,8 @@ body {
 }
 .not-found-page a {
   display: inline-block;
-  color: #342b30;
-  background: #f2bdcc;
+  color: var(--color-ink);
+  background: var(--color-accent-soft);
   padding: 12px 22px;
   border-radius: 6px;
   text-decoration: none;
@@ -834,7 +834,7 @@ body {
     padding: 46px 24px 0;
     gap: 30px;
     background:
-      radial-gradient(ellipse at 55% 77%, #f9dce5 0, transparent 48%), #fff;
+      radial-gradient(ellipse at 55% 77%, var(--color-surface-blue) 0, transparent 48%), #fff;
   }
   .public-home .public-hero h1 {
     font-size: clamp(42px, 9vw, 66px);

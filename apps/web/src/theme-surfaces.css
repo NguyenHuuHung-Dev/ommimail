@@ -1,0 +1,235 @@
+/* The shared palette supplies base colors. These accents give each area a role. */
+html {
+  color: var(--color-ink);
+  background: var(--color-surface-warm);
+}
+::selection {
+  color: var(--color-ink-deep);
+  background: var(--color-accent-soft);
+}
+#root :is(button, a, input, select, textarea, summary):focus-visible {
+  outline-color: var(--color-accent);
+}
+#root .site-header.site-header {
+  color: var(--color-ink-deep);
+  border-bottom-color: var(--color-line);
+}
+#root .site-header .site-brand-dot {
+  color: var(--color-accent);
+}
+#root .home-landing .landing-content {
+  background: var(--color-surface-warm);
+}
+#root .home-landing .landing-feature-grid article {
+  --feature-color: var(--color-blue);
+  --feature-wash: var(--color-blue-soft);
+  border-color: var(--color-line);
+  border-top: 3px solid var(--feature-color);
+  background: linear-gradient(145deg, #fff, var(--feature-wash));
+}
+#root .home-landing .landing-feature-grid article:nth-child(2) {
+  --feature-color: var(--color-mint);
+  --feature-wash: var(--color-mint-soft);
+}
+#root .home-landing .landing-feature-grid article:nth-child(3) {
+  --feature-color: var(--color-gold);
+  --feature-wash: var(--color-gold-soft);
+}
+#root .home-landing .landing-feature-grid :is(.landing-feature-number, a) {
+  color: var(--feature-color);
+}
+#root .home-landing .landing-section-heading h2 em {
+  color: var(--color-accent);
+}
+#root .home-landing .landing-how {
+  background: linear-gradient(110deg, #eef4fa80, transparent 60%);
+}
+#root .home-landing .landing-how li > span {
+  color: var(--color-mint);
+}
+#root .home-landing .landing-button {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+#root .home-landing .landing-button:hover {
+  background: var(--color-accent-hover);
+}
+#root .home-landing .landing-faq details[open] summary {
+  color: var(--color-accent-text);
+}
+#root .home-landing .landing-start {
+  background: linear-gradient(120deg, #eaf3ff, #f1efff 55%, #edf6ef);
+}
+#root .home-landing .landing-start h2 em {
+  color: var(--color-mint);
+}
+#root .home-landing .landing-footer {
+  background: var(--color-ink-deep);
+  color: #fff;
+}
+#root .home-landing .landing-footer-brand {
+  color: #fff;
+}
+#root .home-landing .landing-footer :is(nav a, small),
+#root .home-landing .landing-footer > span {
+  color: #cfdae4;
+}
+#root .home-landing .landing-footer-brand > span {
+  color: #b9aaff;
+}
+#root .auth.auth-layout {
+  background: var(--color-surface-warm) !important;
+}
+#root .auth-layout .auth-showcase {
+  background:
+    radial-gradient(ellipse at 10% 10%, #315e9770, transparent 65%),
+    radial-gradient(ellipse at 100% 100%, #226d5c60, transparent 65%),
+    var(--color-ink-deep) !important;
+}
+#root .auth-layout .auth-showcase h2 em {
+  color: #a9e5cf;
+}
+#root .auth-layout .auth-showcase .auth-kicker {
+  color: #f8dd96;
+}
+#root .auth-layout .auth-showcase li small,
+#root .auth-layout .auth-showcase > small {
+  color: #c0d0dd;
+}
+#root .auth-layout .auth-showcase li {
+  border-color: #ffffff29;
+}
+#root .auth-layout .auth-showcase::after {
+  color: #ffffff0d;
+}
+#root .auth-layout .auth-panel {
+  background:
+    radial-gradient(ellipse at 90% 15%, #eaf3ff, transparent 60%),
+    var(--color-surface-warm) !important;
+}
+#root .auth-layout .auth-card {
+  background: #fff;
+  border-color: var(--color-line);
+}
+#root :is(.auth-layout, .verification-layout) .primary,
+#root .workspace-shell:not(.dark) .primary {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #fff !important;
+}
+#root :is(.auth-layout, .verification-layout) .primary:hover:not(:disabled),
+#root .workspace-shell:not(.dark) .primary:hover:not(:disabled) {
+  background: var(--color-accent-hover) !important;
+}
+#root .verification-layout.verification-layout,
+#root .not-found-page.not-found-page {
+  background:
+    radial-gradient(ellipse at 20% 20%, #dfedfa99, transparent 60%),
+    radial-gradient(ellipse at 85% 70%, #f5edcf99, transparent 55%),
+    var(--color-surface-warm);
+}
+#root .verification-card .verify-badge,
+#root .verification-card .verification-help {
+  background: var(--color-mint-soft);
+  color: var(--color-mint);
+  border-color: #b5d9ce;
+}
+#root .public-home.info-page {
+  background:
+    linear-gradient(130deg, #eef4fa80, transparent 55%),
+    var(--color-surface-warm);
+}
+#root .workspace-shell.workspace-shell {
+  --bg: #fff;
+  --text: var(--color-ink);
+  --muted: var(--color-muted);
+  --line: var(--color-line);
+  --soft: var(--color-surface-blue);
+  border-color: var(--color-line-strong) !important;
+}
+#root .workspace-shell > .site-header.site-header {
+  background: var(--color-surface-warm);
+}
+#root .workspace-shell:not(.dark) > .page-pane.page-pane {
+  background: var(--color-surface) !important;
+}
+#root .workspace-shell:not(.dark) .mailbox-account-rail.mailbox-account-rail {
+  background: var(--color-surface-blue) !important;
+}
+#root .workspace-shell:not(.dark) .message-row.selected {
+  background: #f0edff !important;
+  border-left-color: var(--color-accent) !important;
+}
+#root .workspace-shell:not(.dark) .message-row.unread:not(.selected) {
+  border-left-color: var(--color-mint) !important;
+}
+#root .workspace-shell .connect-channel:nth-child(1) {
+  border-top: 3px solid var(--color-coral);
+}
+#root .workspace-shell .connect-channel:nth-child(2) {
+  border-top: 3px solid var(--color-blue);
+}
+#root .workspace-shell .connect-channel:nth-child(3) {
+  border-top: 3px solid var(--color-mint);
+}
+#root .workspace-shell .otp-card.otp-card {
+  background: var(--color-gold-soft) !important;
+  border-color: #e7d6a6 !important;
+  border-left-color: var(--color-gold) !important;
+}
+#root .workspace-shell .otp-card .otp-codes strong {
+  color: var(--color-gold);
+}
+#root .workspace-shell .share-stat-grid article:nth-child(1),
+#root .workspace-shell .admin-metric:nth-child(1):not(.selected) {
+  background: var(--color-blue-soft);
+}
+#root .workspace-shell .share-stat-grid article:nth-child(2),
+#root .workspace-shell .admin-metric:nth-child(2):not(.selected) {
+  background: var(--color-mint-soft);
+}
+#root .workspace-shell .share-stat-grid article:nth-child(3),
+#root .workspace-shell .admin-metric:nth-child(3):not(.selected) {
+  background: var(--color-gold-soft);
+}
+#root .workspace-shell .admin-metric:nth-child(4):not(.selected) {
+  background: var(--color-accent-soft);
+}
+#root .workspace-shell .premium-page .premium-plan-label {
+  color: var(--color-gold);
+}
+#root .workspace-shell .premium-page .premium-price {
+  color: var(--color-accent-text);
+}
+#root .workspace-shell .premium-page .premium-details section:nth-child(1) {
+  background: var(--color-mint-soft);
+}
+#root .workspace-shell .premium-page .premium-details section:nth-child(2) {
+  background: var(--color-blue-soft);
+}
+#root .profile-modal .profile-summary.profile-summary {
+  background: var(--color-surface-blue);
+}
+#root .profile-modal .profile-mailbox-list article > button,
+#root .workspace-shell .mailbox-head-actions .account-disconnect {
+  color: var(--color-danger) !important;
+  border-color: var(--color-danger-line) !important;
+}
+#root .workspace-shell .mailbox-head-actions .account-disconnect {
+  background: var(--color-danger-soft) !important;
+}
+#root .profile-backdrop.profile-backdrop {
+  background: var(--color-overlay);
+}
+/* Restore the workspace's own dark surfaces when that appearance is used. */
+#root .workspace-shell.dark {
+  --bg: #121c29;
+  --text: #e6eef5;
+  --muted: #aabfce;
+  --line: #35495c;
+  --soft: #1b2b3b;
+}
+#root .workspace-shell.dark > .site-header.site-header {
+  background: #121c29;
+}

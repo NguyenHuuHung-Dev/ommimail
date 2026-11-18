@@ -1,0 +1,35 @@
+/* Shared color roles for public pages, authentication and the mail workspace. */
+:root {
+  --color-ink-deep: #162535;
+  --color-ink: #243648;
+  --color-text: #354d61;
+  --color-muted: #52687b;
+  --color-muted-soft: #5d7286;
+  --color-line: #d7e1e7;
+  --color-line-strong: #b7c6d3;
+  --color-surface: #f8faf9;
+  --color-surface-blue: #eef4fa;
+  --color-surface-warm: #fbfaf5;
+  --color-accent: #674cfb;
+  --color-accent-hover: #5237d6;
+  --color-accent-deep: #392d78;
+  --color-accent-text: #5140b8;
+  --color-accent-light: #a696ef;
+  --color-accent-soft: #e9e5ff;
+  --color-accent-line: #d0c8f5;
+  --color-blue: #315e97;
+  --color-blue-soft: #eaf3ff;
+  --color-mint: #226d5c;
+  --color-mint-soft: #e8f5ef;
+  --color-gold: #806017;
+  --color-gold-soft: #fff4d6;
+  --color-coral: #a64d35;
+  --color-coral-soft: #fff0e8;
+  --color-danger: #a73f48;
+  --color-danger-soft: #fff1ef;
+  --color-danger-line: #ebc4c6;
+  --color-danger-dark: #39212b;
+  --color-danger-light: #ffd8d5;
+  --color-overlay: rgb(22 37 53 / 58%);
+  --color-shadow: rgb(38 65 91 / 15%);
+}

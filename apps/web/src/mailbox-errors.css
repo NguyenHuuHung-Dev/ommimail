@@ -5,8 +5,8 @@
   justify-items: center;
   text-align: center;
   padding: 28px;
-  color: #78656b;
-  background: #fff8fa;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
 }
 
 .mailbox-provider-error > svg {
@@ -14,7 +14,7 @@
   height: 46px;
   padding: 12px;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-danger-line);
 }
 
 .mailbox-provider-error h3 {
@@ -49,7 +49,7 @@
 
 .mailbox-provider-error button:first-child {
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-danger-line);
 }
 
 .bulk-import-results {
@@ -58,7 +58,7 @@
   max-height: 260px;
   overflow: auto;
   padding-top: 8px;
-  border-top: 1px solid #d9bbc4;
+  border-top: 1px solid var(--color-line-strong);
 }
 
 .bulk-import-results > strong {
@@ -67,7 +67,7 @@
   z-index: 1;
   padding: 7px 8px;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
 }
 
 .bulk-import-results > div {
@@ -124,9 +124,9 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid #d9bbc4;
-  background: #fff8fa;
-  color: #604a51;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
@@ -136,7 +136,7 @@
 .spam-toolbar-button:hover:not(:disabled),
 .spam-toolbar-button.open {
   border-color: #0a0a0a;
-  background: #f3c4d2;
+  background: var(--color-accent-soft);
   color: #0a0a0a;
 }
 
@@ -148,7 +148,7 @@
   min-width: 20px;
   padding: 3px 5px;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
   font-size: 8px;
   text-align: center;
 }
@@ -159,9 +159,9 @@
 }
 
 .shell.dark .spam-toolbar-button {
-  border-color: #5d4650;
-  background: #261b1f;
-  color: #f7e9ee;
+  border-color: var(--color-text);
+  background: var(--color-ink-deep);
+  color: var(--color-surface-blue);
 }
 
 .profile-modal {
@@ -187,7 +187,7 @@
   margin-left: auto;
   padding: 5px 7px;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
   font-size: 9px;
   text-align: center;
 }
@@ -206,12 +206,12 @@
   align-items: center;
   gap: 8px;
   padding: 0 10px;
-  border: 1px solid #cabcc0;
+  border: 1px solid var(--color-line-strong);
 }
 
 .profile-mailbox-search svg {
   width: 15px;
-  color: #8a747b;
+  color: var(--color-muted);
 }
 
 .profile-mailbox-search input {
@@ -227,7 +227,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #66545a;
+  color: var(--color-text);
   font-size: 9px;
   font-weight: 800;
   white-space: nowrap;
@@ -244,9 +244,9 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  border: 1px solid #b84f6e;
+  border: 1px solid var(--color-danger);
   background: #fff;
-  color: #9a3452;
+  color: var(--color-danger);
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
@@ -254,7 +254,7 @@
 
 .profile-remove-selected:hover:not(:disabled) {
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-danger-line);
 }
 
 .profile-remove-selected:disabled {
@@ -269,7 +269,7 @@
 .profile-mailbox-list {
   max-height: 285px;
   overflow: auto;
-  border-top: 1px solid #eadde1;
+  border-top: 1px solid var(--color-line);
 }
 
 .profile-mailbox-list article {
@@ -279,11 +279,11 @@
   align-items: center;
   gap: 9px;
   padding: 10px 18px;
-  border-bottom: 1px solid #f0e4e7;
+  border-bottom: 1px solid var(--color-surface-blue);
 }
 
 .profile-mailbox-list article:hover {
-  background: #fff7f9;
+  background: var(--color-surface);
 }
 
 .profile-mailbox-list article > div {
@@ -304,7 +304,7 @@
 
 .profile-mailbox-list article small {
   margin-top: 4px;
-  color: #8a747b;
+  color: var(--color-muted);
   font-size: 8px;
 }
 
@@ -326,16 +326,16 @@
 .profile-mailbox-list article > button {
   width: 32px;
   height: 32px;
-  border: 1px solid #deb9c4;
+  border: 1px solid var(--color-line-strong);
   background: #fff;
-  color: #ad536e;
+  color: var(--color-accent-text);
   display: grid;
   place-items: center;
 }
 
 .profile-mailbox-list article > button:hover:not(:disabled) {
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-accent-soft);
 }
 
 .profile-mailbox-list article > button:disabled {
@@ -349,7 +349,7 @@
 
 .profile-mailbox-empty {
   padding: 28px;
-  color: #8a747b;
+  color: var(--color-muted);
   font-size: 10px;
   text-align: center;
 }
@@ -361,11 +361,11 @@
 
   .profile-summary > div:nth-child(3) {
     border-left: 0;
-    border-top: 1px solid #dfd4d7;
+    border-top: 1px solid var(--color-line);
   }
 
   .profile-summary > div:nth-child(4) {
-    border-top: 1px solid #dfd4d7;
+    border-top: 1px solid var(--color-line);
   }
 
   .profile-mailbox-toolbar {
@@ -396,7 +396,7 @@
 
   .profile-summary > div + div {
     border-left: 0;
-    border-top: 1px solid #dfd4d7;
+    border-top: 1px solid var(--color-line);
   }
 
   .profile-mailbox-toolbar {
@@ -433,13 +433,13 @@
   place-items: center;
   align-content: center;
   gap: 8px;
-  color: #7e384d;
+  color: var(--color-danger);
   text-align: center;
 }
 
 .temp-message-error > svg {
   width: 25px;
-  color: #b85b76;
+  color: var(--color-danger);
 }
 
 .temp-message-error strong,
@@ -453,7 +453,7 @@
 
 .temp-message-error small {
   max-width: 320px;
-  color: #8a747b;
+  color: var(--color-danger);
   font-size: 9px;
   line-height: 1.5;
 }
@@ -463,7 +463,7 @@
   padding: 7px 11px;
   border: 1px solid #0a0a0a;
   background: #0a0a0a;
-  color: #f2bdcc;
+  color: var(--color-danger-line);
   font-size: 8px;
   font-weight: 900;
   text-transform: uppercase;

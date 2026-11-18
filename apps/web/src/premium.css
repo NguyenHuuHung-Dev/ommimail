@@ -1,8 +1,8 @@
 #root .workspace-shell .premium-page {
   overflow: auto;
   padding: clamp(24px, 4vw, 64px) !important;
-  background: #fff9fb !important;
-  color: #251a20;
+  background: var(--color-surface) !important;
+  color: var(--color-ink-deep);
 }
 .premium-heading {
   max-width: 760px;
@@ -11,7 +11,7 @@
 .premium-heading > span,
 .premium-plan-label,
 .premium-details section > span {
-  color: #965b72;
+  color: var(--color-accent-text);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.13em;
@@ -24,7 +24,7 @@
 }
 .premium-heading p {
   margin: 0;
-  color: #806b76;
+  color: var(--color-muted);
   line-height: 1.8;
   font-size: 14px;
 }
@@ -38,8 +38,8 @@
 .premium-plan {
   background: #fff;
   padding: clamp(24px, 3vw, 42px);
-  border: 1px solid #251a20;
-  box-shadow: 8px 8px 0 #f2bdcc;
+  border: 1px solid var(--color-ink-deep);
+  box-shadow: 8px 8px 0 var(--color-accent-soft);
 }
 .premium-plan-label {
   display: flex;
@@ -61,20 +61,20 @@
 .premium-price > span {
   padding-left: 10px;
   font-size: 15px;
-  color: #806b76;
+  color: var(--color-muted);
   font-weight: 400;
   letter-spacing: 0;
 }
 .premium-payment-note {
   font-size: 12px;
-  color: #806b76;
+  color: var(--color-muted);
   line-height: 1.7;
   margin: 15px 0 26px;
 }
 .premium-plan ul {
   padding: 24px 0;
   margin: 0;
-  border-block: 1px solid #eddae1;
+  border-block: 1px solid var(--color-line);
   list-style: none;
   display: grid;
   gap: 15px;
@@ -88,7 +88,7 @@
 }
 .premium-plan li::before {
   content: "—";
-  color: #965b72;
+  color: var(--color-accent-text);
   font-weight: 700;
   flex: none;
 }
@@ -101,16 +101,16 @@
   font-size: 13px;
 }
 .premium-membership span {
-  color: #806b76;
+  color: var(--color-muted);
   font-size: 12px;
   line-height: 1.8;
 }
 #root .premium-pay-button {
   width: 100%;
   min-height: 54px;
-  border: 1px solid #251a20;
+  border: 1px solid var(--color-ink-deep);
   border-radius: 0;
-  background: #251a20;
+  background: var(--color-ink-deep);
   color: #fff;
   display: flex;
   align-items: center;
@@ -126,7 +126,7 @@
   flex: none;
 }
 #root .premium-pay-button:hover:not(:disabled) {
-  background: #67394d;
+  background: var(--color-accent-deep);
 }
 #root .premium-page button:disabled {
   opacity: 0.55;
@@ -135,13 +135,13 @@
 .premium-unavailable {
   font-size: 12px;
   line-height: 1.7;
-  color: #806b76;
+  color: var(--color-muted);
   margin: 15px 0 0;
 }
 .premium-error {
-  background: #fff0f4;
-  color: #9b2e4c;
-  border: 1px solid #edc7d4;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger-line);
   padding: 14px;
   font-size: 12px;
   line-height: 1.7;
@@ -153,7 +153,7 @@
 .premium-order,
 .premium-how,
 .premium-manual {
-  border: 1px solid #ead3dc;
+  border: 1px solid var(--color-line);
   padding: 26px;
   background: #fff;
 }
@@ -164,7 +164,7 @@
 }
 .premium-details p,
 .premium-details small {
-  color: #806b76;
+  color: var(--color-muted);
   font-size: 12px;
   line-height: 1.8;
 }
@@ -182,7 +182,7 @@
 }
 .premium-how b {
   font-size: 11px;
-  color: #a25976;
+  color: var(--color-accent-text);
   padding-top: 3px;
 }
 .premium-how strong {
@@ -200,10 +200,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #d4a8b8;
+  border: 1px solid var(--color-line-strong);
   border-radius: 0;
-  background: #fff7fa;
-  color: #653c4d;
+  background: var(--color-surface);
+  color: var(--color-text);
   padding: 11px 14px;
   font-weight: 600;
   font-size: 12px;
@@ -214,7 +214,7 @@
   margin-top: 12px;
 }
 .premium-page button:focus-visible {
-  outline: 2px solid #a25976;
+  outline: 2px solid var(--color-accent-text);
   outline-offset: 4px;
 }
 @media (max-width: 800px) {
@@ -226,6 +226,6 @@
     margin-bottom: 26px;
   }
   .premium-plan {
-    box-shadow: 5px 5px 0 #f2bdcc;
+    box-shadow: 5px 5px 0 var(--color-accent-soft);
   }
 }
