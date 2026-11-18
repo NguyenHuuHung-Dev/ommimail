@@ -21,6 +21,7 @@ import { HomeLanding } from "./HomeLanding";
 import { PremiumPage } from "./PremiumPage";
 import { MailboxOrganizationPanel, OtpCard } from "./PremiumTools";
 import { MailboxToolbar } from "./MailboxToolbar";
+import { CubeCluster3D } from "./CubeCluster3D";
 import {
   ArrowLeft,
   ChevronDown,
@@ -311,7 +312,7 @@ export function MailApp() {
                   />
                 )}
                 <div className="mailbox-rail-cubes" aria-hidden="true">
-                  <MailboxCubeCluster variant="rail" />
+                  <CubeCluster3D variant="rail" />
                 </div>
               </aside>
               <section className="mailbox-message-column">
@@ -383,7 +384,7 @@ export function MailApp() {
               />
             ) : (
               <Empty title="Select a message">
-                <MailboxCubeCluster variant="empty" />
+                <CubeCluster3D variant="empty" />
               </Empty>
             )}
           </section>
@@ -732,7 +733,7 @@ function PageContent({
             {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>mail.tm · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
           </aside>
           <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
-          <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message" />}</article>
+          <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message"><CubeCluster3D variant="empty" /></Empty>}</article>
         </section>
       </main>
     );
@@ -784,7 +785,10 @@ function MailboxManager({
           <h1>All mailboxes</h1>
           <p>Search, open, or disconnect accounts without scrolling through the dashboard.</p>
         </div>
-        <button className="primary" onClick={openConnect}>Connect account</button>
+        <div className="page-header-actions">
+          <CubeCluster3D variant="header" />
+          <button className="primary" onClick={openConnect}>Connect account</button>
+        </div>
       </div>
       <div className="mailbox-toolbar">
         <label><input value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1); }} placeholder="Search by email address" /></label>
@@ -825,7 +829,10 @@ function SharingHubPage({
   const [mode, setMode] = useState<"message" | "mailbox">(initialMode);
   return (
     <main className="page-pane sharing-hub-page dashboard-page">
-      <div className="page-header"><div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1></div></div>
+      <div className="page-header">
+        <div><span className="eyebrow">Trung tâm chia sẻ</span><h1>Sharing</h1></div>
+        <CubeCluster3D variant="header" />
+      </div>
       <div className="sharing-mode-tabs" role="tablist" aria-label="Chọn loại chia sẻ">
         <button type="button" role="tab" aria-selected={mode === "message"} className={mode === "message" ? "active" : ""} onClick={() => setMode("message")}><strong>Tin nhắn</strong></button>
         <button type="button" role="tab" aria-selected={mode === "mailbox"} className={mode === "mailbox" ? "active" : ""} onClick={() => setMode("mailbox")}><strong>Mailbox</strong></button>
@@ -1322,9 +1329,12 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
             <h2>Connect an account</h2>
             <p>Bring every inbox into one workspace.</p>
           </div>
-          <button onClick={onDone} aria-label="Back to mailbox manager">
-            <ArrowLeft />
-          </button>
+          <div className="connect-header-aside">
+            <CubeCluster3D variant="badge" />
+            <button onClick={onDone} aria-label="Back to mailbox manager">
+              <ArrowLeft />
+            </button>
+          </div>
         </header>
         <div className="connect-channels">
         <section className="connect-channel gmail-channel">
@@ -1545,89 +1555,6 @@ function Skeleton() {
     </>
   );
 }
-function MailboxIsometricCube({
-  x,
-  y,
-  size = 20,
-  top,
-  left,
-  right,
-  shadow,
-}: {
-  x: number;
-  y: number;
-  size?: number;
-  top: string;
-  left: string;
-  right: string;
-  shadow: string;
-}) {
-  const dx = size * 0.866;
-  const dy = size * 0.5;
-  const h = size;
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <polygon
-        points={`6,${dy * 2 + h + 4} ${dx + 6},${dy + h + 4} 6,${h + 4} ${-dx + 6},${dy + h + 4}`}
-        fill={shadow}
-      />
-      <polygon
-        points={`0,0 ${dx},${dy} 0,${dy * 2} ${-dx},${dy}`}
-        fill={top}
-        stroke="#162535"
-        strokeWidth="1.25"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points={`${-dx},${dy} 0,${dy * 2} 0,${dy * 2 + h} ${-dx},${dy + h}`}
-        fill={left}
-        stroke="#162535"
-        strokeWidth="1.25"
-        strokeLinejoin="round"
-      />
-      <polygon
-        points={`0,${dy * 2} ${dx},${dy} ${dx},${dy + h} 0,${dy * 2 + h}`}
-        fill={right}
-        stroke="#162535"
-        strokeWidth="1.25"
-        strokeLinejoin="round"
-      />
-    </g>
-  );
-}
-
-function MailboxCubeCluster({ variant }: { variant: "rail" | "empty" }) {
-  if (variant === "rail") {
-    return (
-      <svg
-        className="mailbox-cubes mailbox-cubes--rail"
-        viewBox="0 0 164 76"
-        width="164"
-        height="76"
-        aria-hidden="true"
-      >
-        <MailboxIsometricCube x={32} y={18} size={17} top="#dfedfa" left="#9cc0ea" right="#315e97" shadow="#d0deec" />
-        <MailboxIsometricCube x={82} y={8} size={19} top="#e9e5ff" left="#b9adfb" right="#674cfb" shadow="#d7d0f5" />
-        <MailboxIsometricCube x={132} y={18} size={17} top="#e8f5ef" left="#9cd8c2" right="#226d5c" shadow="#cde6db" />
-      </svg>
-    );
-  }
-  return (
-    <svg
-      className="mailbox-cubes mailbox-cubes--empty"
-      viewBox="0 0 210 112"
-      width="210"
-      height="112"
-      aria-hidden="true"
-    >
-      <MailboxIsometricCube x={42} y={34} size={22} top="#dfedfa" left="#9cc0ea" right="#315e97" shadow="#d0deec" />
-      <MailboxIsometricCube x={105} y={10} size={26} top="#e9e5ff" left="#b9adfb" right="#674cfb" shadow="#d7d0f5" />
-      <MailboxIsometricCube x={166} y={32} size={22} top="#fff4d6" left="#f1d286" right="#c49234" shadow="#e7dec1" />
-      <MailboxIsometricCube x={105} y={56} size={18} top="#e8f5ef" left="#9cd8c2" right="#226d5c" shadow="#cde6db" />
-    </svg>
-  );
-}
-
 function Empty({
   title,
   description = "",

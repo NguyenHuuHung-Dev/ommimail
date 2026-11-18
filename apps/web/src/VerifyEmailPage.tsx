@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { signOut, type User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
+import { CubeCluster3D } from "./CubeCluster3D";
 import { auth } from "./firebase";
 import {
   refreshVerification,
@@ -116,6 +117,7 @@ export function VerifyEmailPage({ user }: { user: User }) {
       <section className="auth-card verification-card">
         <div className="verify-badge">
           <span>Xác minh email</span>
+          <CubeCluster3D variant="badge" />
         </div>
         <h1>Kiểm tra hộp thư của bạn</h1>
         <p>

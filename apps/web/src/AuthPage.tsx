@@ -21,6 +21,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { api } from "./api";
+import { CubeCluster3D } from "./CubeCluster3D";
 import { auth } from "./firebase";
 import { sendVerification } from "./email-verification";
 import { readSessionNotice, clearSessionNotice } from "./session-access";
@@ -168,7 +169,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
           to="/"
           aria-label="OmniMail — Trang chủ"
         >
-          <img src="/logo.jpg" width="30" height="30" alt="" />
+          <img src="/logo.png" width="30" height="30" alt="" />
           <strong>
             OmniMail<span>.</span>
           </strong>
@@ -204,6 +205,7 @@ export function AuthPage({ mode }: { mode: AuthMode }) {
             </p>
           </div>
           <div className="auth-scene-art">
+            <CubeCluster3D variant="badge" className="auth-scene-cubes" />
             <span className="auth-scene-word" aria-hidden="true">
               {registering ? "TOGETHER" : "CONNECTED"}
             </span>

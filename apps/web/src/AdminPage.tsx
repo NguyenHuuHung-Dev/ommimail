@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
 import type { AdminUser } from "@omnimail/shared";
 import { api } from "./api";
+import { CubeCluster3D } from "./CubeCluster3D";
 
 type Status = "all" | "active" | "pending" | "disabled";
 type Action = "details" | "lock" | "unlock" | "delete" | "role";
@@ -169,13 +170,16 @@ export function AdminPage() {
               Quản lý tài khoản, trạng thái và quyền truy cập trong một nơi.
             </p>
           </div>
-          <button
-            className="admin-button"
-            disabled={isFetching}
-            onClick={() => void refetch()}
-          >
-            {isFetching ? "Đang tải…" : "Làm mới"}
-          </button>
+          <div className="admin-heading-actions">
+            <CubeCluster3D variant="header" />
+            <button
+              className="admin-button"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              {isFetching ? "Đang tải…" : "Làm mới"}
+            </button>
+          </div>
         </header>
         {notice && (
           <div className="admin-success" role="status">

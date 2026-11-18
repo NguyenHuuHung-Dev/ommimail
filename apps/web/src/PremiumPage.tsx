@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { LoaderCircle } from "lucide-react";
 import { PREMIUM_MONTHLY_PRICE_VND } from "@omnimail/shared";
 import { api } from "./api";
+import { CubeCluster3D } from "./CubeCluster3D";
 import "./premium.css";
 
 const formatDate = (value: string) => new Date(value).toLocaleString("vi-VN");
@@ -86,14 +87,17 @@ export function PremiumPage({ role }: { role: "basic" | "premium" }) {
   return (
     <main className="page-pane dashboard-page premium-page">
       <header className="premium-heading">
-        <span>OMNIMAIL PREMIUM</span>
-        <h1>
-          {active || managed ? "Gói Premium của bạn" : "Nâng cấp lên Premium"}
-        </h1>
-        <p>
-          Lấy mã OTP nhanh hơn, sắp xếp mailbox theo cách của bạn và cộng tác
-          trong cùng không gian OmniMail.
-        </p>
+        <div>
+          <span>OMNIMAIL PREMIUM</span>
+          <h1>
+            {active || managed ? "Gói Premium của bạn" : "Nâng cấp lên Premium"}
+          </h1>
+          <p>
+            Lấy mã OTP nhanh hơn, sắp xếp mailbox theo cách của bạn và cộng tác
+            trong cùng không gian OmniMail.
+          </p>
+        </div>
+        <CubeCluster3D variant="header" />
       </header>
       <div className="premium-grid">
         <section className="premium-plan" aria-labelledby="premium-plan-title">

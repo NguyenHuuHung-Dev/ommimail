@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { CubeCluster3D } from "./CubeCluster3D";
 import { Seo } from "./Seo";
 import { SiteHeader } from "./SiteHeader";
 
@@ -91,9 +92,14 @@ function PublicInfoPage({
         <Link className="info-back" to="/">
           ← Về trang chủ
         </Link>
-        <span className="public-kicker">{eyebrow}</span>
-        <h1>{title}</h1>
-        <p className="info-lead">{description}</p>
+        <div className="info-hero-row">
+          <div>
+            <span className="public-kicker">{eyebrow}</span>
+            <h1>{title}</h1>
+            <p className="info-lead">{description}</p>
+          </div>
+          <CubeCluster3D variant="header" />
+        </div>
         <article>{children}</article>
       </main>
       <footer className="public-footer">
