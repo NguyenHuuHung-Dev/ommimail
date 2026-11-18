@@ -48,6 +48,7 @@ vi.mock("./BubbleScene", () => ({
 vi.mock("./MailApp", () => ({
   MailApp: () => <div data-testid="workspace">Authenticated workspace</div>,
 }));
+vi.mock("./AuthAnimation", () => ({ AuthAnimation: () => null }));
 
 import { App } from "./App";
 import { AuthSession } from "./AuthSession";
@@ -347,7 +348,7 @@ describe("email ownership verification", () => {
     await fill('[autocomplete="name"]', "Nguyễn Văn An");
     await fill('[type="email"]', "new@gmail.com");
     await fill('[autocomplete="new-password"]', "password123");
-    await fill('input[placeholder="Repeat your password"]', "password123");
+    await fill('input[name="confirmPassword"]', "password123");
     await submitForm();
     expect(location()).toBe("/verify-email");
     expect(firebase.createUserWithEmailAndPassword).toHaveBeenCalledOnce();
@@ -389,7 +390,7 @@ describe("email ownership verification", () => {
     await fill('[autocomplete="name"]', "Nguyễn Văn An");
     await fill('[type="email"]', "new@gmail.com");
     await fill('[autocomplete="new-password"]', "password123");
-    await fill('input[placeholder="Repeat your password"]', "password123");
+    await fill('input[name="confirmPassword"]', "password123");
     await submitForm();
     expect(firebase.sendEmailVerification).toHaveBeenCalledOnce();
     expect(firebase.sendEmailVerification).toHaveBeenCalledWith(account, {
@@ -411,7 +412,7 @@ describe("email ownership verification", () => {
     await fill('[autocomplete="name"]', "Nguyễn Văn An");
     await fill('[type="email"]', "new@gmail.com");
     await fill('[autocomplete="new-password"]', "password123");
-    await fill('input[placeholder="Repeat your password"]', "password123");
+    await fill('input[name="confirmPassword"]', "password123");
     await submitForm();
     expect(firebase.createUserWithEmailAndPassword).toHaveBeenCalledWith(
       firebase.auth,

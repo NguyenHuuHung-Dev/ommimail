@@ -22,6 +22,7 @@ import "./profile-modal.css";
 import "./mailboxes-layout.css";
 import "./surface-depth.css";
 import "./connect-design.css";
+import "./auth-design.css";
 
 export function HomeRoute() {
   const { user, canAccess, loading } = useAuthSession();
