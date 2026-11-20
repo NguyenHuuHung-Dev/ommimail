@@ -368,6 +368,11 @@ body::before {
     6px 6px 0 1.5px var(--u3d-ink) !important;
 }
 
+#root .temp-mail-page .temp-active-bar strong,
+#root .temp-mail-page .temp-active-bar span {
+  color: var(--u3d-ink) !important;
+}
+
 #root .temp-mail-page .temp-active-bar > button {
   min-height: 36px;
   padding: 0 14px;
