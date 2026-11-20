@@ -39,6 +39,7 @@ export function compositeMessageAccountId(messageId: string) {
   if (messageId.startsWith("microsoft-token:")) return parts[1] ? `microsoft-token:${parts[1]}` : undefined;
   if (messageId.startsWith("microsoft-graph-message:")) return parts[1];
   if (messageId.startsWith("mailtm:")) return parts[1] ? `mailtm:${parts[1]}` : undefined;
+  if (messageId.startsWith("cfmail:")) return parts[1] ? `cfmail:${parts[1]}` : undefined;
   if (messageId.startsWith("microsoft-live:")) return "microsoft-live";
   return undefined;
 }

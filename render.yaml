@@ -17,6 +17,10 @@ services:
         value: ommimail
       - key: FIREBASE_CLIENT_EMAIL
         sync: false
+      - key: CLOUDFLARE_MAIL_DOMAIN
+        sync: false
+      - key: CLOUDFLARE_MAIL_WORKER_URL
+        sync: false
       - key: FIREBASE_PRIVATE_KEY
         sync: false
       - key: FIREBASE_STORAGE_BUCKET

@@ -1,0 +1,18 @@
+{
+  "name": "omnimail-temp-mail",
+  "main": "src/index.js",
+  "account_id": "1f00cf9189ebc108e5496f479a05c00f",
+  "compatibility_date": "2026-11-20",
+  "workers_dev": true,
+  "vars": {
+    "SERVICE_ACCOUNT_EMAIL": "firebase-adminsdk-fbsvc@ommimail.iam.gserviceaccount.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "omnimail-temp-mail",
+      "database_id": "ff835952-1993-41a7-8a7a-8297a208c64d"
+    }
+  ],
+  "triggers": { "crons": ["0 3 * * *"] }
+}

@@ -10,6 +10,7 @@ import { getAuth } from "firebase-admin/auth";
 import { z } from "zod";
 import { accounts, messages } from "./demo-data.js";
 import { mailTm } from "./mail-tm.js";
+import { cloudflareMail, cloudflareMailConfigured, cloudflareMailDomain, CloudflareMailError } from "./cloudflare-mail.js";
 import { microsoftTokens } from "./microsoft-token-accounts.js";
 import { accountOwners } from "./ownership.js";
 import { isMailboxShared, mailboxShares, setMailboxShare } from "./sharing.js";
@@ -460,7 +461,7 @@ app.get("/api/messages", async (q, r) => {
   const account = String(q.query.accountId ?? "");
   // Temp inboxes are time-sensitive. An empty sync cache must never hide a
   // message that arrived at mail.tm after the last background synchronization.
-  const mayUseCache = !account.startsWith("mailtm:") && q.query.refresh !== "1";
+  const mayUseCache = !account.startsWith("mailtm:") && !account.startsWith("cfmail:") && q.query.refresh !== "1";
   const cached = mayUseCache && account && canReadAccount(q, account) ? getCachedMailboxMessages(account) : undefined;
   if (cached) {
     const list = filterLoadedMessages(q, cached);
@@ -518,6 +519,15 @@ app.get("/api/messages", async (q, r) => {
         e instanceof Error ? e.message : "Could not read Microsoft inbox via Graph API",
       );
     }
+  }
+  if (account.startsWith("cfmail:")) {
+    if (!canReadAccount(q, account)) return fail(r, 403, "FORBIDDEN", "Mailbox access was not granted");
+    try {
+      const list = filterLoadedMessages(q, await cloudflareMail.list(account));
+      const mailbox = accounts.find(candidate => candidate.id === account);
+      if (mailbox) { mailbox.unreadCount = list.filter(message => !message.isRead).length; mailbox.lastSyncedAt = new Date().toISOString(); }
+      return ok(r, { items: list, total: list.length });
+    } catch (e) { return fail(r, e instanceof CloudflareMailError ? e.status : 502, "TEMP_PROVIDER_ERROR", e instanceof Error ? e.message : "Could not read domain inbox"); }
   }
   if (account.startsWith("mailtm:")) {
     if (!canReadAccount(q,account))
@@ -615,6 +625,14 @@ async function loadMessageDetail(q: express.Request, messageId: string) {
     } catch (e) {
       throw new MessageOperationError(502, "MICROSOFT_GRAPH_ERROR", e instanceof Error ? e.message : "Could not read Microsoft message");
     }
+  }
+  if (messageId.startsWith("cfmail:")) {
+    const [, inboxId, providerMessageId] = messageId.split(":");
+    const accountId = `cfmail:${inboxId}`;
+    if (!providerMessageId) throw new MessageOperationError(404, "NOT_FOUND", "Message not found");
+    if (!canReadAccount(q, accountId)) throw new MessageOperationError(403, "FORBIDDEN", "Mailbox access was not granted");
+    try { return await cloudflareMail.get(accountId, providerMessageId); }
+    catch (e) { throw new MessageOperationError(e instanceof CloudflareMailError ? e.status : 502, "TEMP_PROVIDER_ERROR", e instanceof Error ? e.message : "Could not read domain message"); }
   }
   if (messageId.startsWith("mailtm:")) {
     const [, accountId, providerMessageId] = messageId.split(":");
@@ -755,9 +773,11 @@ app.delete("/api/messages/:id", async (q, r) => {
   });
 });
 app.get("/api/temp-mail/domains", async (_q, r) => {
+  const own = cloudflareMailConfigured() ? [{ id: "cloudflare-domain", name: cloudflareMailDomain(), ready: true }] : [];
   try {
-    return ok(r, await mailTm.domains());
+    return ok(r, [...own, ...await mailTm.domains()]);
   } catch (e) {
+    if (own.length) return ok(r, own);
     return fail(
       r,
       502,
@@ -781,6 +801,24 @@ app.post("/api/temp-mail/accounts", async (q, r) => {
       "Choose a valid mailbox name and domain",
     );
   try {
+    if (parsed.data.domain.toLowerCase() === cloudflareMailDomain() && cloudflareMailConfigured()) {
+      const remote = await cloudflareMail.create(parsed.data.localPart, identity(q).userId);
+      const account = {
+        id: remote.id, provider: "temp" as const, emailAddress: remote.address,
+        displayName: "Cloudflare inbox", status: "connected" as const, unreadCount: 0,
+        connectedAt: new Date().toISOString(), lastSyncedAt: new Date().toISOString(), color: "#f48120",
+      };
+      // Persist before exposing the mailbox; undo the remote claim on failure.
+      try { await saveMailbox(account, identity(q).userId, "cloudflare", {}); }
+      catch (error) {
+        accountOwners.set(account.id, identity(q).userId);
+        try { await cloudflareMail.remove(account.id); } finally { accountOwners.delete(account.id); }
+        throw error;
+      }
+      accounts.push(account);
+      accountOwners.set(account.id, identity(q).userId);
+      return ok(r, account);
+    }
     const remote = await mailTm.create(
       parsed.data.localPart,
       parsed.data.domain,
@@ -803,7 +841,7 @@ app.post("/api/temp-mail/accounts", async (q, r) => {
   } catch (e) {
     return fail(
       r,
-      502,
+      e instanceof CloudflareMailError ? e.status : 502,
       "TEMP_PROVIDER_ERROR",
       e instanceof Error ? e.message : "Could not create mailbox",
     );
@@ -958,7 +996,7 @@ app.get("/api/temp-mail/accounts/:id/messages", async (q, r) => {
   if (accountOwners.get(q.params.id) !== identity(q).userId)
     return fail(r, 403, "FORBIDDEN", "Mailbox does not belong to this user");
   try {
-    return ok(r, await mailTm.list(q.params.id.replace(/^mailtm:/, "")));
+    return ok(r, q.params.id.startsWith("cfmail:") ? await cloudflareMail.list(q.params.id) : await mailTm.list(q.params.id.replace(/^mailtm:/, "")));
   } catch (e) {
     return fail(
       r,
@@ -971,19 +1009,8 @@ app.get("/api/temp-mail/accounts/:id/messages", async (q, r) => {
 app.delete("/api/temp-mail/accounts/:id", async (q, r) => {
   if (accountOwners.get(q.params.id) !== identity(q).userId)
     return fail(r, 403, "FORBIDDEN", "Mailbox does not belong to this user");
-  const i = accounts.findIndex(
-    (a) => a.id === q.params.id && a.provider === "temp",
-  );
-  try {
-    await mailTm.remove(q.params.id.replace(/^mailtm:/, ""));
-  } catch {
-    /* local cleanup still applies */
-  }
-  if (i >= 0) accounts.splice(i, 1);
-  accountOwners.delete(q.params.id);
-  clearMailboxSyncState(q.params.id);
-  await deleteMailbox(q.params.id);
-  return ok(r, { deleted: i >= 0 });
+  try { return ok(r, { deleted: await disconnectMailbox(q.params.id) }); }
+  catch { return fail(r, 502, "TEMP_PROVIDER_ERROR", "Chưa thể xóa hộp thư. Vui lòng thử lại."); }
 });
 app.get("/api/oauth/google/start", oauth.googleStart);
 app.get("/api/oauth/microsoft/start", oauth.microsoftStart);

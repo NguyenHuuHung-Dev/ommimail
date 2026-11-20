@@ -63,7 +63,7 @@ Home at `/` is the single public landing page, with the “Every inbox. One sign
 | Mail reading | Latest 10 messages, lazy body loading, provider refresh and automatic polling |
 | Synchronization | Provider-backed jobs, short-lived message cache, scheduled refresh and live Socket.IO updates |
 | Account connection | Google OAuth, Microsoft OAuth, Gmail app password and Microsoft refresh-token import |
-| Temporary email | mail.tm domain discovery, address creation, copy, refresh and deletion |
+| Temporary email | Cloudflare domain inboxes and mail.tm discovery, address creation, copy, refresh and deletion |
 | Authentication | Firebase email/password plus Google, Facebook and Microsoft sign-in |
 | Access control | Basic, Premium and Admin roles with server-side authorization |
 | Mailbox sharing | Owner-controlled read-only sharing and recipient revocation |
@@ -286,7 +286,13 @@ Microsoft mail is read through Microsoft Graph. The legacy seeded IMAP path is d
 <details>
 <summary><strong>Temporary mail</strong></summary>
 
-Temporary addresses use mail.tm's account-token flow. No provider API key is required. Each generated mailbox receives its own bearer token, stored encrypted by the API.
+The configured Cloudflare domain appears first in Temp Mail. Its Email Worker
+receives messages into D1 and accepts signed API requests with per-user mailbox
+ownership. See [Cloudflare setup and limits](docs/cloudflare-temp-mail.md).
+
+Other temporary domains use mail.tm's account-token flow. No mail.tm API key is
+required. Each generated mail.tm mailbox receives its own bearer token, stored
+encrypted by the API.
 </details>
 
 ## API highlights

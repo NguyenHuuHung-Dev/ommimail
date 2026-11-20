@@ -4,7 +4,7 @@ import type { MailAccount, MessageShare } from "@omnimail/shared";
 import { EncryptionService } from "./security.js";
 import crypto from "node:crypto";
 
-type CredentialKind = "oauth" | "gmail-app-password" | "microsoft-refresh-token" | "mailtm";
+type CredentialKind = "oauth" | "gmail-app-password" | "microsoft-refresh-token" | "mailtm" | "cloudflare";
 export type StoredMailbox = { account: MailAccount; userId: string; credentialKind: CredentialKind; credential: Record<string, unknown> };
 export type StoredUser = { userId: string; email: string; displayName?: string; lastSeenAt: string; role: "admin" | "premium" | "basic" };
 

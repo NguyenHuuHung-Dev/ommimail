@@ -4,6 +4,7 @@ import { accounts } from "./demo-data.js";
 import { gmail } from "./gmail.js";
 import { gmailAppPasswords } from "./gmail-app-password.js";
 import { mailTm } from "./mail-tm.js";
+import { cloudflareMail } from "./cloudflare-mail.js";
 import { microsoftGraph } from "./microsoft-graph.js";
 import { listMicrosoftInbox } from "./microsoft-imap.js";
 import { microsoftTokens } from "./microsoft-token-accounts.js";
@@ -36,6 +37,7 @@ function notify(job: InternalSyncJob) {
 }
 
 async function fetchLatestMessages(account: MailAccount): Promise<MailMessage[]> {
+  if (account.id.startsWith("cfmail:")) return cloudflareMail.list(account.id);
   if (account.id.startsWith("gmail-imap:"))
     return gmailAppPasswords.list(account.id.slice("gmail-imap:".length));
   if (account.id.startsWith("gmail-")) return gmail.list(account.id);

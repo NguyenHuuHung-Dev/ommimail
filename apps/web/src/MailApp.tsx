@@ -725,12 +725,13 @@ function PageContent({
           <aside className="temp-addresses">
             <header><span>Addresses</span><b>{tempAccounts.length}</b></header>
             <div className="temp-sidebar-create">
-              <strong>Tạo Temp Mail mới</strong>
+              <strong>Tạo Temp Mail mới</strong><p>Chọn tên miền để tạo địa chỉ và nhận thư ngay tại đây.</p>
               <label><span>Tên địa chỉ</span><input value={tempLocal} onChange={(e) => setTempLocal(e.target.value.replace(/[^a-z0-9._-]/gi, ""))} /></label>
-              <label><span>Domain</span><select value={tempDomain || tempDomains[0]?.name || ""} onChange={(e) => setTempDomain(e.target.value)}>{tempDomains.map((domain) => <option key={domain.id} value={domain.name}>@{domain.name}</option>)}</select></label>
-              <button className="primary" disabled={!tempDomains.length || createTemp.isPending} onClick={() => createTemp.mutate()}>{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
+              <label><span>Domain</span><select value={tempDomain || tempDomains[0]?.name || ""} onChange={(e) => setTempDomain(e.target.value)}>{tempDomains.map((domain) => <option key={domain.id} value={domain.name} disabled={!domain.ready}>@{domain.name}</option>)}</select></label>
+              {(tempDomain || tempDomains[0]?.name) === "omnimail.io.vn" && <small>Hộp thư riêng tư · Chỉ nhận thư · Lưu 30 thư mới nhất trong 7 ngày. Tệp đính kèm chỉ hiện thông tin.</small>}
+              <button className="primary" disabled={!tempDomains.some(domain => domain.ready) || createTemp.isPending} onClick={() => createTemp.mutate()}>{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
             </div>
-            {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>mail.tm · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
+            {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>{account.id.startsWith("cfmail:") ? "Cloudflare" : "mail.tm"} · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
           </aside>
           <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
           <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message"><CubeCluster3D variant="empty" /></Empty>}</article>
@@ -1481,10 +1482,10 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
         </details>
         </section>
         <section className="connect-channel temp-channel">
-          <header><span>03</span><div><strong>Temporary mail</strong><small>Create a disposable mail.tm inbox</small></div></header>
+          <header><span>03</span><div><strong>Temporary mail</strong><small>Tạo địa chỉ email tạm trên tên miền bạn chọn</small></div></header>
         <div className="temp-connect">
           <div>
-            <h3>mail.tm temporary inbox</h3>
+            <h3>Hộp thư tạm thời</h3>
             <p>
               Create a free disposable address and receive messages immediately.
             </p>
@@ -1495,7 +1496,7 @@ function ConnectPage({ onDone }: { onDone: () => void }) {
             <div className="connect-error">{error.message}</div>
           ) : domains.length === 0 ? (
             <div className="connect-warning">
-              <strong>mail.tm currently has no available domain.</strong>
+              <strong>Chưa có tên miền khả dụng.</strong>
               <span>
                 Please wait a moment and refresh the available domains.
               </span>
