@@ -425,12 +425,60 @@ body::before {
 }
 
 #root .temp-mail-page .temp-sidebar-create {
+  display: grid;
+  gap: 10px;
   padding: 14px !important;
   border: 1.5px solid var(--u3d-ink) !important;
   background: var(--u3d-gold-tint) !important;
   box-shadow:
     4px 4px 0 var(--u3d-gold),
     4px 4px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-sidebar-create > strong {
+  font-size: 1rem;
+}
+
+#root .temp-mail-page .temp-sidebar-create > p,
+#root .temp-mail-page .temp-sidebar-create > small {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+#root .temp-mail-page .temp-sidebar-create label > span {
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#root .temp-mail-page .temp-sidebar-create input,
+#root .temp-mail-page .temp-sidebar-create select {
+  min-height: 40px;
+  font-size: 1rem;
+}
+
+@media (max-width: 760px) {
+  #root .temp-mail-page .temp-active-bar {
+    display: flex;
+    flex-wrap: wrap;
+    height: auto;
+    gap: 10px;
+  }
+
+  #root .temp-mail-page .temp-active-bar > div {
+    flex: 1 0 100%;
+    padding: 0;
+  }
+
+  #root .temp-mail-page .temp-active-bar > div strong {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  #root .temp-mail-page .temp-active-bar > button {
+    font-size: 0.875rem;
+  }
 }
 
 #root .temp-mail-page .temp-address {

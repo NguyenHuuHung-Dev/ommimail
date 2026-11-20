@@ -752,13 +752,13 @@
 
   .temp-addresses {
     display: block !important;
-    max-height: 190px;
+    max-height: none;
     overflow-y: auto !important;
     border-bottom: 1px solid #0a0a0a;
   }
 
   .temp-sidebar-create {
-    display: none;
+    display: grid;
   }
 
   .temp-message-list {
