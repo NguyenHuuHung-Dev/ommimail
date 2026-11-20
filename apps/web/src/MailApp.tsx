@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -29,6 +29,7 @@ import {
   MoreHorizontal,
   Plus,
   RefreshCw,
+  Send,
   SlidersHorizontal,
   ShieldCheck,
   Trash2,
@@ -688,10 +689,13 @@ function PageContent({
   const [selectedTemp, setSelectedTemp] = useState<string | null>(null);
   const [selectedTempMessage, setSelectedTempMessage] = useState<string | null>(null);
   const [copiedTemp, setCopiedTemp] = useState(false);
+  const [sendTempOpen, setSendTempOpen] = useState(false);
   const tempAccounts = accounts.filter((account) => account.provider === "temp");
   const activeTempId = selectedTemp ?? tempAccounts[0]?.id ?? null;
   const activeTempAccount = tempAccounts.find((account) => account.id === activeTempId);
+  const activeTempIsDomain = Boolean(activeTempAccount?.id.startsWith("cfmail:"));
   const { data: tempDomains = [], error: tempDomainError } = useQuery({ queryKey: ["temp-domains"], queryFn: api.tempDomains, enabled: page === "temp-mail" });
+  const domainCanSend = tempDomains.find((domain) => domain.id === "cloudflare-domain")?.canSend;
   const createTemp = useMutation({ mutationFn: () => api.createTemp({ localPart: tempLocal, domain: tempDomain || tempDomains[0]?.name || "" }), onSuccess: (account) => { qc.invalidateQueries({ queryKey: ["accounts"] }); setSelectedTemp(account.id); setSelectedTempMessage(null); } });
   const { data: tempMessages, isLoading: tempLoading, isFetching: tempRefreshing, error: tempMessagesError, refetch: refreshTemp } = useQuery({ queryKey: ["temp-messages", activeTempId], queryFn: () => api.messages(`?limit=30&refresh=1&accountId=${activeTempId}`), enabled: page === "temp-mail" && Boolean(activeTempId), refetchInterval: page === "temp-mail" && activeTempId ? 3_000 : false, refetchIntervalInBackground: false });
   const { data: tempMessage } = useQuery({ queryKey: ["message", selectedTempMessage], queryFn: () => api.message(selectedTempMessage!), enabled: page === "temp-mail" && Boolean(selectedTempMessage) });
@@ -717,9 +721,14 @@ function PageContent({
         {(tempDomainError || createTemp.error) && <div className="connect-error temp-page-error">{(tempDomainError ?? createTemp.error)?.message}</div>}
         {activeTempAccount && <div className="temp-active-bar">
           <div><span>Your temporary email</span><strong>{activeTempAccount.emailAddress}</strong></div>
-          <button className={copiedTemp ? "copied" : ""} onClick={copyTempAddress}>{copiedTemp ? "Copied" : "Copy"}</button>
-          <button onClick={() => void refreshTemp()} disabled={tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} />Refresh</button>
-          <button className="danger" onClick={() => { if (window.confirm(`Remove ${activeTempAccount.emailAddress} from OmniMail?`)) removeAccount(activeTempAccount); }}><Trash2 />Delete</button>
+          {activeTempIsDomain && (
+            <button type="button" className="temp-send-btn" onClick={() => setSendTempOpen(true)}>
+              <Send />Gửi thử
+            </button>
+          )}
+          <button type="button" className={copiedTemp ? "copied" : ""} onClick={copyTempAddress}>{copiedTemp ? "Copied" : "Copy"}</button>
+          <button type="button" onClick={() => void refreshTemp()} disabled={tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} />Refresh</button>
+          <button type="button" className="danger" onClick={() => { if (window.confirm(`Remove ${activeTempAccount.emailAddress} from OmniMail?`)) removeAccount(activeTempAccount); }}><Trash2 />Delete</button>
         </div>}
         <section className="temp-workspace">
           <aside className="temp-addresses">
@@ -728,7 +737,7 @@ function PageContent({
               <strong>Tạo Temp Mail mới</strong><p>Chọn tên miền để tạo địa chỉ và nhận thư ngay tại đây.</p>
               <label><span>Tên địa chỉ</span><input value={tempLocal} onChange={(e) => setTempLocal(e.target.value.replace(/[^a-z0-9._-]/gi, ""))} /></label>
               <label><span>Domain</span><select value={tempDomain || tempDomains[0]?.name || ""} onChange={(e) => setTempDomain(e.target.value)}>{tempDomains.map((domain) => <option key={domain.id} value={domain.name} disabled={!domain.ready}>@{domain.name}</option>)}</select></label>
-              {(tempDomain || tempDomains[0]?.name) === "omnimail.io.vn" && <small>Hộp thư riêng tư · Chỉ nhận thư · Lưu 30 thư mới nhất trong 7 ngày. Tệp đính kèm chỉ hiện thông tin.</small>}
+              {(tempDomain || tempDomains[0]?.name) === "omnimail.io.vn" && <small>Hộp thư riêng tư · Nhận thư & gửi thử qua Brevo · Lưu 30 thư mới nhất trong 7 ngày.</small>}
               <button className="primary" disabled={!tempDomains.some(domain => domain.ready) || createTemp.isPending} onClick={() => createTemp.mutate()}>{createTemp.isPending ? "Đang tạo…" : "Tạo & mở"}</button>
             </div>
             {role !== "basic" && userId ? <MailboxOrganizationPanel accounts={tempAccounts} selectedId={activeTempId} userId={userId} onSelect={(id) => { setSelectedTemp(id); setSelectedTempMessage(null); }} /> : tempAccounts.length ? tempAccounts.map((account) => <div className={activeTempId === account.id ? "temp-address active" : "temp-address"} key={account.id}><button onClick={() => { setSelectedTemp(account.id); setSelectedTempMessage(null); }}><ProviderDot p="temp" /><span><strong>{account.emailAddress}</strong><small>{account.id.startsWith("cfmail:") ? "Cloudflare" : "mail.tm"} · live</small></span><b>{account.unreadCount}</b></button><button className="temp-address-menu" title="Remove address" aria-label={`Remove ${account.emailAddress}`} onClick={() => { if (window.confirm(`Remove ${account.emailAddress} from OmniMail?`)) removeAccount(account); }}><MoreHorizontal /></button></div>) : <Empty title="No temporary address yet" />}
@@ -736,6 +745,17 @@ function PageContent({
           <div className="temp-message-list"><header><div><strong>Latest messages</strong><small>Automatic refresh every 3 seconds</small></div><button onClick={() => void refreshTemp()} disabled={!activeTempId || tempRefreshing}><RefreshCw className={tempRefreshing ? "spin" : ""} /></button></header>{tempLoading ? <Skeleton /> : tempMessagesError ? <div className="temp-message-error" role="alert"><strong>Không thể tải thư Temp Mail</strong><small>{tempMessagesError.message}</small><button type="button" onClick={() => void refreshTemp()}>Thử lại</button></div> : (tempMessages?.items ?? []).length ? tempMessages!.items.map((message) => <button className={selectedTempMessage === message.id ? "active" : ""} key={message.id} onClick={() => setSelectedTempMessage(message.id)}><strong>{message.from.name ?? message.from.address}</strong><span>{message.subject}</span><small>{new Date(message.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></button>) : <Empty title="Waiting for messages" />}</div>
           <article className="temp-reader">{tempMessage ? <><header><span>Message</span><time>{new Date(tempMessage.receivedAt).toLocaleString()}</time></header><div><h2>{tempMessage.subject}</h2><p className="temp-from">From {tempMessage.from.name ?? tempMessage.from.address} &lt;{tempMessage.from.address}&gt;</p><OtpCard key={tempMessage.id} messageId={tempMessage.id} /><div className="temp-body"><MessageBody m={tempMessage} /></div></div></> : <Empty title="Select a temp message"><CubeCluster3D variant="empty" /></Empty>}</article>
         </section>
+        {activeTempAccount && activeTempIsDomain && (
+          <TempMailSendDialog
+            account={activeTempAccount}
+            open={sendTempOpen}
+            canSend={domainCanSend}
+            onClose={() => setSendTempOpen(false)}
+            onSentSelf={() => {
+              window.setTimeout(() => void refreshTemp(), 2500);
+            }}
+          />
+        )}
       </main>
     );
   if (page === "mail-sharing" || page === "mailbox-sharing")
@@ -748,6 +768,214 @@ function PageContent({
     <main className="page-pane">
       <Empty title="Page not found" />
     </main>
+  );
+}
+function TempMailSendDialog({
+  account,
+  open,
+  canSend,
+  onClose,
+  onSentSelf,
+}: {
+  account: MailAccount;
+  open: boolean;
+  canSend?: boolean;
+  onClose: () => void;
+  onSentSelf: () => void;
+}) {
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [to, setTo] = useState("");
+  const [subject, setSubject] = useState("Thử nghiệm gửi email từ OmniMail");
+  const [text, setText] = useState(`Xin chào,\n\nĐây là email gửi thử từ hộp thư ${account.emailAddress} qua Brevo.`);
+  const [sentInfo, setSentInfo] = useState<{ to: string; messageId: string } | null>(null);
+
+  const sendMutation = useMutation({
+    mutationFn: () =>
+      api.sendTempMail(account.id, {
+        to: to.trim(),
+        subject: subject.trim(),
+        text: text.trim(),
+      }),
+    onSuccess: (result) => {
+      setSentInfo({ to: result.to, messageId: result.messageId });
+      if (result.to.toLowerCase() === account.emailAddress.toLowerCase()) {
+        onSentSelf();
+      }
+    },
+  });
+
+  useEffect(() => {
+    setSentInfo(null);
+    sendMutation.reset();
+    setText(`Xin chào,\n\nĐây là email gửi thử từ hộp thư ${account.emailAddress} qua Brevo.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account.id, account.emailAddress]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      setSentInfo(null);
+      sendMutation.reset();
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else dialog.setAttribute("open", "");
+    } else if (!open && dialog.open) {
+      if (typeof dialog.close === "function") dialog.close();
+      else dialog.removeAttribute("open");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleClose = () => {
+      dialog.returnValue = "";
+      onClose();
+    };
+    dialog.addEventListener("close", handleClose);
+
+    // Fallback for browsers without native closedby="any" (e.g. Safari)
+    let cleanupBackdrop: (() => void) | undefined;
+    if (typeof HTMLDialogElement !== "undefined" && !("closedBy" in HTMLDialogElement.prototype)) {
+      const outside = (event: PointerEvent) => {
+        const rect = dialog.getBoundingClientRect();
+        return (
+          event.clientX < rect.left ||
+          event.clientX > rect.right ||
+          event.clientY < rect.top ||
+          event.clientY > rect.bottom
+        );
+      };
+      let pressedOutside = false;
+      const onPointerDown = (event: PointerEvent) => {
+        pressedOutside = outside(event);
+      };
+      const onPointerUp = (event: PointerEvent) => {
+        if (pressedOutside && outside(event)) dialog.close();
+      };
+      dialog.addEventListener("pointerdown", onPointerDown);
+      dialog.addEventListener("pointerup", onPointerUp);
+      cleanupBackdrop = () => {
+        dialog.removeEventListener("pointerdown", onPointerDown);
+        dialog.removeEventListener("pointerup", onPointerUp);
+      };
+    }
+
+    return () => {
+      dialog.removeEventListener("close", handleClose);
+      cleanupBackdrop?.();
+    };
+  }, [onClose]);
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    setSentInfo(null);
+    sendMutation.mutate();
+  };
+
+  const fillSelfTest = () => {
+    setTo(account.emailAddress);
+    if (!subject.trim()) setSubject("Thử nghiệm gửi email từ OmniMail");
+    if (!text.trim()) {
+      setText(`Xin chào,\n\nĐây là email gửi thử từ hộp thư ${account.emailAddress} qua Brevo.`);
+    }
+  };
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="temp-send-dialog"
+      aria-labelledby={titleId}
+      {...({ closedby: "any" } as Record<string, string>)}
+    >
+      <header className="temp-send-dialog-header">
+        <div>
+          <span className="temp-send-eyebrow">Brevo Outbound</span>
+          <h2 id={titleId}>Gửi thử bằng mail domain</h2>
+        </div>
+        <button
+          type="button"
+          className="temp-send-close"
+          aria-label="Đóng hộp thoại gửi thử"
+          onClick={() => dialogRef.current?.close()}
+        >
+          <X size={16} />
+        </button>
+      </header>
+      <form className="temp-send-form" onSubmit={handleSubmit}>
+        {canSend === false && (
+          <div className="temp-send-notice" role="status">
+            Máy chủ API chưa cấu hình <code>BREVO_API_KEY</code>. Hãy thêm key Brevo vào biến môi trường và xác thực tên miền trên Brevo để gửi email thật.
+          </div>
+        )}
+        <div className="temp-send-from-row">
+          <span>Từ địa chỉ</span>
+          <strong>{account.emailAddress}</strong>
+          <button type="button" className="temp-send-self-fill" onClick={fillSelfTest}>
+            Tự gửi vào hộp thư này
+          </button>
+        </div>
+        <label>
+          <span>Người nhận (To)</span>
+          <input
+            type="email"
+            required
+            autoFocus
+            value={to}
+            onChange={(event) => setTo(event.target.value)}
+            placeholder="vi-du@gmail.com"
+          />
+        </label>
+        <label>
+          <span>Tiêu đề</span>
+          <input
+            type="text"
+            required
+            maxLength={200}
+            value={subject}
+            onChange={(event) => setSubject(event.target.value)}
+            placeholder="Tiêu đề email thử"
+          />
+        </label>
+        <label>
+          <span>Nội dung</span>
+          <textarea
+            required
+            rows={5}
+            maxLength={10000}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder="Nhập nội dung email thử..."
+          />
+        </label>
+        {sendMutation.error && (
+          <div className="connect-error" role="alert">
+            {sendMutation.error.message}
+          </div>
+        )}
+        {sentInfo && (
+          <div className="temp-send-success" role="status">
+            <strong>Đã gửi thành công tới {sentInfo.to}</strong>
+            {sentInfo.messageId && <small>Brevo Message ID: {sentInfo.messageId}</small>}
+          </div>
+        )}
+        <div className="temp-send-actions">
+          <button
+            type="button"
+            className="temp-send-cancel"
+            onClick={() => dialogRef.current?.close()}
+          >
+            Đóng
+          </button>
+          <button type="submit" className="primary temp-send-submit" disabled={sendMutation.isPending}>
+            <Send size={14} />
+            {sendMutation.isPending ? "Đang gửi qua Brevo…" : "Gửi email"}
+          </button>
+        </div>
+      </form>
+    </dialog>
   );
 }
 function MailboxManager({

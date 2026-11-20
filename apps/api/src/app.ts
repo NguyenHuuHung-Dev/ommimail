@@ -11,6 +11,7 @@ import { z } from "zod";
 import { accounts, messages } from "./demo-data.js";
 import { mailTm } from "./mail-tm.js";
 import { cloudflareMail, cloudflareMailConfigured, cloudflareMailDomain, CloudflareMailError } from "./cloudflare-mail.js";
+import { brevoMailConfigured, BrevoMailError, consumeTempMailSendSlot, sendBrevoTempMail } from "./brevo-mail.js";
 import { microsoftTokens } from "./microsoft-token-accounts.js";
 import { accountOwners } from "./ownership.js";
 import { isMailboxShared, mailboxShares, setMailboxShare } from "./sharing.js";
@@ -773,7 +774,9 @@ app.delete("/api/messages/:id", async (q, r) => {
   });
 });
 app.get("/api/temp-mail/domains", async (_q, r) => {
-  const own = cloudflareMailConfigured() ? [{ id: "cloudflare-domain", name: cloudflareMailDomain(), ready: true }] : [];
+  const own = cloudflareMailConfigured()
+    ? [{ id: "cloudflare-domain", name: cloudflareMailDomain(), ready: true, canSend: brevoMailConfigured() }]
+    : [];
   try {
     return ok(r, [...own, ...await mailTm.domains()]);
   } catch (e) {
@@ -1003,6 +1006,59 @@ app.get("/api/temp-mail/accounts/:id/messages", async (q, r) => {
       502,
       "TEMP_PROVIDER_ERROR",
       e instanceof Error ? e.message : "Could not read temp inbox",
+    );
+  }
+});
+app.post("/api/temp-mail/accounts/:id/send", async (q, r) => {
+  const ownerId = identity(q).userId;
+  if (accountOwners.get(q.params.id) !== ownerId)
+    return fail(r, 403, "FORBIDDEN", "Mailbox does not belong to this user");
+  const account = accounts.find((item) => item.id === q.params.id);
+  if (!account || !account.id.startsWith("cfmail:"))
+    return fail(
+      r,
+      400,
+      "UNSUPPORTED_SENDER",
+      "Chỉ hộp thư Temp Mail theo tên miền mới hỗ trợ gửi email qua Brevo.",
+    );
+  const parsed = z
+    .object({
+      to: z.string().trim().email().max(254),
+      subject: z.string().trim().min(1).max(200),
+      text: z.string().trim().min(1).max(10_000),
+      senderName: z.string().trim().max(80).optional(),
+    })
+    .safeParse(q.body);
+  if (!parsed.success)
+    return fail(
+      r,
+      400,
+      "VALIDATION_ERROR",
+      "Vui lòng nhập đầy đủ email người nhận hợp lệ, tiêu đề và nội dung.",
+    );
+  try {
+    if (!brevoMailConfigured())
+      throw new BrevoMailError(
+        503,
+        "BREVO_NOT_CONFIGURED",
+        "Chưa cấu hình BREVO_API_KEY trên máy chủ API để gửi email từ tên miền.",
+      );
+    consumeTempMailSendSlot(ownerId);
+    const result = await sendBrevoTempMail({
+      fromEmail: account.emailAddress,
+      fromName: parsed.data.senderName,
+      to: parsed.data.to,
+      subject: parsed.data.subject,
+      text: parsed.data.text,
+    });
+    return ok(r, result);
+  } catch (e) {
+    if (e instanceof BrevoMailError) return fail(r, e.status, e.code, e.message);
+    return fail(
+      r,
+      502,
+      "BREVO_SEND_FAILED",
+      e instanceof Error ? e.message : "Chưa thể gửi email qua Brevo.",
     );
   }
 });

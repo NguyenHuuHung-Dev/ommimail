@@ -42,6 +42,16 @@ Deleting an inbox removes its stored messages. If remote deletion fails, the
 API keeps the connection available for retry. Schedule daily cleanup as above;
 expired messages are excluded from reads even before the cleanup runs.
 
+## Outbound test sending (Brevo)
+
+Domain inboxes (`@omnimail.io.vn`) can also send real test emails via Brevo's Transactional Email API (`POST /api/temp-mail/accounts/:id/send`):
+
+1. In Brevo (**Senders, Domains, & Dedicated IPs → Domains**), add and authenticate `omnimail.io.vn` (publish Brevo's DKIM TXT/CNAME records and DMARC record in your DNS zone).
+2. Keep a single SPF TXT record at `@` combining all active senders, e.g.
+   `v=spf1 include:_spf.firebasemail.com include:_spf.mx.cloudflare.net include:spf.brevo.com ~all`.
+3. Create a Brevo API key (**SMTP & API → API Keys**) and set `BREVO_API_KEY` (and optionally `BREVO_SENDER_NAME=OmniMail`) on the API service (Render / `.env`).
+4. Only the authenticated owner of a `cfmail:` mailbox can send from that address, with a per-user sliding rate limit (default 10 emails / 15 minutes, configurable via `BREVO_SEND_LIMIT_PER_15M`).
+
 ## Validation
 
 `pnpm test`, `pnpm typecheck`, `pnpm build`. Worker tests exercise real SQLite

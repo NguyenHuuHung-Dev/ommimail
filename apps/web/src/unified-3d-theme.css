@@ -355,17 +355,36 @@ body::before {
    2. TEMP MAIL PAGE (/app/temp-mail)
    ========================================================================== */
 #root .temp-mail-page.dashboard-page {
+  display: flex;
+  flex-direction: column;
   padding: clamp(16px, 2.4vw, 28px) clamp(14px, 2.8vw, 34px) !important;
 }
 
 #root .temp-mail-page .temp-active-bar {
-  padding: 16px 20px !important;
+  flex: none;
+  height: auto !important;
+  min-block-size: 62px;
+  display: flex;
+  align-items: safe center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 0 !important;
   margin-bottom: 18px !important;
+  padding: 10px 18px !important;
   border: 1.5px solid var(--u3d-ink) !important;
   background: linear-gradient(90deg, var(--u3d-mint-tint) 0%, #ffffff 55%) !important;
   box-shadow:
     6px 6px 0 var(--u3d-mint),
     6px 6px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-active-bar > div {
+  min-inline-size: 0;
+  flex: 1 1 240px;
+  padding: 0 !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 #root .temp-mail-page .temp-active-bar strong,
@@ -374,14 +393,27 @@ body::before {
 }
 
 #root .temp-mail-page .temp-active-bar > button {
-  min-height: 36px;
+  flex: 0 0 auto;
+  block-size: 38px;
+  min-block-size: 38px;
+  min-inline-size: 92px;
   padding: 0 14px;
+  font-size: 0.78rem;
+  line-height: 1;
   border: 1.5px solid var(--u3d-ink) !important;
   background: #ffffff !important;
   color: var(--u3d-ink) !important;
   font-weight: 700;
   box-shadow:
     3px 3px 0 var(--u3d-blue),
+    3px 3px 0 1.5px var(--u3d-ink) !important;
+}
+
+#root .temp-mail-page .temp-active-bar > button.temp-send-btn {
+  background: var(--u3d-lavender-tint) !important;
+  color: var(--u3d-lavender-ink) !important;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
     3px 3px 0 1.5px var(--u3d-ink) !important;
 }
 
@@ -402,10 +434,211 @@ body::before {
 }
 
 #root .temp-mail-page .temp-workspace {
+  flex: 1 1 0;
+  min-block-size: 0;
+  height: auto !important;
+  margin-top: 0 !important;
   gap: 18px !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+dialog.temp-send-dialog {
+  inline-size: min(540px, calc(100% - 28px));
+  max-block-size: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1.5px solid var(--u3d-ink);
+  background: #ffffff;
+  color: var(--u3d-ink);
+  box-shadow:
+    8px 8px 0 var(--u3d-lavender),
+    8px 8px 0 1.5px var(--u3d-ink);
+}
+
+dialog.temp-send-dialog[open] {
+  display: grid;
+}
+
+dialog.temp-send-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.temp-send-dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: rgba(22, 37, 53, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.temp-send-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--u3d-ink);
+  background: linear-gradient(90deg, var(--u3d-lavender-tint) 0%, #ffffff 70%);
+}
+
+.temp-send-eyebrow {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--u3d-lavender-ink);
+}
+
+.temp-send-dialog-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--u3d-ink);
+}
+
+.temp-send-close {
+  inline-size: 34px;
+  block-size: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--u3d-ink);
+  background: #ffffff;
+  color: var(--u3d-ink);
+  cursor: pointer;
+  box-shadow:
+    2px 2px 0 var(--u3d-coral),
+    2px 2px 0 1.5px var(--u3d-ink);
+}
+
+.temp-send-form {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px 20px;
+}
+
+.temp-send-notice {
+  padding: 10px 12px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-gold-tint);
+  color: var(--u3d-ink);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.temp-send-from-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-mint-tint);
+}
+
+.temp-send-from-row > span {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--u3d-mint-ink);
+}
+
+.temp-send-from-row > strong {
+  min-inline-size: 0;
+  flex: 1 1 160px;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+  color: var(--u3d-ink);
+}
+
+.temp-send-self-fill {
+  padding: 6px 10px;
+  border: 1.5px solid var(--u3d-ink);
+  background: #ffffff;
+  color: var(--u3d-ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.temp-send-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.temp-send-form label > span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--u3d-ink);
+}
+
+.temp-send-form input,
+.temp-send-form textarea {
+  inline-size: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--u3d-ink);
+  background: #ffffff;
+  color: var(--u3d-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+
+.temp-send-success {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--u3d-ink);
+  background: var(--u3d-mint-tint);
+  color: var(--u3d-mint-ink);
+  font-size: 0.86rem;
+}
+
+.temp-send-success small {
+  color: var(--u3d-ink);
+  word-break: break-all;
+}
+
+.temp-send-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.temp-send-cancel,
+.temp-send-submit {
+  block-size: 38px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px solid var(--u3d-ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.temp-send-cancel {
+  background: #ffffff;
+  color: var(--u3d-ink);
+}
+
+.temp-send-submit {
+  background: var(--u3d-ink);
+  color: #ffffff;
+  box-shadow:
+    3px 3px 0 var(--u3d-lavender),
+    3px 3px 0 1.5px var(--u3d-ink);
+}
+
+.temp-send-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 
 #root .temp-mail-page .temp-addresses {
@@ -467,7 +700,7 @@ body::before {
   #root .temp-mail-page .temp-active-bar {
     display: flex;
     flex-wrap: wrap;
-    height: auto;
+    height: auto !important;
     gap: 10px;
   }
 
@@ -482,7 +715,12 @@ body::before {
   }
 
   #root .temp-mail-page .temp-active-bar > button {
+    min-inline-size: auto;
     font-size: 0.875rem;
+  }
+
+  #root .temp-mail-page .temp-workspace {
+    flex: none;
   }
 }
 

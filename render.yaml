@@ -21,6 +21,10 @@ services:
         sync: false
       - key: CLOUDFLARE_MAIL_WORKER_URL
         sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: OmniMail
       - key: FIREBASE_PRIVATE_KEY
         sync: false
       - key: FIREBASE_STORAGE_BUCKET

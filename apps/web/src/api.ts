@@ -87,7 +87,7 @@ export const api = {
   syncAll: () => request<{ jobs: MailSyncJob[] }>("/api/mail-accounts/sync-all", { method: "POST" }),
   syncJob: (id: string) => request<MailSyncJob>(`/api/sync-jobs/${encodeURIComponent(id)}`),
   tempDomains: () =>
-    request<{ id: string; name: string; ready: boolean }[]>(
+    request<{ id: string; name: string; ready: boolean; canSend?: boolean }[]>(
       "/api/temp-mail/domains",
     ),
   createTemp: (p: { localPart: string; domain: string }) =>
@@ -95,6 +95,17 @@ export const api = {
       method: "POST",
       body: JSON.stringify(p),
     }),
+  sendTempMail: (
+    accountId: string,
+    payload: { to: string; subject: string; text: string; senderName?: string },
+  ) =>
+    request<{ messageId: string; from: string; to: string; subject: string; sentAt: string }>(
+      `/api/temp-mail/accounts/${encodeURIComponent(accountId)}/send`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
   me: () => request<{ userId: string; email?: string; displayName?: string; role: "basic" | "premium" | "admin" }>("/api/me", undefined, { timeoutMs: 60_000 }),
   updateMe: (displayName: string) => request<{ userId: string; email: string; displayName: string; role: "basic" | "premium" | "admin" }>("/api/me", { method: "PATCH", body: JSON.stringify({ displayName }) }),
   admin: () => request<AdminOverview>("/api/admin/overview"),
